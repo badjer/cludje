@@ -1,36 +1,23 @@
 (ns cludje.types-test
-  (:use clojure.test
+  (:use midje.sweet
         cludje.types))
 
-(deftest Str-test
-  (testing "show"
-    (is (= (show Str "a") "a")))
-  (testing "parse"
-    (is (= (parse Str "a") "a")))
-  (testing "validate"
-    (is (= (validate Str "a") true))))
+(fact "Str"
+  (show Str "a") => "a"
+  (parse Str "a") => "a"
+  (validate Str "a") => true)
 
-(deftest Email-test
+(fact "Email"
   (let [em "a@bc.de"]
-    (testing "show"
-      (is (= (show Email em) em)))
-    (testing "parse"
-      (is (= (parse Email em) em)))
-    (testing "validate"
-      (is (= (validate Email em) true))
-      (is (not= (validate Email "a") true)))))
+    (show Email em) => em
+    (parse Email em) => em
+    (validate Email em) => true
+    (validate Email "a") => false))
 
-(deftest Password-test
+(fact "Password"
   (let [pw "1234567890"]
-    (testing "show"
-      (is (= (show Password pw) "********")))
-    (testing "parse"
-      (is (= (parse Password pw) pw)))
-    (testing "validate"
-      (is (= (validate Password pw) true))
-      (is (not= (validate Password "1") true)))))
-
-
-
-
+    (show Password pw) => "********"
+    (parse Password pw) => pw
+    (validate Password pw) => true
+    (validate Password "1") => false))
 
