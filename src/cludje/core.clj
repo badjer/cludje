@@ -3,44 +3,72 @@
             [cludje.types :as t]
             [cludje.validation]))
 
-(defprotocol IMakeable
-  (make [self m] "Make an instance from something"))
+(defprotocol IBuildable
+  (build [self m] "Make an instance from something"))
+(defn make 
+  "Make an instance (calls build)"
+  ([ibuildable]
+   (build ibuildable {}))
+  ([ibuildable m]
+   (build ibuildable m))
+  ([ibuildable f v & kvs]
+   (build ibuildable (-> (apply hash-map kvs) 
+                        (assoc f v)))))
+
 (defprotocol IValidatable
-  (get-problems? [self m] "Get a map of problems trying to make m"))
+  (problems? [self m] "Get a map of problems trying to make m"))
+
+(defn record-name [nam]
+  (symbol (str (name nam) "-type")))
 
 (defn defmodel-record [nam fields]
   (let [kees (map #(symbol (name %)) (keys fields))
-        rec-name (symbol (str (name nam) "-model"))]
+        rec-name (record-name nam)]
     `(defrecord ~rec-name [~@kees])))
 
-(defn defmodel-constructor [nam fields]
-  `(defn ~nam 
-     "Constructor to build new instances of ~nam"
-     ([] ~fields)
-     ([m#] (merge ~fields m#))
-     ([f# v# & kvs#]
-      (merge ~fields
-             (-> (apply hash-map kvs#)
-                 (assoc f# v#))))))
-
-(defn defmodel-problems [nam]
-  (let [problems-fn (symbol (str (s/lower-case nam) "-problems?"))]
-    `(defn ~problems-fn [x#]
-       (apply cludje.validation/needs x# (keys (~nam))))))
-
-(defn defmodel-parse [nam]
-  (let [parse-fn (symbol (str "parse-" (s/lower-case nam)))]
-    `(defn ~parse-fn [x#]
-       (reduce conj {} (for [[ke# typ#] (~nam)]
-                         [ke# (t/parse typ# (ke# x#))])))))
-
+(defn defmodel-singleton [nam fields]
+  (let [rec-name (record-name nam)
+        constructor (symbol (str "->" rec-name))
+        numkeys (count (keys fields))]
+    `(def ~nam (with-meta 
+                 (apply ~constructor (repeat ~numkeys nil))
+                 {:fields ~fields}))))
        
+(defn defmodel-problems [nam]
+  (let [problems-fn (symbol (str (s/lower-case nam) "-problems?"))
+        rec-name (record-name nam)]
+    `(extend ~rec-name
+       IValidatable
+       {:problems? 
+        (fn [self# m#] 
+          (merge
+            (apply cludje.validation/needs m# (keys ~nam))
+            (into {} (for [[field# typ#] (:fields (meta ~nam))]
+                       (when (not (cludje.types/validate typ# (get m# field#)))
+                         [field# (str "Invalid format for " field#)])))))})))
+
+(defn defmodel-make [nam]
+  (let [parse-fn (symbol (str "parse-" (s/lower-case nam)))
+        rec-name (record-name nam)
+        constructor (symbol (str "->" rec-name))]
+    `(extend ~rec-name
+       IBuildable
+       {:build 
+        (fn [self# m#]
+          (let [parsed# 
+                (into {} 
+                      (for [[field# typ#] (:fields (meta ~nam))] 
+                        [field# (cludje.types/parse typ# (get m# field#))]))]
+            (merge
+              (apply ~constructor (repeat (count (keys ~nam)) nil))
+              parsed#)))})))
+
 
 
 (defmacro defmodel [nam fields]
   `(do
      ~(defmodel-record nam fields)
-     ~(defmodel-constructor nam fields)
+     ~(defmodel-singleton nam fields)
      ~(defmodel-problems nam)
-     ~(defmodel-parse nam)
+     ~(defmodel-make nam)
      ))

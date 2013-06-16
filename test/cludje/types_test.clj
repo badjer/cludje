@@ -28,7 +28,7 @@
 
 (fact "Password"
   (let [pw "1234567890"]
-    (show Password pw) => "********"
+    (show Password pw) => ""
     (parse Password pw) => pw
     ; Empty values are valid
     (parse Password nil) => nil

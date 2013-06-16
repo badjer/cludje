@@ -6,7 +6,6 @@
   (show [self x])
   (validate [self txt]))
 
-
 (def Str 
   (reify IFieldType 
     (parse [self txt] (when txt (str txt)))
@@ -24,7 +23,7 @@
 (def Password
   (reify IFieldType
     (parse [self txt] (when txt (str txt)))
-    (show [self x] "********")
+    (show [self x] "")
     (validate [self txt] (or (empty? txt)
                              (< 2 (.length txt))))))
 
