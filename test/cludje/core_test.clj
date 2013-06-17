@@ -6,6 +6,7 @@
 
 (defmodel User {:name Str :email Email :pwd Password})
 (defmodel Cog {:price Money :amt Int})
+(defmodel Person {:name Str :age Int} :require [:name])
 
 (fact "defmodel"
   (fact "constructor"
@@ -28,5 +29,7 @@
     (make Cog {:price "$12.34"}) => (contains {:price 1234}))
   (fact "problems? checks type"
     (problems? Cog {:amt "asdf"}) => (has-keys :amt))
+  (fact "problems? only needs required fields"
+    (problems? Person {}) => (just-keys :name))
   )
 

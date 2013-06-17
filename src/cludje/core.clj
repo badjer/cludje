@@ -26,13 +26,13 @@
         rec-name (record-name nam)]
     `(defrecord ~rec-name [~@kees])))
 
-(defn defmodel-singleton [nam fields]
+(defn defmodel-singleton [nam fields opts]
   (let [rec-name (record-name nam)
         constructor (symbol (str "->" rec-name))
         numkeys (count (keys fields))]
     `(def ~nam (with-meta 
                  (apply ~constructor (repeat ~numkeys nil))
-                 {:fields ~fields}))))
+                 ~opts))))
        
 (defn defmodel-problems [nam]
   (let [problems-fn (symbol (str (s/lower-case nam) "-problems?"))
@@ -42,10 +42,11 @@
        {:problems? 
         (fn [self# m#] 
           (merge
-            (apply cludje.validation/needs m# (keys ~nam))
+            (apply cludje.validation/needs m# (:require (meta ~nam)))
             (into {} (for [[field# typ#] (:fields (meta ~nam))]
                        (when (not (cludje.types/validate typ# (get m# field#)))
                          [field# (str "Invalid format for " field#)])))))})))
+
 
 (defn defmodel-make [nam]
   (let [parse-fn (symbol (str "parse-" (s/lower-case nam)))
@@ -65,10 +66,13 @@
 
 
 
-(defmacro defmodel [nam fields]
-  `(do
-     ~(defmodel-record nam fields)
-     ~(defmodel-singleton nam fields)
-     ~(defmodel-problems nam)
-     ~(defmodel-make nam)
-     ))
+(defmacro defmodel [nam fields & opts]
+  (let [defaults {:require (vec (keys fields)) 
+                  :fields fields}
+        optmap (merge defaults (apply hash-map opts))]
+    `(do
+       ~(defmodel-record nam fields)
+       ~(defmodel-singleton nam fields optmap)
+       ~(defmodel-problems nam)
+       ~(defmodel-make nam)
+     )))
