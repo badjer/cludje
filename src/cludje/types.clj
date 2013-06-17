@@ -100,3 +100,19 @@
     (show [self x] (money-str x))
     (validate [self txt] (or (empty? (str txt)) (re-find money-regex (str txt))))))
 
+(def Bool
+  (reify IFieldType
+    (parse [self txt]
+      (cond
+        (empty? txt) nil
+        1 true
+        true true
+        false false
+        0 false
+        (re-find #"^[Yy](es)?$" (str txt)) true
+        (re-find #"^[tT](rue)?$" (str txt)) true
+        (re-find #"^[Nn](o)?$" (str txt)) false
+        (re-find #"^[fF](alse)$" (str txt)) false
+        :else nil))
+    (show [self x] (if x "yes" "no"))
+    (validate [self txt] (or (empty? (str txt)) (not (nil? (parse Bool txt)))))))

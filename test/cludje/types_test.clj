@@ -83,4 +83,18 @@
     (validate Money dcs) => truthy
     (validate Money cs) => truthy))
 
-
+(fact "Bool"
+  (let [true-vals [true "true" "True" "t" "T" "yes" "Yes" "y" "Y" 1]
+        false-vals [false "false" "False" "f" "F" "no" "No" "n" "N" 0]]
+    (show Bool true) => "yes"
+    (show Bool false) => "no"
+    (for [v true-vals]
+      (parse Bool v) => true)
+    (for [v false-vals]
+      (parse Bool v) => false)
+    (for [v [nil ""]]
+      (parse Bool v) => nil)
+    (for [v (concat true-vals false-vals)]
+      (validate Bool v) => truthy)
+    (for [v ["asdf" -1 2]]
+      (validate Bool v) => falsey)))
