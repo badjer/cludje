@@ -39,6 +39,9 @@
       (fetch- db tbl id) => (contains row2))
     (fact "delete-"
       (count (query- db tbl nil)) => 1
+      ; Delete nil shouldn't do anything
+      (delete- db tbl nil) => anything
+      (count (query- db tbl nil)) => 1
       (delete- db tbl id) => anything
       (count (query- db tbl nil)) => 0)))
 

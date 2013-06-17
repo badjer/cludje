@@ -123,8 +123,11 @@
           kee (get-key model parsed)]
       (write db model kee parsed))))
 
-
-;(defmacro definteraction [nam & forms]
-  ;`(defn ~nam [sys request]
-     ;(let [save (partial cludje.core/save (:db sys))]
-       ;~@forms)))
+(defmacro defaction [nam & forms]
+  `(defn ~nam [~'system ~'request]
+     (let [~'save (partial save (:db ~'system))
+           ~'fetch (partial fetch (:db ~'system))
+           ~'query (partial query (:db ~'system))
+           ~'write (partial write (:db ~'system))
+           ~'delete (partial delete (:db ~'system))]
+       ~@forms)))

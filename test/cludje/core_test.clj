@@ -109,4 +109,38 @@
     (save db Cog with-id) => id
     (count (query db Cog nil)) => 1))
 
+(defaction ident request)
+(defaction ident-sys system)
+(defaction ident-save save)
+(defaction ident-fetch fetch)
+(defaction ident-query query)
+(defaction ident-write write)
+(defaction ident-delete delete)
+
+(defaction add-cog 
+  (save Cog request))
+
+(fact "defaction"
+  (let [db (->MemDb (atom {}))
+        sys {:db db}] 
+    (fact "defaction creates a method with 2 params" 
+      (ident nil nil) =not=> (throws))
+    (fact "defaction has a request argument"
+      (ident nil cog) => cog)
+    (fact "defaction has a system argument"
+      (ident-sys sys nil) => sys)
+    (fact "defaction defines a new save"
+      ; There should be a save method, with a smaller arity 
+      ; (the first argument should already be bound)
+      ((ident-save sys nil) Cog cog) =not=> (throws))
+    (fact "defaction defines a new fetch"
+      ((ident-fetch sys nil) Cog nil) =not=> (throws))
+    (fact "defaction defines a new query"
+      ((ident-query sys nil) Cog nil) =not=> (throws))
+    (fact "defaction defines a new write"
+      ((ident-write sys nil) Cog nil cog) =not=> (throws))
+    (fact "defaction defines a new delete"
+      ((ident-delete sys nil) Cog nil) =not=> (throws))
+
+    ))
 
