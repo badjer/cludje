@@ -186,7 +186,7 @@
   {:to Email :from Email :subject Str :body Str :text Str})
 
 (defn send-mail [mailer mes]
-  (let [parsed (parse-model MailMessage mes)]
+  (let [parsed (dissoc (parse-model MailMessage mes) :mailmessage_id)]
     (send-mail- mailer parsed)))
 
 
@@ -198,7 +198,9 @@
            ~'fetch (partial fetch (:db ~'system))
            ~'query (partial query (:db ~'system))
            ~'write (partial write (:db ~'system))
-           ~'delete (partial delete (:db ~'system))]
+           ~'delete (partial delete (:db ~'system))
+           ~'send-mail (partial send-mail (:mailer ~'system))
+           ~'log (partial log (:logger ~'system))]
        (try
          ~@forms
          (catch clojure.lang.ExceptionInfo ex#

@@ -138,21 +138,25 @@
 
 (defaction ident request)
 (defaction ident-sys system)
+
+(fact "defaction base api functions"
+  (let [sys {}] 
+    (fact "defaction creates a method with 2 params" 
+      (ident nil nil) =not=> (throws))
+    (fact "defaction has a request argument"
+      (ident nil cog) => cog)
+    (fact "defaction has a system argument"
+      (ident-sys sys nil) => sys)))
+
 (defaction ident-save save)
 (defaction ident-fetch fetch)
 (defaction ident-query query)
 (defaction ident-write write)
 (defaction ident-delete delete)
 
-(fact "defaction api"
+(fact "defaction db api functions"
   (let [db (->MemDb (atom {}))
-        sys {:db db}] 
-    (fact "defaction creates a method with 2 params" 
-      (ident nil nil) =not=> (throws))
-    (fact "defaction has a request argument"
-      (ident nil cog) => cog)
-    (fact "defaction has a system argument"
-      (ident-sys sys nil) => sys)
+        sys {:db db}]
     (fact "defaction defines a new save"
       ; There should be a save method, with a smaller arity 
       ; (the first argument should already be bound)
@@ -168,7 +172,7 @@
 
 (defaction add-cog (save Cog request))
 
-(fact "defaction"
+(fact "defaction db api functionality"
   (let [db (->MemDb (atom {}))
         sys {:db db}]
     (fact "defaction can save"
@@ -187,8 +191,7 @@
 (def person {:name "a" :age 2})
 (def user {:name "a" :email "a@b.cd" :pwd "123"})
 
-
-(fact "complex defaction"
+(fact "complex db defaction"
   (let [db (->MemDb (atom {}))
         sys {:db db}]
     (fact "exception in let returns problems"
@@ -197,4 +200,44 @@
       (add-person sys (merge person user)) =not=> has-problems?
       (count (query db User nil)) => 1
       (count (query db Person nil)) => 1)))
+
+
+(defaction ident-send-mail send-mail)
+
+(fact "defaction mail api"
+  (let [mailatom (atom [])
+        mailer (->MemMailer mailatom)
+        sys {:mailer mailer}]
+    (fact "send-mail exists"
+      ((ident-send-mail sys nil) mail) =not=> (throws))))
+
+(defaction send-an-email (send-mail request))
+
+(fact "defaction mail api works"
+  (let [mailatom (atom [])
+        mailer (->MemMailer mailatom)
+        sys {:mailer mailer}]
+    (fact "send-mail executes"
+      (send-an-email sys mail) => anything
+      (count @mailatom) => 1
+      (first @mailatom) => mail)))
+
+(defaction ident-log log)
+
+(fact "defaction log api"
+  (let [logger (->MemLogger (atom []))
+        sys {:logger logger}]
+    (fact "log exists"
+      ((ident-log sys nil) "hi") =not=> (throws))))
+
+(defaction log-request (log request))
+
+(fact "defaction log api works"
+  (let [logatom (atom [])
+        logger (->MemLogger logatom)
+        sys {:logger logger}]
+    (fact "log executes"
+      (log-request sys "hi") => anything
+      (count @logatom) => 1
+      (first @logatom) => "hi")))
 
