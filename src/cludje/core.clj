@@ -76,18 +76,26 @@
               parsed#)))})))
 
 
-
 (defmacro defmodel [nam fields & opts]
-  (let [table (s/lower-case (name nam))
-        kee (keyword (str table "_id"))
-        defaults {:require (vec (keys fields)) 
-                  :fields (assoc fields kee cludje.types/Str)
-                  :table table
-                  :key kee}
-        optmap (merge defaults (apply hash-map opts))]
+  (let [optmap (apply hash-map opts)
+        table (s/lower-case (name nam))
+        no-key? (:no-key optmap)
+        kee (if no-key? 
+              nil
+              (keyword (str table "_id")))
+        ; Required fields don't include key
+        reqfields (vec (keys fields))
+        allfields (if no-key? 
+                    fields 
+                    (assoc fields kee cludje.types/Str))
+        modelopts (merge {:require reqfields
+                          :fields allfields
+                          :table table
+                          :key kee}
+                         optmap)]
     `(do
        ~(defmodel-record nam fields)
-       ~(defmodel-singleton nam fields optmap)
+       ~(defmodel-singleton nam fields modelopts)
        ~(defmodel-problems nam)
        ~(defmodel-make nam)
        )))
@@ -111,7 +119,7 @@
   "Contols login and permissions"
   (current-user- [self] "Returns the currently logged-in user.")
   (login- [self user])
-  (logout- [self user])
+  (logout- [self])
   (encrypt- [self txt] "Encrypt a string")
   (check-hash- [self txt cypher] "Test if the encrypted txt matches cypher")
   (in-role?- [self user role] "Is the user in the role?"))
@@ -183,12 +191,27 @@
 
 ; Mail api
 (defmodel MailMessage 
-  {:to Email :from Email :subject Str :body Str :text Str})
+  {:to Email :from Email :subject Str :body Str :text Str}
+  :no-key true)
 
 (defn send-mail [mailer mes]
-  (let [parsed (dissoc (parse-model MailMessage mes) :mailmessage_id)]
+  (let [parsed (parse-model MailMessage mes)]
     (send-mail- mailer parsed)))
 
+
+; Auth api
+(defn current-user [auth]
+  (current-user- auth))
+(defn login [auth user]
+  (login- auth user))
+(defn logout [auth]
+  (logout- auth))
+(defn encrypt [auth txt]
+  (encrypt- auth txt))
+(defn check-hash [auth txt cypher]
+  (check-hash- auth txt cypher))
+(defn in-role? [auth user role]
+  (in-role?- auth user role))
 
 
 

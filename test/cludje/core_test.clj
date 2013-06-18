@@ -241,3 +241,4 @@
       (count @logatom) => 1
       (first @logatom) => "hi")))
 
+
