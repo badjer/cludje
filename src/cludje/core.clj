@@ -115,6 +115,10 @@
   "Sends email"
   (send-mail- [self message] "Takes an email map. Expected keys are :from :to :subject :text :html"))
 
+(defprotocol ILogger
+  "Represents logging"
+  (log- [self message] "Log a message"))
+
 (defprotocol IAuth
   "Contols login and permissions"
   (current-user- [self] "Returns the currently logged-in user.")
@@ -123,10 +127,6 @@
   (encrypt- [self txt] "Encrypt a string")
   (check-hash- [self txt cypher] "Test if the encrypted txt matches cypher")
   (in-role?- [self user role] "Is the user in the role?"))
-
-(defprotocol ILogger
-  "Represents logging"
-  (log- [self message] "Log a message"))
 
 (defprotocol IRouter
   "Does routing"
