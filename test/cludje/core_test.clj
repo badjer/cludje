@@ -7,7 +7,7 @@
 
 (defmodel User {:name Str :email Email :pwd Password})
 (defmodel Cog {:price Money :amt Int})
-(defmodel Person {:name Str :age Int} :require [:name])
+(defmodel Person {:name Str :age Int :user_id Str} :require [:name])
 
 (fact "defmodel"
   (fact "metadata"
@@ -159,4 +159,23 @@
     (fact "defaction returns problems if save fails"
       (add-cog sys {}) => has-problems?
       (:problems (add-cog sys {})) => (has-keys :price :amt))))
+
+(defaction add-person
+  (let [uid (save User request)
+        dt (assoc request :user_id uid)]
+    (save Person dt)))
+
+(def person {:name "a" :age 2})
+(def user {:name "a" :email "a@b.cd" :pwd "123"})
+
+
+(fact "complex defaction"
+  (let [db (->MemDb (atom {}))
+        sys {:db db}]
+    (fact "exception in let returns problems"
+      (add-person sys {}) => (has-problems :name))
+    (fact "multiple operations work"
+      (add-person sys (merge person user)) =not=> has-problems?
+      (count (query db User nil)) => 1
+      (count (query db Person nil)) => 1)))
 
