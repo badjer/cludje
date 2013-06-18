@@ -24,5 +24,3 @@
     (and (contains? x :problems)
          ((apply has-keys kees) (:problems x)))))
 
-
-

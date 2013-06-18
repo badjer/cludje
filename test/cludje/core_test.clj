@@ -3,6 +3,8 @@
         cludje.test
         cludje.types
         cludje.database
+        cludje.logger
+        cludje.mailer
         cludje.core))
 
 (defmodel User {:name Str :email Email :pwd Password})
@@ -117,6 +119,23 @@
     (save db Cog with-id) => id
     (count (query db Cog nil)) => 1))
 
+(def mail {:to "a@b.cd" :from "b@b.cd" :subject "test"
+           :body "hi" :text "hi"})
+
+(fact "send-mail"
+  (let [mailatom (atom [])
+        mailer (->MemMailer mailatom)]
+    (send-mail mailer mail) =not=> (throws)
+    (send-mail mailer nil) => (throws)
+    (send-mail mailer (assoc mail :to nil)) => (throws)
+    (send-mail mailer (assoc mail :to "abcd")) => (throws)
+    (send-mail mailer (dissoc mail :to)) => (throws)
+    (send-mail mailer (dissoc mail :from)) => (throws)
+    (send-mail mailer (dissoc mail :subject)) => (throws)
+    (send-mail mailer (dissoc mail :text)) => (throws)
+    (send-mail mailer (dissoc mail :body)) => (throws)))
+
+
 (defaction ident request)
 (defaction ident-sys system)
 (defaction ident-save save)
@@ -158,7 +177,7 @@
       (first (query db Cog nil)) => (contains cog))
     (fact "defaction returns problems if save fails"
       (add-cog sys {}) => has-problems?
-      (:problems (add-cog sys {})) => (has-keys :price :amt))))
+      (add-cog sys {}) => (has-problems :price :amt))))
 
 (defaction add-person
   (let [uid (save User request)

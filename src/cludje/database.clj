@@ -1,6 +1,5 @@
 (ns cludje.database
-  (:use cludje.system
-        cludje.core))
+  (:use cludje.core))
 
 (def permitted-types
   "The types that are allowed to be in the database"

@@ -1,11 +1,15 @@
 (ns cludje.core
+  (:use cludje.types)
   (:require [clojure.string :as s]
-            [cludje.types :as t]
-            [cludje.system :as sys]
             [cludje.validation]))
+
+; ####
+; Model protocols
+; ####
 
 (defprotocol IBuildable
   (build [self m] "Make an instance from something"))
+
 (defn make 
   "Make an instance (calls build)"
   ([ibuildable]
@@ -18,6 +22,10 @@
 
 (defprotocol IValidatable
   (problems? [self m] "Get a map of problems trying to make m"))
+
+; ####
+; Model construction
+; ####
 
 (defn record-name [nam]
   (symbol (str (name nam) "-type")))
@@ -41,7 +49,6 @@
     (into {} (for [[field typ] (:fields model-meta)]
                (when-not (cludje.types/validate typ (get input field))
                  [field (str "Invalid format for " field)])))))
-
 
 (defn defmodel-problems [nam]
   (let [rec-name (record-name nam)]
@@ -85,6 +92,48 @@
        ~(defmodel-make nam)
        )))
 
+
+; ####
+; System protocols
+; ####
+(defprotocol IDatabase
+  "Represents a datastore"
+  (fetch- [self coll kee] "Get an item from the datastore")
+  (query- [self coll params] "Get multiple items from the datastore. If params is empty, all entries should be returned")
+  (write- [self coll kee data] "Insert or update. If kee is nil, insert. The key is returned")
+  (delete- [self coll kee] "Delete"))
+
+(defprotocol IMailer
+  "Sends email"
+  (send-mail- [self message] "Takes an email map. Expected keys are :from :to :subject :text :html"))
+
+(defprotocol IAuth
+  "Contols login and permissions"
+  (current-user- [self] "Returns the currently logged-in user.")
+  (login- [self user])
+  (logout- [self user])
+  (encrypt- [self txt] "Encrypt a string")
+  (check-hash- [self txt cypher] "Test if the encrypted txt matches cypher")
+  (in-role?- [self user role] "Is the user in the role?"))
+
+(defprotocol ILogger
+  "Represents logging"
+  (log- [self message] "Log a message"))
+
+(defprotocol IRouter
+  "Does routing"
+  (handle- [self request] "Handle a user request (a la Ring)"))
+
+(defprotocol IRenderer
+  "Handle finding and rendering output"
+  (render- [self request output] "Generate output for the user"))
+
+
+; ####
+; API 
+; ####
+
+; DB API
 (defn- table-name [model]
   (:table (meta model)))
 
@@ -93,19 +142,19 @@
 
 (defn fetch [db model kee]
   (let [tbl (table-name model)]
-    (sys/fetch- db tbl kee)))
+    (fetch- db tbl kee)))
 
 (defn query [db model params]
   (let [tbl (table-name model)]
-    (sys/query- db tbl params)))
+    (query- db tbl params)))
 
 (defn write [db model kee data]
   (let [tbl (table-name model)]
-    (sys/write- db tbl kee data)))
+    (write- db tbl kee data)))
 
 (defn delete [db model kee]
   (let [tbl (table-name model)]
-    (sys/delete- db tbl kee)))
+    (delete- db tbl kee)))
 
 (defn throw-problems 
   ([]
@@ -116,12 +165,32 @@
 (defn get-key [model m]
   (get m (key-name model) nil))
 
-(defn save [db model m]
+(defn parse-model [model m]
   (if-let [probs (problems? model m)]
     (throw-problems probs)
-    (let [parsed (make model m)
-          kee (get-key model parsed)]
-      (write db model kee parsed))))
+    (make model m)))
+
+(defn save [db model m]
+  (let [parsed (parse-model model m)
+        kee (get-key model parsed)] 
+    (write db model kee parsed)))
+
+
+; Logger api
+(defn log [logger s]
+  (log- logger s))
+
+
+; Mail api
+(defmodel MailMessage 
+  {:to Email :from Email :subject Str :body Str :text Str})
+
+(defn send-mail [mailer mes]
+  (let [parsed (parse-model MailMessage mes)]
+    (send-mail- mailer parsed)))
+
+
+
 
 (defmacro defaction [nam & forms]
   `(defn ~nam [~'system ~'request]

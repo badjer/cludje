@@ -1,6 +1,6 @@
 (ns cludje.database-test
   (:use midje.sweet
-        cludje.system
+        cludje.core
         cludje.database))
 
 (def tbl "table")
