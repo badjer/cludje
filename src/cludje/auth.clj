@@ -15,7 +15,7 @@
     (reset! logged-in? false)
     true)
   (encrypt- [self txt] txt)
-  (check-hash- [self txt cypher] (= (encrypt txt) cypher))
+  (check-hash- [self txt cypher] (= (encrypt self txt) cypher))
   (in-role?- [self user role] 
     (and (= mockuser (select-keys user (keys mockuser)))
          (some #{role} mockroles))))

@@ -228,7 +228,13 @@
            ~'write (partial write (:db ~'system))
            ~'delete (partial delete (:db ~'system))
            ~'send-mail (partial send-mail (:mailer ~'system))
-           ~'log (partial log (:logger ~'system))]
+           ~'log (partial log (:logger ~'system))
+           ~'current-user (partial current-user (:auth ~'system))
+           ~'login (partial login (:auth ~'system))
+           ~'logout (partial logout (:auth ~'system))
+           ~'encrypt (partial encrypt (:auth ~'system))
+           ~'check-hash (partial check-hash (:auth ~'system))
+           ~'in-role? (partial in-role? (:auth ~'system))]
        (try
          ~@forms
          (catch clojure.lang.ExceptionInfo ex#

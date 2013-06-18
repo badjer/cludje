@@ -265,6 +265,47 @@
       (in-role? auth mockuser "guest") => truthy
       (in-role? auth mockuser "a") => falsey)))
 
+(defaction ident-current-user current-user)
+(defaction ident-login login)
+(defaction ident-logout logout)
+(defaction ident-encrypt encrypt)
+(defaction ident-check-hash check-hash)
+(defaction ident-in-role? in-role?)
+
+(facts "defaction auth api"
+  (let [auth (->MockAuth (atom false))
+        sys {:auth auth}]
+    ((ident-current-user sys nil)) =not=> (throws)
+    ((ident-login sys nil) mockuser) =not=> (throws)
+    ((ident-logout sys nil)) =not=> (throws)
+    ((ident-encrypt sys nil) "a") =not=> (throws)
+    ((ident-check-hash sys nil) "a" "a") =not=> (throws)
+    ((ident-in-role? sys nil) mockuser :guest) =not=> (throws)))
+
+(defaction ac-current-user (current-user))
+(defaction ac-login (login request))
+(defaction ac-logout (logout))
+(defaction ac-encrypt (encrypt request))
+(defaction ac-check-hash (check-hash request "a"))
+(defaction ac-in-role? (in-role? request :guest))
+
+(facts "defaction auth api works"
+  (let [logged-in? (atom true)
+        auth (->MockAuth logged-in?)
+        sys {:auth auth}]
+    (ac-login sys mockuser) =not=> has-problems?
+    @logged-in? => true
+    (ac-current-user sys nil) => mockuser
+    (ac-logout sys nil) =not=> has-problems?
+    @logged-in? => false
+    (ac-encrypt sys "a") => "a"
+    (ac-check-hash sys "a") => true
+    (ac-check-hash sys "b") => false
+    (ac-in-role? sys mockuser) => truthy
+    (ac-in-role? sys nil) => falsey))
+
+
+
 
 
 
