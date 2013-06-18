@@ -5,6 +5,7 @@
         cludje.database
         cludje.logger
         cludje.mailer
+        cludje.auth
         cludje.core))
 
 (defmodel User {:name Str :email Email :pwd Password})
@@ -240,5 +241,31 @@
       (log-request sys "hi") => anything
       (count @logatom) => 1
       (first @logatom) => "hi")))
+
+
+(facts "login"
+  (let [auth (->MockAuth (atom false))]
+    (fact "login works with extra fields"
+      (current-user auth) => nil
+      (login auth (assoc mockuser :fluff 1)) => anything
+      (current-user auth) => mockuser)
+    (fact "login throws exception if missing fields"
+      (logout auth) => anything
+      (login auth (dissoc mockuser :pwd)) => (throws)
+      (login auth (dissoc mockuser :username)) => (throws))))
+
+(facts "in-role?"
+  (let [auth (->MockAuth (atom false))]
+    (in-role? auth mockuser nil) => falsey
+    (in-role? auth nil :guest) => falsey
+    (fact "in-role? with keyword roles"
+      (in-role? auth mockuser :guest) => truthy
+      (in-role? auth mockuser :a) => falsey)
+    (fact "in-role? with string roles"
+      (in-role? auth mockuser "guest") => truthy
+      (in-role? auth mockuser "a") => falsey)))
+
+
+
 
 

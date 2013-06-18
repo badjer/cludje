@@ -200,10 +200,13 @@
 
 
 ; Auth api
+(defmodel AuthUser {:username Str :pwd Password} :no-key true)
+
 (defn current-user [auth]
   (current-user- auth))
 (defn login [auth user]
-  (login- auth user))
+  (let [parsed (parse-model AuthUser user)]
+    (login- auth parsed)))
 (defn logout [auth]
   (logout- auth))
 (defn encrypt [auth txt]
@@ -211,7 +214,9 @@
 (defn check-hash [auth txt cypher]
   (check-hash- auth txt cypher))
 (defn in-role? [auth user role]
-  (in-role?- auth user role))
+  (when role
+    (let [kwrole (keyword (name role))]
+      (in-role?- auth user kwrole))))
 
 
 
