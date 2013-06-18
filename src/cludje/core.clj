@@ -107,11 +107,11 @@
   (let [tbl (table-name model)]
     (sys/delete- db tbl kee)))
 
-(defn- throw-problems 
+(defn throw-problems 
   ([]
    (throw-problems {}))
   ([problems]
-  (throw (with-meta (Exception. "") {:problems problems}))))
+   (throw (ex-info "Problems" {:problems problems}))))
 
 (defn get-key [model m]
   (get m (key-name model) nil))
@@ -130,4 +130,8 @@
            ~'query (partial query (:db ~'system))
            ~'write (partial write (:db ~'system))
            ~'delete (partial delete (:db ~'system))]
-       ~@forms)))
+       (try
+         ~@forms
+         (catch clojure.lang.ExceptionInfo ex#
+           (let [problems# (:problems (ex-data ex#))]
+             (assoc ~'request :problems problems#)))))))

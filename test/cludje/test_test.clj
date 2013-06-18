@@ -19,4 +19,9 @@
     x =not=> (just-keys :a :b :c)
     x =not=> (just-keys :c)))
 
+(fact "has-problems?"
+  {} =not=> has-problems?
+  {:problems {}} => has-problems?
+  nil =not=> has-problems?
+  {:a 1} =not=> has-problems?)
 

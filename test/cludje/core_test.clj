@@ -102,6 +102,14 @@
   (get-key Cog {:cog_id 1}) => 1
   (get-key Cog {}) => nil)
 
+(fact "throw-problems"
+  (throw-problems {:a 1}) => (throws)
+  (try
+    (throw-problems {:a 1})
+    (catch Exception ex
+      (ex-data ex) => (has-keys :problems)
+      (:problems (ex-data ex)) => {:a 1})))
+
 (fact "save knows when to update"
   (let [db (->MemDb (atom {}))
         id (write db Cog nil cog)
@@ -117,10 +125,7 @@
 (defaction ident-write write)
 (defaction ident-delete delete)
 
-(defaction add-cog 
-  (save Cog request))
-
-(fact "defaction"
+(fact "defaction api"
   (let [db (->MemDb (atom {}))
         sys {:db db}] 
     (fact "defaction creates a method with 2 params" 
@@ -140,7 +145,18 @@
     (fact "defaction defines a new write"
       ((ident-write sys nil) Cog nil cog) =not=> (throws))
     (fact "defaction defines a new delete"
-      ((ident-delete sys nil) Cog nil) =not=> (throws))
+      ((ident-delete sys nil) Cog nil) =not=> (throws))))
 
-    ))
+(defaction add-cog (save Cog request))
+
+(fact "defaction"
+  (let [db (->MemDb (atom {}))
+        sys {:db db}]
+    (fact "defaction can save"
+      (add-cog sys cog) =not=> has-problems?
+      (count (query db Cog nil)) => 1
+      (first (query db Cog nil)) => (contains cog))
+    (fact "defaction returns problems if save fails"
+      (add-cog sys {}) => has-problems?
+      (:problems (add-cog sys {})) => (has-keys :price :amt))))
 
