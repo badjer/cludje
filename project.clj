@@ -15,4 +15,5 @@
   :main cludje.app
   :profiles {:dev {:dependencies [[lazytest "1.2.3"]
                                   [midje "1.5.1"]]
+                   :source-paths ["test"]
                    :plugins [[lein-midje "3.0.1"]]}})

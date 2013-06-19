@@ -11,13 +11,24 @@
 
 (defmodel Guest {:name Str :household_id Int})
 
-;(definteraction AddHousehold [in]
-  ;(let [u (save User in)]
-    ;(save Household (merge in u))))
+(defaction AddHousehold
+  (let [uid (save User request)]
+    (save Household (assoc request :user_id uid))))
+
+(defaction AddGuest
+  (save Guest request))
+
+;(auth-role AddHousehold :admin)
+;(auth-role AddGuest :guest)
+;(defn own-house? [request user]
+;  (let [household (query Household (select-keys user :user_id))]
+;    (= (:household_id request) 
+;;       (:household_id household))))
+
+;(auth AddGuest (own? Household))
 ;
-;(definteraction AddGuest [in]
-  ;(save Guest in))
-
-
-
-
+;(auth AddGuest own-house?)
+;;(route "/addHousehold" AddHousehold)
+;(route "/addGuest" AddGuest)
+;
+;(auth-role :admin)

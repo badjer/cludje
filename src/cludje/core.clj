@@ -128,12 +128,11 @@
   (check-hash- [self txt cypher] "Test if the encrypted txt matches cypher")
   (in-role?- [self user role] "Is the user in the role?"))
 
-(defprotocol IRouter
-  "Does routing"
-  (handle- [self request] "Handle a user request (a la Ring)"))
+(defprotocol IDispatcher
+  (get-action- [self request] "Get the action to execute"))
 
 (defprotocol IRenderer
-  "Handle finding and rendering output"
+  "Handle rendering output"
   (render- [self request output] "Generate output for the user"))
 
 
@@ -217,6 +216,11 @@
   (when role
     (let [kwrole (keyword (name role))]
       (in-role?- auth user kwrole))))
+
+
+; Dispatcher api
+(defn get-action [dispatcher request]
+  (get-action- dispatcher request))
 
 
 
