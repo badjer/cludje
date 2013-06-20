@@ -6,6 +6,8 @@
         cludje.logger
         cludje.mailer
         cludje.auth
+        cludje.dispatcher
+        cludje.renderer
         cludje.core))
 
 (defmodel User {:name Str :email Email :pwd Password})
@@ -305,8 +307,20 @@
     (ac-in-role? sys nil) => falsey))
 
 
+(defaction ident-render render)
 
+(facts "defaction render api"
+  (let [rr (->LiteralRenderer)
+        sys {:renderer rr}]
+    (ident-render sys nil) =not=> (throws)
+    (ident-render sys nil) => fn?))
 
+(defaction ac-render1 (render {:a 2}))
+(defaction ac-render0 (render))
 
-
-
+(facts "defaction render api works"
+  (let [rr (->LiteralRenderer)
+        sys {:renderer rr}]
+    (ac-render1 sys {:a 1}) => {:a 2}
+    (ac-render0 sys {:a 1}) => {:a 1}))
+    

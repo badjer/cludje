@@ -223,6 +223,11 @@
   (get-action- dispatcher request))
 
 
+; Renderer api
+(defn render [renderer request output]
+  (render- renderer request output))
+
+
 
 (defmacro defaction [nam & forms]
   `(defn ~nam [~'system ~'request]
@@ -238,7 +243,10 @@
            ~'logout (partial logout (:auth ~'system))
            ~'encrypt (partial encrypt (:auth ~'system))
            ~'check-hash (partial check-hash (:auth ~'system))
-           ~'in-role? (partial in-role? (:auth ~'system))]
+           ~'in-role? (partial in-role? (:auth ~'system))
+           ~'render (fn 
+                      ([out#] (render (:renderer ~'system) ~'request out#))
+                      ([] (render (:renderer ~'system) ~'request ~'request)))]
        (try
          ~@forms
          (catch clojure.lang.ExceptionInfo ex#
