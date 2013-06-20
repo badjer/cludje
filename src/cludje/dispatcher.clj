@@ -5,8 +5,10 @@
 (defrecord Dispatcher [dispatches]
   IDispatcher
   (get-action- [self request]
-    (when-let [action (get request :action)]
-      (get @dispatches (keyword (name action))))))
+    (let [default (get @dispatches :default)]
+      (if-let [action (get request :action)]
+        (get @dispatches (keyword (name action)) default)
+        default))))
 
 
 (defn find-actions [root-ns]

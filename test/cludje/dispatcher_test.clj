@@ -17,6 +17,10 @@
     (get-action- disp {:action "1"}) => #(= % action1)
     (get-action- disp {:action "3"}) => nil?))
 
+(fact "dispatcher gets default if there is no match"
+  (let [disp (->Dispatcher (atom {:default action1}))]
+    (get-action- disp {:action :asdf}) => #(= % action1)))
+
 (fact "find-actions on a single namespace"
   (find-actions 'cludje.testcontrollers) => (has-keys :index)
   (fact "can actually execute the found action"

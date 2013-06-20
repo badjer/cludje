@@ -1,6 +1,6 @@
-(ns cludje.test-test
-  (:use cludje.test 
-        midje.sweet)
+(ns cludje.cludjetest-test
+  (:use cludje.test
+        midje.sweet))
 
 (fact "has-keys"
   (let [x {:a 1 :b 2}]
@@ -21,7 +21,6 @@
 
 (fact "has-problems?"
   {} =not=> has-problems?
-  1 => 2
   {:problems {}} => has-problems?
   nil =not=> has-problems?
   {:a 1} =not=> has-problems?)
@@ -38,5 +37,5 @@
   nil =not=> (has-problems))
 
 (fact "do-request"
-  (do-request {}) => "aasdf")
+  (do-request {}) => (contains {:status 200}))
 

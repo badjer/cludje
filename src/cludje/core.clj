@@ -135,6 +135,31 @@
   "Handle rendering output"
   (render- [self request output] "Generate output for the user"))
 
+(defprotocol IServer
+  (set-handler [self handler]))
+
+(defprotocol IStartable
+  (start [self])
+  (stop [self]))
+
+(defprotocol IPersistent
+  (get-state [self])
+  (init-state [self state]))
+
+;(defprotocol ILifecycle
+  ;(init [self init-state] "Initialize the (sub)system, but don't start")
+  ;(start [self] "Start the init'd (sub)system")
+  ;(get-state [self] "Return the state of the (sub)system. 
+                    ;This should return a thing that can be used
+                    ;by init to create a new instance of the system
+                    ;to its current state")
+  ;(stop [self] "Stop the (sub)system"))
+;
+;(defrecord System [db mailer logger auth dispatcher renderer server])
+
+
+
+
 
 ; ####
 ; API 
@@ -252,3 +277,10 @@
          (catch clojure.lang.ExceptionInfo ex#
            (let [problems# (:problems (ex-data ex#))]
              (assoc ~'request :problems problems#)))))))
+
+(defn make-ring-handler [{:keys [dispatcher renderer] :as system}] 
+  (fn [request] 
+    (when-let [action (get-action dispatcher request)] 
+      (let [output (action system request)] 
+        (render renderer request output)))))
+

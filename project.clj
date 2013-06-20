@@ -7,6 +7,7 @@
                  [com.novemberain/monger "1.5.0"]
                  [com.cemerick/friend "0.1.5"]
                  [cheshire "5.2.0"]
+                 [clj-http "0.7.2"]
                  ;[compojure "1.1.5"]
                  [ring "1.1.8"]
                  [ring/ring-jetty-adapter "1.1.8"]

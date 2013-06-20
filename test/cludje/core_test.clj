@@ -326,4 +326,15 @@
         sys {:renderer rr}]
     (ac-render1 sys {:a 1}) => {:a 2}
     (ac-render0 sys {:a 1}) => {:a 1}))
+
+(defaction ac-a1 {:a 1})
     
+(facts "make-ring-handler"
+  (let [rr (->LiteralRenderer)
+        disp (->Dispatcher (atom {:ident ident :a1 ac-a1}))
+        sys {:renderer rr :dispatcher disp}
+        handler (make-ring-handler sys)]
+    handler => fn?
+    (handler {:action :ident}) => {:action :ident}
+    (handler {:action :a1}) => {:a 1}))
+

@@ -1,5 +1,6 @@
 (ns cludje.test
-  (:use midje.sweet))
+  (:use midje.sweet)
+  (:require [clj-http.client :as http]))
 
 (defn has-keys [& kees]
   "A midje checker that returns truthy if the thing
@@ -24,3 +25,8 @@
     (and (contains? x :problems)
          ((apply has-keys kees) (:problems x)))))
 
+(defn do-request [{:keys [url body method] :or {url "http://google.ca"
+                                                body ""
+                                                method :get}}]
+  (case method 
+    :get (http/get url)))

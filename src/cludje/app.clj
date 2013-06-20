@@ -1,26 +1,66 @@
 (ns cludje.app
   (:use cludje.core
-        cludje.types))
+        cludje.database
+        cludje.mailer
+        cludje.logger
+        cludje.auth
+        cludje.dispatcher
+        cludje.renderer
+        cludje.server))
 
-(defmodel User {:email Email :password Password :name Str}
-  :require [:email :password])
+(defaction identity-action request)
 
-(defmodel Household 
-  {:attendee Str :maxguests Int :attending Bool :user_id Int}
-  :require [:attendee :maxguests :user_id])
+(defn default-system []
+  {:db (->MemDb (atom {}))
+   :mailer (->MemMailer (atom []))
+   :logger (->MemLogger (atom []))
+   :auth (->MockAuth (atom false))
+   :dispatcher (->Dispatcher (atom {:default identity-action}))
+   :renderer (->LiteralRenderer)
+   :server (->JettyServer 8888 (atom nil) (atom nil))})
 
-(defmodel Guest {:name Str :household_id Int})
+(defn make-system 
+  "Create a system. Use defaults if none provided"
+  ([]
+   (make-system {}))
+  ([opts]
+   (merge (default-system) opts)))
 
-(defaction AddHousehold
-  (let [uid (save User request)]
-    (save Household (assoc request :user_id uid))))
 
-(defaction AddGuest
-  (save Guest request))
+(defn start-system [sys]
+  (let [handler (make-ring-handler sys)]
+    ; Set the server handler
+    (set-handler (:server sys) handler)
+    (doseq [[kee subsys] sys]
+      (when (extends? IStartable (type subsys))
+        (println (str "Starting " kee))
+        (start subsys)))
+    sys))
 
-(defn start-app [])
+(defn stop-system [sys]
+  (doseq [subsys (vals sys)]
+    (when (extends? IStartable (type subsys))
+      (stop subsys))))
 
-(defn stop-app [])
+;(defmodel User {:email Email :password Password :name Str}
+  ;:require [:email :password])
+;
+;(defmodel Household 
+  ;{:attendee Str :maxguests Int :attending Bool :user_id Int}
+  ;:require [:attendee :maxguests :user_id])
+;
+;(defmodel Guest {:name Str :household_id Int})
+;
+;(defaction AddHousehold
+  ;(let [uid (save User request)]
+    ;(save Household (assoc request :user_id uid))))
+;
+;(defaction AddGuest
+  ;(save Guest request))
+;
+;(defn start-app [])
+;;
+;(defn stop-app [])
 
 
 
