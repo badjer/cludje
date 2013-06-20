@@ -306,6 +306,9 @@
     (ac-in-role? sys mockuser) => truthy
     (ac-in-role? sys nil) => falsey))
 
+; Dispatcher api
+; Currently, we're not making this easily available to
+; defaction, because I'm not sure it'd ever be needed
 
 (defaction ident-render render)
 

@@ -18,6 +18,12 @@
 (defaction AddGuest
   (save Guest request))
 
+(defn start-app [])
+
+(defn stop-app [])
+
+
+
 ;(auth-role AddHousehold :admin)
 ;(auth-role AddGuest :guest)
 ;(defn own-house? [request user]
