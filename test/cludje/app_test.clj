@@ -18,13 +18,14 @@
 (fact "a start-system -ed system can respond to requests"
   (let [sys (make-system)
         req {:url "http://localhost:8888"}] 
-    (:server sys) =not=> nil?
     (start-system sys) => anything
     ; Now that the system is started, we should be able to connect to it 
     (do-request req) => (contains {:status 200})
+    (do-request req) => (contains {:body "hello world"})
     (fact "stopping the system stops the webserver"
       (stop-system sys) => anything
       (do-request req) => (throws))))
+
 
 (defaction ac-add1 
   ; Add 1 to items

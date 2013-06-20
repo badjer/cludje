@@ -8,14 +8,14 @@
         cludje.renderer
         cludje.server))
 
-(defaction identity-action request)
+(defaction default-action {:body "hello world"})
 
 (defn default-system []
   {:db (->MemDb (atom {}))
    :mailer (->MemMailer (atom []))
    :logger (->MemLogger (atom []))
    :auth (->MockAuth (atom false))
-   :dispatcher (->Dispatcher (atom {:default identity-action}))
+   :dispatcher (->Dispatcher (atom {:default default-action}))
    :renderer (->LiteralRenderer)
    :server (->JettyServer 8888 (atom nil) (atom nil))})
 
