@@ -20,6 +20,20 @@
 (fact "find-actions on a single namespace"
   (find-actions 'cludje.testcontrollers) => (has-keys :index)
   (fact "can actually execute the found action"
-    ((:index find-actions 'cludje.testcontrollers) 
+    ((:index find-actions 'cludje.testcontrollers)
      nil {:a 1}) => {:a 1}))
+
+(future-fact "find-actions finds things in sub-namespaces"
+  (let [dis (find-actons 'cludje.testcontrollers)]
+    ; This isn't super urgent - do it later
+    dis => (has-keys :index) ; in the root ns, controllers are bare
+    ; Loading from cludje.testcontrollers.guest should result
+    ; in routes that have their name as guest#fn-name
+    dis => (has-keys :guest#new-guest) ))
+
+(fact "make-dispactcher"
+  (let [disp (make-dispatcher 'cludje.testcontrollers)]
+    (get-action- disp {:action :index}) =not=> nil?
+    ; Try executing the action to make sure we actually got it
+    ((get-action- disp {:action :index}) nil {:a 1}) => {:a 1}))
 

@@ -27,15 +27,15 @@
 ; Model construction
 ; ####
 
-(defn record-name [nam]
+(defn- record-name [nam]
   (symbol (str (name nam) "-type")))
 
-(defn defmodel-record [nam fields]
+(defn- defmodel-record [nam fields]
   (let [kees (map #(symbol (name %)) (keys fields))
         rec-name (record-name nam)]
     `(defrecord ~rec-name [~@kees])))
 
-(defn defmodel-singleton [nam fields opts]
+(defn- defmodel-singleton [nam fields opts]
   (let [rec-name (record-name nam)
         constructor (symbol (str "->" rec-name))
         numkeys (count (keys fields))]
@@ -50,7 +50,7 @@
                (when-not (cludje.types/validate typ (get input field))
                  [field (str "Invalid format for " field)])))))
 
-(defn defmodel-problems [nam]
+(defn- defmodel-problems [nam]
   (let [rec-name (record-name nam)]
     `(extend ~rec-name
        IValidatable
@@ -60,7 +60,7 @@
             (if-not (empty? p#)
               p#)))})))
 
-(defn defmodel-make [nam]
+(defn- defmodel-make [nam]
   (let [rec-name (record-name nam)
         constructor (symbol (str "->" rec-name))]
     `(extend ~rec-name

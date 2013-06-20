@@ -8,6 +8,7 @@
     (when-let [action (get request :action)]
       (get @dispatches (keyword (name action))))))
 
+
 (defn find-actions [root-ns]
   ; Find all the defactions under the specified namespace
   ; (including all namespaces that start with it)
@@ -18,3 +19,7 @@
     (into {} (for [[k v] (ns-publics root-ns)]
                [(keyword (name k)) v]))
   ))
+
+(defn make-dispatcher [root-ns]
+  (let [dispatches (find-actions root-ns)]
+    (->Dispatcher (atom dispatches))))
