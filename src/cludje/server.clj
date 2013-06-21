@@ -24,8 +24,8 @@
   (start [self]
     (reset! server (jetty/run-jetty @handler (jetty-opts self))))
   (stop [self]
-    (when @server (.stop @server)))
-  IPersistent
-  (get-state [self])
-  (init-state [self state]))
+    (when @server (.stop @server))))
+  ;IPersistent
+  ;(get-state [self])
+  ;(init-state [self state]))
 

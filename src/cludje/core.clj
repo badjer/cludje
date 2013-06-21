@@ -128,7 +128,7 @@
   (logout- [self])
   (encrypt- [self txt] "Encrypt a string")
   (check-hash- [self txt cypher] "Test if the encrypted txt matches cypher")
-  (in-role?- [self user role] "Is the user in the role?"))
+  (authorize- [self user input] "Is the user allowed to do this?"))
 
 (defprotocol IDispatcher
   (get-action- [self request] "Get the action to execute"))
@@ -229,10 +229,8 @@
   (encrypt- auth txt))
 (defn check-hash [auth txt cypher]
   (check-hash- auth txt cypher))
-(defn in-role? [auth user role]
-  (when role
-    (let [kwrole (keyword (name role))]
-      (in-role?- auth user kwrole))))
+(defn authorize [auth user input]
+  (authorize- auth user input))
 
 
 ; Dispatcher api
@@ -260,7 +258,7 @@
            ~'logout (partial logout (:auth ~'system))
            ~'encrypt (partial encrypt (:auth ~'system))
            ~'check-hash (partial check-hash (:auth ~'system))
-           ~'in-role? (partial in-role? (:auth ~'system))]
+           ~'authorize (partial authorize (:auth ~'system))]
        (try
          ~@forms
          (catch clojure.lang.ExceptionInfo ex#

@@ -256,23 +256,19 @@
       (login auth (dissoc mockuser :pwd)) => (throws)
       (login auth (dissoc mockuser :username)) => (throws))))
 
-(facts "in-role?"
+(facts "authorize"
   (let [auth (->MockAuth (atom false))]
-    (in-role? auth mockuser nil) => falsey
-    (in-role? auth nil :guest) => falsey
-    (fact "in-role? with keyword roles"
-      (in-role? auth mockuser :guest) => truthy
-      (in-role? auth mockuser :a) => falsey)
-    (fact "in-role? with string roles"
-      (in-role? auth mockuser "guest") => truthy
-      (in-role? auth mockuser "a") => falsey)))
+    (authorize auth mockuser nil) => truthy
+    (authorize auth mockuser {}) => truthy
+    (authorize auth nil nil) => falsey
+    (authorize auth nil {}) => falsey))
 
 (defaction ident-current-user current-user)
 (defaction ident-login login)
 (defaction ident-logout logout)
 (defaction ident-encrypt encrypt)
 (defaction ident-check-hash check-hash)
-(defaction ident-in-role? in-role?)
+(defaction ident-authorize authorize)
 
 (facts "defaction auth api"
   (let [auth (->MockAuth (atom false))
@@ -282,14 +278,14 @@
     ((ident-logout sys nil)) =not=> (throws)
     ((ident-encrypt sys nil) "a") =not=> (throws)
     ((ident-check-hash sys nil) "a" "a") =not=> (throws)
-    ((ident-in-role? sys nil) mockuser :guest) =not=> (throws)))
+    ((ident-authorize sys nil) mockuser :guest) =not=> (throws)))
 
 (defaction ac-current-user (current-user))
 (defaction ac-login (login input))
 (defaction ac-logout (logout))
 (defaction ac-encrypt (encrypt input))
 (defaction ac-check-hash (check-hash input "a"))
-(defaction ac-in-role? (in-role? input :guest))
+(defaction ac-authorize (authorize input :guest))
 
 (facts "defaction auth api works"
   (let [logged-in? (atom true)
@@ -303,6 +299,6 @@
     (ac-encrypt sys "a") => "a"
     (ac-check-hash sys "a") => true
     (ac-check-hash sys "b") => false
-    (ac-in-role? sys mockuser) => truthy
-    (ac-in-role? sys nil) => falsey))
+    (ac-authorize sys mockuser) => truthy
+    (ac-authorize sys nil) => falsey))
 

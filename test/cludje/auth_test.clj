@@ -10,6 +10,5 @@
     (current-user- auth) => mockuser
     (logout- auth) => anything
     (current-user- auth) => nil
-    (in-role?- auth mockuser :guest) => truthy
-    (in-role?- auth mockuser :a) => falsey
-    (in-role?- auth {} :guest) => falsey))
+    (authorize auth mockuser {}) => truthy
+    (authorize auth nil {}) => falsey))

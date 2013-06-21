@@ -16,7 +16,6 @@
     true)
   (encrypt- [self txt] txt)
   (check-hash- [self txt cypher] (= (encrypt self txt) cypher))
-  (in-role?- [self user role] 
-    (and (= mockuser (select-keys user (keys mockuser)))
-         (some #{role} mockroles))))
+  (authorize- [self user input] 
+    (= mockuser (select-keys user (keys mockuser)))))
 
