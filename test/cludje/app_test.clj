@@ -3,6 +3,7 @@
         cludje.test
         cludje.core
         cludje.dispatcher
+        cludje.renderer
         cludje.app))
 
 (facts "make-system initializes all subsystems"
@@ -27,6 +28,19 @@
       (stop-system sys) => anything
       (do-request req) => (throws))))
 
+(defaction ac-a1 {:a 1})
+
+(def json-req (assoc req :method :json :body {:a 1}))
+
+(fact "started app responds with json"
+  (let [dispatches {:default ac-a1}
+        dispatcher (->Dispatcher (atom {:default ac-a1}))
+        renderer (->JsonRenderer)
+        sysoverrides {:dispatcher dispatcher :renderer renderer}
+        sys (make-system sysoverrides)]
+    (start-system sys) => anything
+    (do-request json-req) => {:a 1}
+    (stop-system sys) => anything))
 
 (defaction ac-add1 
   ; Add 1 to items

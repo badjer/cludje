@@ -1,6 +1,7 @@
 (ns cludje.test
   (:use midje.sweet)
-  (:require [clj-http.client :as http]))
+  (:require [clj-http.client :as http]
+            [cheshire.core :as cheshire]))
 
 (defn has-keys [& kees]
   "A midje checker that returns truthy if the thing
@@ -25,8 +26,16 @@
     (and (contains? x :problems)
          ((apply has-keys kees) (:problems x)))))
 
+(defn ->json [x]
+  (cheshire/generate-string x))
+
+(defn <-json [s]
+  (cheshire/parse-string s true))
+
+
 (defn do-request [{:keys [url body method] :or {url "http://google.ca"
                                                 body ""
                                                 method :get}}]
   (case method 
-    :get (http/get url)))
+    :get (http/get url)
+    :json (<-json (:body (http/post url {:form-params body :content-type :json})))))

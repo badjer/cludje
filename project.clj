@@ -11,6 +11,7 @@
                  ;[compojure "1.1.5"]
                  [ring "1.1.8"]
                  [ring/ring-jetty-adapter "1.1.8"]
+                 [ring/ring-json "0.2.0"]
                  [hiccup "1.0.3"]]
   :source-paths ["src"]
   :test-paths ["test"]

@@ -10,5 +10,5 @@
 (defrecord JsonRenderer []
   IRenderer
   (render- [self request output]
-    (cheshire/generate-string output)))
+    {:body (cheshire/generate-string output)}))
 

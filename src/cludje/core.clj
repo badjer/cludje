@@ -1,7 +1,9 @@
 (ns cludje.core
   (:use cludje.types)
   (:require [clojure.string :as s]
-            [cludje.validation]))
+            [cludje.validation]
+            [ring.middleware.keyword-params :as kw]
+            [ring.middleware.json :as json]))
 
 ; ####
 ; Model protocols
@@ -255,7 +257,7 @@
 
 
 (defmacro defaction [nam & forms]
-  `(defn ~nam [~'system ~'request]
+  `(defn ~nam [~'system ~'input]
      (let [~'save (partial save (:db ~'system))
            ~'fetch (partial fetch (:db ~'system))
            ~'query (partial query (:db ~'system))
@@ -268,19 +270,18 @@
            ~'logout (partial logout (:auth ~'system))
            ~'encrypt (partial encrypt (:auth ~'system))
            ~'check-hash (partial check-hash (:auth ~'system))
-           ~'in-role? (partial in-role? (:auth ~'system))
-           ~'render (fn 
-                      ([out#] (render (:renderer ~'system) ~'request out#))
-                      ([] (render (:renderer ~'system) ~'request ~'request)))]
+           ~'in-role? (partial in-role? (:auth ~'system))]
        (try
          ~@forms
          (catch clojure.lang.ExceptionInfo ex#
            (let [problems# (:problems (ex-data ex#))]
-             (assoc ~'request :problems problems#)))))))
+             (assoc ~'input :problems problems#)))))))
 
 (defn make-ring-handler [{:keys [dispatcher renderer] :as system}] 
-  (fn [request] 
-    (when-let [action (get-action dispatcher request)] 
-      (let [output (action system request)] 
-        (render renderer request output)))))
-
+  (-> (fn [request] 
+        (when-let [action (get-action dispatcher request)] 
+          (let [input (:params request)
+                output (action system input)] 
+            (render renderer request output))))
+    (kw/wrap-keyword-params)
+    (json/wrap-json-params)))

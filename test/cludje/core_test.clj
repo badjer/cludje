@@ -139,14 +139,14 @@
     (send-mail mailer (dissoc mail :body)) => (throws)))
 
 
-(defaction ident request)
+(defaction ident input)
 (defaction ident-sys system)
 
 (fact "defaction base api functions"
   (let [sys {}] 
     (fact "defaction creates a method with 2 params" 
       (ident nil nil) =not=> (throws))
-    (fact "defaction has a request argument"
+    (fact "defaction has a input argument"
       (ident nil cog) => cog)
     (fact "defaction has a system argument"
       (ident-sys sys nil) => sys)))
@@ -173,7 +173,7 @@
     (fact "defaction defines a new delete"
       ((ident-delete sys nil) Cog nil) =not=> (throws))))
 
-(defaction add-cog (save Cog request))
+(defaction add-cog (save Cog input))
 
 (fact "defaction db api functionality"
   (let [db (->MemDb (atom {}))
@@ -187,8 +187,8 @@
       (add-cog sys {}) => (has-problems :price :amt))))
 
 (defaction add-person
-  (let [uid (save User request)
-        dt (assoc request :user_id uid)]
+  (let [uid (save User input)
+        dt (assoc input :user_id uid)]
     (save Person dt)))
 
 (def person {:name "a" :age 2})
@@ -214,7 +214,7 @@
     (fact "send-mail exists"
       ((ident-send-mail sys nil) mail) =not=> (throws))))
 
-(defaction send-an-email (send-mail request))
+(defaction send-an-email (send-mail input))
 
 (fact "defaction mail api works"
   (let [mailatom (atom [])
@@ -233,14 +233,14 @@
     (fact "log exists"
       ((ident-log sys nil) "hi") =not=> (throws))))
 
-(defaction log-request (log request))
+(defaction log-input (log input))
 
 (fact "defaction log api works"
   (let [logatom (atom [])
         logger (->MemLogger logatom)
         sys {:logger logger}]
     (fact "log executes"
-      (log-request sys "hi") => anything
+      (log-input sys "hi") => anything
       (count @logatom) => 1
       (first @logatom) => "hi")))
 
@@ -285,11 +285,11 @@
     ((ident-in-role? sys nil) mockuser :guest) =not=> (throws)))
 
 (defaction ac-current-user (current-user))
-(defaction ac-login (login request))
+(defaction ac-login (login input))
 (defaction ac-logout (logout))
-(defaction ac-encrypt (encrypt request))
-(defaction ac-check-hash (check-hash request "a"))
-(defaction ac-in-role? (in-role? request :guest))
+(defaction ac-encrypt (encrypt input))
+(defaction ac-check-hash (check-hash input "a"))
+(defaction ac-in-role? (in-role? input :guest))
 
 (facts "defaction auth api works"
   (let [logged-in? (atom true)
@@ -305,36 +305,4 @@
     (ac-check-hash sys "b") => false
     (ac-in-role? sys mockuser) => truthy
     (ac-in-role? sys nil) => falsey))
-
-; Dispatcher api
-; Currently, we're not making this easily available to
-; defaction, because I'm not sure it'd ever be needed
-
-(defaction ident-render render)
-
-(facts "defaction render api"
-  (let [rr (->LiteralRenderer)
-        sys {:renderer rr}]
-    (ident-render sys nil) =not=> (throws)
-    (ident-render sys nil) => fn?))
-
-(defaction ac-render1 (render {:a 2}))
-(defaction ac-render0 (render))
-
-(facts "defaction render api works"
-  (let [rr (->LiteralRenderer)
-        sys {:renderer rr}]
-    (ac-render1 sys {:a 1}) => {:a 2}
-    (ac-render0 sys {:a 1}) => {:a 1}))
-
-(defaction ac-a1 {:a 1})
-    
-(facts "make-ring-handler"
-  (let [rr (->LiteralRenderer)
-        disp (->Dispatcher (atom {:ident ident :a1 ac-a1}))
-        sys {:renderer rr :dispatcher disp}
-        handler (make-ring-handler sys)]
-    handler => fn?
-    (handler {:action :ident}) => {:action :ident}
-    (handler {:action :a1}) => {:a 1}))
 

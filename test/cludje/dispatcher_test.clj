@@ -40,4 +40,3 @@
     (get-action- disp {:action :index}) =not=> nil?
     ; Try executing the action to make sure we actually got it
     ((get-action- disp {:action :index}) nil {:a 1}) => {:a 1}))
-
