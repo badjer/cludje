@@ -26,14 +26,12 @@
   ([opts]
    (merge (default-system) opts)))
 
-
 (defn start-system [sys]
   (let [handler (make-ring-handler sys)]
     ; Set the server handler
     (set-handler (:server sys) handler)
-    (doseq [[kee subsys] sys]
+    (doseq [subsys (vals sys)]
       (when (extends? IStartable (type subsys))
-        (println (str "Starting " kee))
         (start subsys)))
     sys))
 
@@ -41,6 +39,7 @@
   (doseq [subsys (vals sys)]
     (when (extends? IStartable (type subsys))
       (stop subsys))))
+
 
 ;(defmodel User {:email Email :password Password :name Str}
   ;:require [:email :password])
