@@ -44,6 +44,7 @@
     (do-request req) => (contains {:body "1"})
     (do-request req) => (contains {:body "2"})
     (stop-system sys) => anything
+    (do-request req) => (throws)
     (start-system sys) => anything
     (do-request req) => (contains {:body "3"})
     (stop-system sys) => anything))
