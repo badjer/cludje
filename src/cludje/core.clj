@@ -232,6 +232,25 @@
 (defn authorize [auth user input]
   (authorize- auth user input))
 
+(defn arity [f]
+  (let [m (first (.getDeclaredMethods (class f)))
+        p (.getParameterTypes m)]
+    (alength p)))
+
+(defn- match-ability? [auth-action auth-model expr]
+  `(let [~(symbol (s/lower-case (name auth-model))) (make ~auth-model ~'input)]
+    (and (= ~'action ~auth-action) 
+          (= ~'model ~auth-model) 
+          ~expr)))
+
+(defmacro defability [nam & forms]; auth-action auth-model check-fn]
+  (let [calls (for [[auth-action auth-model expr] (partition 3 forms)]
+                (match-ability? auth-action auth-model expr))]
+    `(defn ~nam [~'action ~'model ~'user ~'input]
+       (or ~@calls))))
+
+
+(defn can? [auth action model m])
 
 ; Dispatcher api
 (defn get-action [dispatcher request]

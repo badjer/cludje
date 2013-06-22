@@ -302,3 +302,39 @@
     (ac-authorize sys mockuser) => truthy
     (ac-authorize sys nil) => falsey))
 
+(defability ab-cog
+  :add Cog (= (:amt input) 1))
+
+(facts "defability"
+  (ab-cog :add Cog nil {:amt 1}) => true
+  (ab-cog :add Cog nil {:amt 2}) => false
+  (ab-cog :remove Cog nil {:amt 1}) => false
+  (ab-cog :add Cog nil {}) => false)
+
+(defn is-amt-1 [x] (= 1 (:amt x)))
+
+(defability ab-cog-var
+  :add Cog (is-amt-1 cog))
+
+(facts "ability with var"
+  (ab-cog-var :add Cog nil {:amt 1 :price 1}) => true
+  (ab-cog-var :add Cog nil {:amt 2 :price 1}) => false
+  (ab-cog-var :remove Cog nil {:amt 1 :price 1}) => false
+  (facts "ability with var doesn't need the entire object supplied"
+    ;That will be the responsibility of validation
+    (ab-cog-var :add Cog nil {:amt 1}) => true
+    (ab-cog-var :add Cog nil {:amt 2}) => false))
+
+(defability ab-cog-person
+  :add Cog (is-amt-1 cog)
+  :add Person (= (:name person) (:username user)))
+
+(facts "defability with multiple permissions"
+  (ab-cog-person :add Cog nil {:amt 1}) => true
+  (ab-cog-person :add Cog nil {:amt 2}) => false
+  (ab-cog-person :remove Cog nil {:amt 1}) => false
+  (ab-cog-person :add Person {:username "a"} {:name "a"}) => true
+  (ab-cog-person :add Person {:username "a"} {:name "b"}) => false
+  (ab-cog-person :remove Person {:username "a"} {:name "a"}) => false
+  (ab-cog-person :add Person {:username "b"} {:name "a"}) => false)
+
