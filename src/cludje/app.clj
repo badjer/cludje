@@ -14,7 +14,7 @@
   {:db (->MemDb (atom {}))
    :mailer (->MemMailer (atom []))
    :logger (->MemLogger (atom []))
-   :auth (->MockAuth (atom false))
+   :auth (make-MockAuth (atom false))
    :dispatcher (->Dispatcher (atom {:default default-action}))
    :renderer (->LiteralRenderer)
    :server (->JettyServer 8888 (atom nil) (atom nil))})

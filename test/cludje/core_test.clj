@@ -246,7 +246,7 @@
 
 
 (facts "login"
-  (let [auth (->MockAuth (atom false))]
+  (let [auth (make-MockAuth false)]
     (fact "login works with extra fields"
       (current-user auth) => nil
       (login auth (assoc mockuser :fluff 1)) => anything
@@ -257,11 +257,11 @@
       (login auth (dissoc mockuser :username)) => (throws))))
 
 (facts "authorize"
-  (let [auth (->MockAuth (atom false))]
-    (authorize auth mockuser nil) => truthy
-    (authorize auth mockuser {}) => truthy
-    (authorize auth nil nil) => falsey
-    (authorize auth nil {}) => falsey))
+  (let [auth (make-MockAuth false)]
+    (authorize auth :action :model mockuser nil) => truthy
+    (authorize auth :action :model mockuser {}) => truthy
+    (authorize auth :action :model nil nil) => falsey
+    (authorize auth :action :model nil {}) => falsey))
 
 (defaction ident-current-user current-user)
 (defaction ident-login login)
@@ -269,38 +269,45 @@
 (defaction ident-encrypt encrypt)
 (defaction ident-check-hash check-hash)
 (defaction ident-authorize authorize)
+(defaction ident-can? can?)
 
 (facts "defaction auth api"
-  (let [auth (->MockAuth (atom false))
+  (let [auth (make-MockAuth false)
         sys {:auth auth}]
     ((ident-current-user sys nil)) =not=> (throws)
     ((ident-login sys nil) mockuser) =not=> (throws)
     ((ident-logout sys nil)) =not=> (throws)
     ((ident-encrypt sys nil) "a") =not=> (throws)
     ((ident-check-hash sys nil) "a" "a") =not=> (throws)
-    ((ident-authorize sys nil) mockuser :guest) =not=> (throws)))
+    ((ident-authorize sys nil) :action :model mockuser :guest) =not=> (throws)
+    ((ident-can? sys nil) :action :model {}) =not=> (throws)))
 
 (defaction ac-current-user (current-user))
 (defaction ac-login (login input))
 (defaction ac-logout (logout))
 (defaction ac-encrypt (encrypt input))
 (defaction ac-check-hash (check-hash input "a"))
-(defaction ac-authorize (authorize input :guest))
+(defaction ac-authorize (authorize :action Cog user input))
+(defaction ac-can? (can? :action Cog input))
 
 (facts "defaction auth api works"
-  (let [logged-in? (atom true)
-        auth (->MockAuth logged-in?)
+  (let [auth (make-MockAuth false)
         sys {:auth auth}]
     (ac-login sys mockuser) =not=> has-problems?
-    @logged-in? => true
     (ac-current-user sys nil) => mockuser
     (ac-logout sys nil) =not=> has-problems?
-    @logged-in? => false
+    (ac-current-user sys nil) => nil
     (ac-encrypt sys "a") => "a"
     (ac-check-hash sys "a") => true
     (ac-check-hash sys "b") => false
-    (ac-authorize sys mockuser) => truthy
-    (ac-authorize sys nil) => falsey))
+    ; We require the user to be logged in for the rest of the tests
+    (ac-login sys mockuser) => anything
+    (ac-authorize sys nil) => truthy
+    (ac-can? sys nil) => truthy
+    ; We require the user to be not logged in for the rest of the tests
+    (ac-logout sys nil) => anything
+    (ac-authorize sys nil) => falsey
+    (ac-can? sys nil) => falsey))
 
 (defability ab-cog
   :add Cog (= (:amt input) 1))
@@ -337,4 +344,11 @@
   (ab-cog-person :add Person {:username "a"} {:name "b"}) => false
   (ab-cog-person :remove Person {:username "a"} {:name "a"}) => false
   (ab-cog-person :add Person {:username "b"} {:name "a"}) => false)
+
+(facts "auth works with defability"
+  (let [auth (make-MockAuth true ab-cog)]
+    (can? auth :add Cog {:amt 1}) => true
+    (can? auth :delete Cog {:amt 1}) => falsey))
+
+  
 

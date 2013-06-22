@@ -128,7 +128,7 @@
   (logout- [self])
   (encrypt- [self txt] "Encrypt a string")
   (check-hash- [self txt cypher] "Test if the encrypted txt matches cypher")
-  (authorize- [self user input] "Is the user allowed to do this?"))
+  (authorize- [self action model user input] "Is the user allowed to do this?"))
 
 (defprotocol IDispatcher
   (get-action- [self request] "Get the action to execute"))
@@ -229,8 +229,8 @@
   (encrypt- auth txt))
 (defn check-hash [auth txt cypher]
   (check-hash- auth txt cypher))
-(defn authorize [auth user input]
-  (authorize- auth user input))
+(defn authorize [auth action model user input]
+  (authorize- auth action model user input))
 
 (defn arity [f]
   (let [m (first (.getDeclaredMethods (class f)))
@@ -243,14 +243,16 @@
           (= ~'model ~auth-model) 
           ~expr)))
 
-(defmacro defability [nam & forms]; auth-action auth-model check-fn]
+(defmacro defability [nam & forms]
   (let [calls (for [[auth-action auth-model expr] (partition 3 forms)]
                 (match-ability? auth-action auth-model expr))]
     `(defn ~nam [~'action ~'model ~'user ~'input]
        (or ~@calls))))
 
 
-(defn can? [auth action model m])
+(defn can? [auth action model m]
+  (let [user (current-user auth)]
+    (authorize auth action model user m)))
 
 ; Dispatcher api
 (defn get-action [dispatcher request]
@@ -277,7 +279,8 @@
            ~'logout (partial logout (:auth ~'system))
            ~'encrypt (partial encrypt (:auth ~'system))
            ~'check-hash (partial check-hash (:auth ~'system))
-           ~'authorize (partial authorize (:auth ~'system))]
+           ~'authorize (partial authorize (:auth ~'system))
+           ~'can? (partial can? (:auth ~'system))]
        (try
          ~@forms
          (catch clojure.lang.ExceptionInfo ex#
