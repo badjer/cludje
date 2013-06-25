@@ -192,7 +192,7 @@
     (save Person dt)))
 
 (def person {:name "a" :age 2})
-(def user {:name "a" :email "a@b.cd" :pwd "123"})
+(def usr {:name "a" :email "a@b.cd" :pwd "123"})
 
 (fact "complex db defaction"
   (let [db (->MemDb (atom {}))
@@ -200,7 +200,7 @@
     (fact "exception in let returns problems"
       (add-person sys {}) => (has-problems :name))
     (fact "multiple operations work"
-      (add-person sys (merge person user)) =not=> has-problems?
+      (add-person sys (merge person usr)) =not=> has-problems?
       (count (query db User nil)) => 1
       (count (query db Person nil)) => 1)))
 
@@ -244,6 +244,8 @@
       (count @logatom) => 1
       (first @logatom) => "hi")))
 
+(fact "current-user works with nil as :auth"
+  (current-user nil) => nil)
 
 (facts "login"
   (let [auth (make-MockAuth false)]
@@ -270,6 +272,7 @@
 (defaction ident-check-hash check-hash)
 (defaction ident-authorize authorize)
 (defaction ident-can? can?)
+(defaction ident-user user)
 
 (facts "defaction auth api"
   (let [auth (make-MockAuth false)
@@ -280,7 +283,8 @@
     ((ident-encrypt sys nil) "a") =not=> (throws)
     ((ident-check-hash sys nil) "a" "a") =not=> (throws)
     ((ident-authorize sys nil) :action :model mockuser :guest) =not=> (throws)
-    ((ident-can? sys nil) :action :model {}) =not=> (throws)))
+    ((ident-can? sys nil) :action :model {}) =not=> (throws)
+    (ident-user sys nil) =not=> (throws)))
 
 (defaction ac-current-user (current-user))
 (defaction ac-login (login input))
@@ -289,6 +293,7 @@
 (defaction ac-check-hash (check-hash input "a"))
 (defaction ac-authorize (authorize :action Cog user input))
 (defaction ac-can? (can? :action Cog input))
+(defaction ac-user user)
 
 (facts "defaction auth api works"
   (let [auth (make-MockAuth false)
@@ -302,10 +307,12 @@
     (ac-check-hash sys "b") => false
     ; We require the user to be logged in for the rest of the tests
     (ac-login sys mockuser) => anything
-    (ac-authorize sys nil) => truthy
+    (ac-user sys nil) => mockuser
+    (ac-authorize sys {:b 1}) => true
     (ac-can? sys nil) => truthy
     ; We require the user to be not logged in for the rest of the tests
     (ac-logout sys nil) => anything
+    (ac-user sys nil) => nil
     (ac-authorize sys nil) => falsey
     (ac-can? sys nil) => falsey))
 

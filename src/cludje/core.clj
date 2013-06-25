@@ -219,7 +219,8 @@
 (defmodel AuthUser {:username Str :pwd Password} :no-key true)
 
 (defn current-user [auth]
-  (current-user- auth))
+  (when auth
+    (current-user- auth)))
 (defn login [auth user]
   (let [parsed (parse-model AuthUser user)]
     (login- auth parsed)))
@@ -280,7 +281,8 @@
            ~'encrypt (partial encrypt (:auth ~'system))
            ~'check-hash (partial check-hash (:auth ~'system))
            ~'authorize (partial authorize (:auth ~'system))
-           ~'can? (partial can? (:auth ~'system))]
+           ~'can? (partial can? (:auth ~'system))
+           ~'user (~'current-user)]
        (try
          ~@forms
          (catch clojure.lang.ExceptionInfo ex#
