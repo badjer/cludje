@@ -245,6 +245,7 @@
           ~expr)))
 
 (defmacro defability [nam & forms]
+  "Creates a function that can be used to authorize access to a model"
   (let [calls (for [[auth-action auth-model expr] (partition 3 forms)]
                 (match-ability? auth-action auth-model expr))]
     `(defn ~nam [~'action ~'model ~'user ~'input]
