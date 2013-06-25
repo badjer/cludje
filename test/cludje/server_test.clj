@@ -37,4 +37,16 @@
     (do-request json-req) => {:a 1}
     (stop serv) => anything))
 
+(def res-request {:url "http://localhost:8099/css/test.css"})
+(facts "JettyServer serves static files"
+  (let [serv (->JettyServer 8099 (atom nil) (atom nil))
+        sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
+             :renderer (->JsonRenderer)}
+        handler (make-ring-handler sys)]
+    (set-handler serv handler) => anything
+    (start serv) => anything
+    (:body (do-request res-request)) => "hello world\n"
+    (stop serv) => anything))
+
+
 

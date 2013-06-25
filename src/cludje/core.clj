@@ -2,6 +2,8 @@
   (:use cludje.types)
   (:require [clojure.string :as s]
             [cludje.validation]
+            [ring.middleware.resource :as resource]
+            [ring.middleware.file-info :as file-info]
             [ring.middleware.keyword-params :as kw]
             [ring.middleware.json :as json]))
 
@@ -146,8 +148,8 @@
 
 ; TODO: Do something with this
 ;(defprotocol IPersistent
-  ;(get-state [self])
-  ;(init-state [self state]))
+;(get-state [self])
+;(init-state [self state]))
 
 
 
@@ -240,7 +242,7 @@
 
 (defn- match-ability? [auth-action auth-model expr]
   `(let [~(symbol (s/lower-case (name auth-model))) (make ~auth-model ~'input)]
-    (and (= ~'action ~auth-action) 
+     (and (= ~'action ~auth-action) 
           (= ~'model ~auth-model) 
           ~expr)))
 
@@ -296,5 +298,7 @@
           (let [input (:params request)
                 output (action system input)] 
             (render renderer request output))))
-    (kw/wrap-keyword-params)
-    (json/wrap-json-params)))
+      (resource/wrap-resource "public")
+      (file-info/wrap-file-info) 
+      (kw/wrap-keyword-params) 
+      (json/wrap-json-params)))
