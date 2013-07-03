@@ -204,6 +204,17 @@
       (count (query db User nil)) => 1
       (count (query db Person nil)) => 1)))
 
+(defaction add-2-persons
+  (save Person input)
+  (save Person input))
+
+(fact "defaction runs all operations in body (defaction has implicit do)"
+  (let [dba (atom {})
+        db (->MemDb dba)
+        sys {:db db}]
+    (add-2-persons sys person) => anything
+    (count (query db Person nil)) => 2))
+
 
 (defaction ident-send-mail send-mail)
 
@@ -355,6 +366,7 @@
 (facts "auth works with defability"
   (let [auth (make-MockAuth true ab-cog)]
     (can? auth :add Cog {:amt 1}) => true
+    (can? auth :add Cog {:amt 2}) => falsey
     (can? auth :delete Cog {:amt 1}) => falsey))
 
   
