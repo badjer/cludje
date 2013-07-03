@@ -8,6 +8,5 @@ angular.module('mainapp', [], function($routeProvider, $locationProvider){
 });
 
 function MainCntl($scope){
-	$scope.data = {}
+	$scope.data = {};
 };
-
