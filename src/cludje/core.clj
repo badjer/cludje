@@ -235,10 +235,11 @@
 (defn authorize [auth action model user input]
   (authorize- auth action model user input))
 
-(defn arity [f]
-  (let [m (first (.getDeclaredMethods (class f)))
-        p (.getParameterTypes m)]
-    (alength p)))
+;(defn arity [f]
+  ;(let [m (first (.getDeclaredMethods (class f)))
+        ;p (.getParameterTypes m)]
+    ;(alength p)))
+
 
 (defn- match-ability? [auth-action auth-model expr]
   `(let [~(symbol (s/lower-case (name auth-model))) (make ~auth-model ~'input)]
