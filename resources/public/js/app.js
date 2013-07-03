@@ -7,6 +7,14 @@ angular.module('mainapp', [], function($routeProvider, $locationProvider){
 	});
 });
 
-function MainCntl($scope){
+function MainCntl($scope, $http){
 	$scope.data = {};
+	$scope.action = function(actname){
+		// Do some ajax here
+		$http.post('/', $scope.data)
+			.success(function(data){
+				$scope.data = data;
+				console.log(data);
+			});
+	};
 };
