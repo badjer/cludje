@@ -10,21 +10,23 @@
 
 (defaction default-action {:body "hello world"})
 
-(defn default-system []
-  {:db (->MemDb (atom {}))
-   :mailer (->MemMailer (atom []))
-   :logger (->MemLogger (atom []))
-   :auth (make-MockAuth (atom false))
-   :dispatcher (->Dispatcher (atom {:default default-action}))
-   :renderer (->LiteralRenderer)
-   :server (->JettyServer 8888 (atom nil) (atom nil))})
+(defn default-system 
+  ([] (default-system {}))
+  ([opts]
+   {:db (->MemDb (atom {}))
+    :mailer (->MemMailer (atom []))
+    :logger (->MemLogger (atom []))
+    :auth (make-MockAuth (atom false))
+    :dispatcher (->Dispatcher (atom {:default default-action}))
+    :renderer (->LiteralRenderer)
+    :server (->JettyServer (get opts :port 8888) (atom nil) (atom nil))}))
 
 (defn make-system 
   "Create a system. Use defaults if none provided"
   ([]
    (make-system {}))
   ([opts]
-   (merge (default-system) opts)))
+   (merge (default-system opts) opts)))
 
 (defn start-system [sys]
   (let [handler (make-ring-handler sys)]
@@ -82,20 +84,20 @@
 ;    (auth! :add timeentry)))
 ;
 ;(defmodel User {:email Email :password Password :name Str}
-  ;:require [:email :password])
+;:require [:email :password])
 ;
 ;(defmodel Household 
-  ;{:attendee Str :maxguests Int :attending Bool :user_id Int}
-  ;:require [:attendee :maxguests :user_id])
+;{:attendee Str :maxguests Int :attending Bool :user_id Int}
+;:require [:attendee :maxguests :user_id])
 ;
 ;(defmodel Guest {:name Str :household_id Int})
 ;
 ;(defaction AddHousehold
-  ;(let [uid (save User request)]
-    ;(save Household (assoc request :user_id uid))))
+;(let [uid (save User request)]
+;(save Household (assoc request :user_id uid))))
 ;
 ;(defaction AddGuest
-  ;(save Guest request))
+;(save Guest request))
 ;
 ;(defn start-app [])
 ;;

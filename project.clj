@@ -14,8 +14,9 @@
                  [hiccup "1.0.3"]]
   :source-paths ["src"]
   :test-paths ["test"]
-  :main cludje.app
-  :profiles {:dev {:dependencies [[lazytest "1.2.3"]
+  ;:main cludje.app
+  :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.3"] 
+                                  [lazytest "1.2.3"]
                                   [midje "1.5.1"]]
-                   :source-paths ["test"]
+                   :source-paths ["test" "dev"]
                    :plugins [[lein-midje "3.0.1"]]}})
