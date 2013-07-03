@@ -23,7 +23,7 @@
     (start-system sys) => anything
     ; Now that the system is started, we should be able to connect to it 
     (do-request req) => (contains {:status 200})
-    (do-request req) => (contains {:body "hello world"})
+    (do-request req) => (contains {:body "{\"msg\":\"hello world\"}"})
     (fact "stopping the system stops the webserver"
       (stop-system sys) => anything
       (do-request req) => (throws))))
@@ -51,7 +51,8 @@
 (facts "app db survives restart"
   (let [dispatches {:default ac-add1}
         dispatcher (->Dispatcher (atom {:default ac-add1}))
-        sysoverrides {:dispatcher dispatcher}
+        renderer (->LiteralRenderer)
+        sysoverrides {:dispatcher dispatcher :renderer renderer}
         sys (make-system sysoverrides)]
     (:dispatcher sys) => dispatcher
     (start-system sys) => anything

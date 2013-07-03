@@ -8,7 +8,7 @@
         cludje.renderer
         cludje.server))
 
-(defaction default-action {:body "hello world"})
+(defaction default-action {:msg "hello world"})
 
 (defn default-system 
   ([] (default-system {}))
@@ -18,7 +18,7 @@
     :logger (->MemLogger (atom []))
     :auth (make-MockAuth (atom false))
     :dispatcher (->Dispatcher (atom {:default default-action}))
-    :renderer (->LiteralRenderer)
+    :renderer (->JsonRenderer)
     :server (->JettyServer (get opts :port 8888) (atom nil) (atom nil))}))
 
 (defn make-system 
