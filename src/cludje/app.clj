@@ -37,6 +37,7 @@
         (start subsys)))
     sys))
 
+
 (defn stop-system [sys]
   (doseq [subsys (vals sys)]
     (when (extends? IStartable (type subsys))

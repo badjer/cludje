@@ -10,11 +10,9 @@
                  [clj-http "0.7.2"]
                  [ring "1.1.8"]
                  [ring/ring-jetty-adapter "1.1.8"]
-                 [ring/ring-json "0.2.0"]
-                 [hiccup "1.0.3"]]
+                 [ring/ring-json "0.2.0"]]
   :source-paths ["src"]
   :test-paths ["test"]
-  ;:main cludje.app
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.3"] 
                                   [lazytest "1.2.3"]
                                   [midje "1.5.1"]]
