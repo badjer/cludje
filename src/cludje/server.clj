@@ -12,7 +12,7 @@
                  (.setHandler (.getHandler server)))))
 
 (defn- jetty-opts [config]
-  (merge {:port 8080 :join? false
+  (merge {:port 8888 :join? false
           :configurator jetty-configurator}
          config))
 
@@ -29,3 +29,6 @@
   ;(get-state [self])
   ;(init-state [self state]))
 
+
+(defn jetty [port]
+  (->JettyServer port (atom nil) (atom nil)))

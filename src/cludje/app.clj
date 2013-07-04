@@ -8,18 +8,22 @@
         cludje.renderer
         cludje.server))
 
-(defaction default-action {:msg "hello world"})
+(defaction hello-world {:msg "hello world"})
+
+(defn controller-ns []
+  nil)
 
 (defn default-system 
   ([] (default-system {}))
-  ([opts]
+  ([{:keys [port controllers default-action] 
+     :or {port 8888 default-action hello-world} :as opts}]
    {:db (->MemDb (atom {}))
     :mailer (->MemMailer (atom []))
     :logger (->MemLogger (atom []))
     :auth (make-MockAuth (atom false))
-    :dispatcher (->Dispatcher (atom {:default default-action}))
+    :dispatcher (make-dispatcher controllers {:default default-action})
     :renderer (->JsonRenderer)
-    :server (->JettyServer (get opts :port 8888) (atom nil) (atom nil))}))
+    :server (jetty port)}))
 
 (defn make-system 
   "Create a system. Use defaults if none provided"

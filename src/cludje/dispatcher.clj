@@ -16,12 +16,18 @@
   ; (including all namespaces that start with it)
   ; and build them into a dictionary that we can 
   ; give to a Dispatcher
-  (let [ns-str (s/replace (name root-ns) #"^[^\.]+\." "")]
-    (load ns-str)
-    (into {} (for [[k v] (ns-publics root-ns)]
-               [(keyword (name k)) v]))
-  ))
+  (when root-ns
+    (let [ns-str (s/replace (name root-ns) #"^[^\.]+\." "")]
+      (load ns-str)
+      (into {} (for [[k v] (ns-publics root-ns)]
+                 [(keyword (name k)) v]))
+    )))
 
-(defn make-dispatcher [root-ns]
-  (let [dispatches (find-actions root-ns)]
-    (->Dispatcher (atom dispatches))))
+(defn make-dispatcher 
+  ([root-ns]
+   (make-dispatcher root-ns {}))
+  ([root-ns otherdispatches]
+    (let [dispatches (find-actions root-ns)
+          disp (merge dispatches otherdispatches)]
+      (->Dispatcher (atom disp)))))
+
