@@ -4,6 +4,7 @@
         cludje.mailer
         cludje.logger
         cludje.auth
+        cludje.login
         cludje.dispatcher
         cludje.renderer
         cludje.server))
@@ -20,7 +21,8 @@
    {:db (->MemDb (atom {}))
     :mailer (->MemMailer (atom []))
     :logger (->MemLogger (atom []))
-    :auth (make-MockAuth (atom false))
+    :login (make-MockLogin false)
+    :auth (make-auth mock-auth-fn)
     :dispatcher (make-dispatcher controller-ns {:default default-action})
     :renderer (->JsonRenderer)
     :server (jetty port)}))

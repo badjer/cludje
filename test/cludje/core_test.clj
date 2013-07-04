@@ -6,6 +6,7 @@
         cludje.logger
         cludje.mailer
         cludje.auth
+        cludje.login
         cludje.dispatcher
         cludje.renderer
         cludje.core))
@@ -259,56 +260,56 @@
   (current-user nil) => nil)
 
 (facts "login"
-  (let [auth (make-MockAuth false)]
+  (let [logn (make-MockLogin false)]
     (fact "login works with extra fields"
-      (current-user auth) => nil
-      (login auth (assoc mockuser :fluff 1)) => anything
-      (current-user auth) => mockuser)
+      (current-user logn) => nil
+      (login logn (assoc mockuser :fluff 1)) => anything
+      (current-user logn) => mockuser)
     (fact "login throws exception if missing fields"
-      (logout auth) => anything
-      (login auth (dissoc mockuser :pwd)) => (throws)
-      (login auth (dissoc mockuser :username)) => (throws))))
-
-(facts "authorize"
-  (let [auth (make-MockAuth false)]
-    (authorize auth :action :model mockuser nil) => truthy
-    (authorize auth :action :model mockuser {}) => truthy
-    (authorize auth :action :model nil nil) => falsey
-    (authorize auth :action :model nil {}) => falsey))
+      (logout logn) => anything
+      (login logn (dissoc mockuser :pwd)) => (throws)
+      (login logn (dissoc mockuser :username)) => (throws))))
 
 (defaction ident-current-user current-user)
 (defaction ident-login login)
 (defaction ident-logout logout)
 (defaction ident-encrypt encrypt)
 (defaction ident-check-hash check-hash)
-(defaction ident-authorize authorize)
-(defaction ident-can? can?)
 (defaction ident-user user)
 
-(facts "defaction auth api"
-  (let [auth (make-MockAuth false)
-        sys {:auth auth}]
+(facts "defaction login api"
+  (let [logn (make-MockLogin false)
+        sys {:login logn}]
     ((ident-current-user sys nil)) =not=> (throws)
     ((ident-login sys nil) mockuser) =not=> (throws)
     ((ident-logout sys nil)) =not=> (throws)
     ((ident-encrypt sys nil) "a") =not=> (throws)
     ((ident-check-hash sys nil) "a" "a") =not=> (throws)
-    ((ident-authorize sys nil) :action :model mockuser :guest) =not=> (throws)
-    ((ident-can? sys nil) :action :model {}) =not=> (throws)
     (ident-user sys nil) =not=> (throws)))
+
+(defaction ident-authorize authorize)
+(defaction ident-can? can?)
+
+(facts "defaction auth api"
+  (let [auth (make-auth mock-auth-fn)
+        sys {:auth auth}]
+    ((ident-authorize sys nil) :action :model mockuser :guest) =not=> (throws)
+    ((ident-can? sys nil) :action :model {}) =not=> (throws)))
+
+(defaction ac-authorize (authorize :action Cog user input))
+(defaction ac-can? (can? :action Cog input))
 
 (defaction ac-current-user (current-user))
 (defaction ac-login (login input))
 (defaction ac-logout (logout))
 (defaction ac-encrypt (encrypt input))
 (defaction ac-check-hash (check-hash input "a"))
-(defaction ac-authorize (authorize :action Cog user input))
-(defaction ac-can? (can? :action Cog input))
 (defaction ac-user user)
 
-(facts "defaction auth api works"
-  (let [auth (make-MockAuth false)
-        sys {:auth auth}]
+(facts "defaction login and auth api works"
+  (let [logn (make-MockLogin false)
+        auth (make-auth mock-auth-fn)
+        sys {:login logn :auth auth}]
     (ac-login sys mockuser) =not=> has-problems?
     (ac-current-user sys nil) => mockuser
     (ac-logout sys nil) =not=> has-problems?
@@ -335,6 +336,14 @@
   (ab-cog :add Cog nil {:amt 2}) => false
   (ab-cog :remove Cog nil {:amt 1}) => false
   (ab-cog :add Cog nil {}) => false)
+  
+(defability ab-all-cog
+  :add Cog true)
+
+(facts "defability with no filter"
+  (ab-all-cog :add Cog nil {:amt 1}) => true
+  (ab-all-cog :add Cog nil nil) => true
+  (ab-all-cog :remove Cog nil {:amt 1}) => false)
 
 (defn is-amt-1 [x] (= 1 (:amt x)))
 
@@ -364,10 +373,11 @@
   (ab-cog-person :add Person {:username "b"} {:name "a"}) => false)
 
 (facts "auth works with defability"
-  (let [auth (make-MockAuth true ab-cog)]
-    (can? auth :add Cog {:amt 1}) => true
-    (can? auth :add Cog {:amt 2}) => falsey
-    (can? auth :delete Cog {:amt 1}) => falsey))
+  (let [auth (make-auth ab-cog)
+        logn (make-MockLogin true)]
+    (can? auth logn :add Cog {:amt 1}) => true
+    (can? auth logn :add Cog {:amt 2}) => falsey
+    (can? auth logn :delete Cog {:amt 1}) => falsey))
 
   
 

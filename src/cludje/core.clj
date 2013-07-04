@@ -123,13 +123,17 @@
   "Represents logging"
   (log- [self message] "Log a message"))
 
-(defprotocol IAuth
-  "Contols login and permissions"
+(defprotocol ILogin
+  "Contols login"
   (current-user- [self] "Returns the currently logged-in user.")
   (login- [self user])
   (logout- [self])
   (encrypt- [self txt] "Encrypt a string")
   (check-hash- [self txt cypher] "Test if the encrypted txt matches cypher")
+  )
+
+(defprotocol IAuth
+  "Controls permissions"
   (authorize- [self action model user input] "Is the user allowed to do this?"))
 
 (defprotocol IDispatcher
@@ -218,13 +222,13 @@
 
 
 ; Auth api
-(defmodel AuthUser {:username Str :pwd Password} :no-key true)
+(defmodel LoginUser {:username Str :pwd Password} :no-key true)
 
 (defn current-user [auth]
   (when auth
     (current-user- auth)))
 (defn login [auth user]
-  (let [parsed (parse-model AuthUser user)]
+  (let [parsed (parse-model LoginUser user)]
     (login- auth parsed)))
 (defn logout [auth]
   (logout- auth))
@@ -232,13 +236,14 @@
   (encrypt- auth txt))
 (defn check-hash [auth txt cypher]
   (check-hash- auth txt cypher))
+
 (defn authorize [auth action model user input]
   (authorize- auth action model user input))
 
 ;(defn arity [f]
-  ;(let [m (first (.getDeclaredMethods (class f)))
-        ;p (.getParameterTypes m)]
-    ;(alength p)))
+;(let [m (first (.getDeclaredMethods (class f)))
+;p (.getParameterTypes m)]
+;(alength p)))
 
 
 (defn- match-ability? [auth-action auth-model expr]
@@ -251,12 +256,14 @@
   "Creates a function that can be used to authorize access to a model"
   (let [calls (for [[auth-action auth-model expr] (partition 3 forms)]
                 (match-ability? auth-action auth-model expr))]
-    `(defn ~nam [~'action ~'model ~'user ~'input]
-       (or ~@calls))))
+    `(do
+       (defn ~nam [~'action ~'model ~'user ~'input]
+         (or ~@calls))
+       (alter-meta! (var ~nam) assoc :ability true))))
 
 
-(defn can? [auth action model m]
-  (let [user (current-user auth)]
+(defn can? [auth logn action model m]
+  (let [user (current-user logn)]
     (authorize auth action model user m)))
 
 ; Dispatcher api
@@ -272,27 +279,27 @@
 
 (defmacro defaction [nam & forms]
   `(do
-  (defn ~nam [~'system ~'input]
-     (let [~'save (partial save (:db ~'system))
-           ~'fetch (partial fetch (:db ~'system))
-           ~'query (partial query (:db ~'system))
-           ~'write (partial write (:db ~'system))
-           ~'delete (partial delete (:db ~'system))
-           ~'send-mail (partial send-mail (:mailer ~'system))
-           ~'log (partial log (:logger ~'system))
-           ~'current-user (partial current-user (:auth ~'system))
-           ~'login (partial login (:auth ~'system))
-           ~'logout (partial logout (:auth ~'system))
-           ~'encrypt (partial encrypt (:auth ~'system))
-           ~'check-hash (partial check-hash (:auth ~'system))
-           ~'authorize (partial authorize (:auth ~'system))
-           ~'can? (partial can? (:auth ~'system))
-           ~'user (~'current-user)]
-       (try
-         ~@forms
-         (catch clojure.lang.ExceptionInfo ex#
-           (let [problems# (:problems (ex-data ex#))]
-             (assoc ~'input :problems problems#)))))) 
+     (defn ~nam [~'system ~'input]
+       (let [~'save (partial save (:db ~'system))
+             ~'fetch (partial fetch (:db ~'system))
+             ~'query (partial query (:db ~'system))
+             ~'write (partial write (:db ~'system))
+             ~'delete (partial delete (:db ~'system))
+             ~'send-mail (partial send-mail (:mailer ~'system))
+             ~'log (partial log (:logger ~'system))
+             ~'current-user (partial current-user (:login ~'system))
+             ~'login (partial login (:login ~'system))
+             ~'logout (partial logout (:login ~'system))
+             ~'encrypt (partial encrypt (:login ~'system))
+             ~'check-hash (partial check-hash (:login ~'system))
+             ~'authorize (partial authorize (:auth ~'system))
+             ~'can? (partial can? (:auth ~'system) (:login ~'system))
+             ~'user (~'current-user)]
+         (try
+           ~@forms
+           (catch clojure.lang.ExceptionInfo ex#
+             (let [problems# (:problems (ex-data ex#))]
+               (assoc ~'input :problems problems#)))))) 
      (alter-meta! (var ~nam) assoc :action true)))
 
 (defn make-ring-handler [{:keys [dispatcher renderer] :as system}] 
