@@ -15,9 +15,11 @@
 (fact "find-abilities"
   (let [abs (find-abilities 'cludje.testcontrollers)
         authfn (apply make-auth-fn abs)]
-    (count abs) => 1
+    (count abs) => 2
     authfn => fn?
     ((first abs) :add Foo nil 1) => truthy
     (authfn :add Foo nil 1) => truthy
-    (authfn :delete Foo nil 1) => falsey
+    (fact "second ability in controller also works"
+      (authfn :remove Foo nil 1) => truthy)
+    (authfn :alter Foo nil 1) => falsey
     (authfn :add Bar nil 1) => falsey))
