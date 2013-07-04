@@ -9,6 +9,8 @@
 
 (def system nil)
 
+(def sys-opts {:port 8123 :controller-ns 'user})
+
 (defn init
   "Constructs the current development system."
   []

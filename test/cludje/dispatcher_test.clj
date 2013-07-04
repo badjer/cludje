@@ -27,6 +27,10 @@
     ((:index find-actions 'cludje.testcontrollers)
      nil {:a 1}) => {:a 1}))
 
+(fact "find-actions only finds actions, not other fns"
+  (find-actions 'cludje.testcontrollers) => (just-keys :index))
+
+
 (future-fact "find-actions finds things in sub-namespaces"
   (let [dis (find-actons 'cludje.testcontrollers)]
     ; This isn't super urgent - do it later

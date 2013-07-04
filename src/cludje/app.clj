@@ -15,13 +15,13 @@
 
 (defn default-system 
   ([] (default-system {}))
-  ([{:keys [port controllers default-action] 
+  ([{:keys [port controller-ns default-action] 
      :or {port 8888 default-action hello-world} :as opts}]
    {:db (->MemDb (atom {}))
     :mailer (->MemMailer (atom []))
     :logger (->MemLogger (atom []))
     :auth (make-MockAuth (atom false))
-    :dispatcher (make-dispatcher controllers {:default default-action})
+    :dispatcher (make-dispatcher controller-ns {:default default-action})
     :renderer (->JsonRenderer)
     :server (jetty port)}))
 

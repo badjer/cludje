@@ -11,6 +11,10 @@
         default))))
 
 
+(defn is-action? [vr]
+  (let [m (meta vr)]
+    (get m :action)))
+
 (defn find-actions [root-ns]
   ; Find all the defactions under the specified namespace
   ; (including all namespaces that start with it)
@@ -20,7 +24,8 @@
     (let [ns-str (s/replace (name root-ns) #"^[^\.]+\." "")]
       (load ns-str)
       (into {} (for [[k v] (ns-publics root-ns)]
-                 [(keyword (name k)) v]))
+                 (when (is-action? v)
+                   [(keyword (name k)) v])))
     )))
 
 (defn make-dispatcher 

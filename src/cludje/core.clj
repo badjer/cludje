@@ -271,7 +271,8 @@
 
 
 (defmacro defaction [nam & forms]
-  `(defn ~nam [~'system ~'input]
+  `(do
+  (defn ~nam [~'system ~'input]
      (let [~'save (partial save (:db ~'system))
            ~'fetch (partial fetch (:db ~'system))
            ~'query (partial query (:db ~'system))
@@ -291,7 +292,8 @@
          ~@forms
          (catch clojure.lang.ExceptionInfo ex#
            (let [problems# (:problems (ex-data ex#))]
-             (assoc ~'input :problems problems#)))))))
+             (assoc ~'input :problems problems#)))))) 
+     (alter-meta! (var ~nam) assoc :action true)))
 
 (defn make-ring-handler [{:keys [dispatcher renderer] :as system}] 
   (-> (fn [request] 
