@@ -1,4 +1,5 @@
 (ns user
+  (:use cludje.core)
   (:require [clojure.java.io :as io]
             [clojure.string :as s]
             [clojure.pprint :refer (pprint)]
@@ -20,13 +21,13 @@
 (defn start
   "Starts the current development system."
   []
-  (alter-var-root #'system app/start-system))
+  (alter-var-root #'system start-system))
 
 (defn stop
   "Shuts down and destroys the current development system."
   []
   (alter-var-root #'system
-    (fn [s] (when s (app/stop-system s)))))
+    (fn [s] (when s (stop-system s)))))
 
 (defn go
   "Initializes the current development system and starts it running."

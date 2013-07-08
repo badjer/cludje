@@ -11,17 +11,17 @@
 
 (facts "JettyServer"
   (let [serv (->JettyServer 8099 (atom identity) (atom nil))]
-    (start serv) => anything 
+    (start- serv) => anything 
     (do-request req) => (contains {:status 200})
-    (stop serv) => anything
+    (stop- serv) => anything
     (do-request) => (throws)))
 
-(facts "JettyServer set-handler works"
+(facts "JettyServer set-handler- works"
   (let [serv (->JettyServer 8099 (atom nil) (atom nil))]
-    (set-handler serv identity) => anything
-    (start serv) => anything
+    (set-handler- serv identity) => anything
+    (start- serv) => anything
     (do-request req) => (contains {:status 200})
-    (stop serv) => anything))
+    (stop- serv) => anything))
 
 (defaction ac-echo input)
 
@@ -32,10 +32,10 @@
         sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
              :renderer (->JsonRenderer)}
         handler (make-ring-handler sys)]
-    (set-handler serv handler) => anything
-    (start serv) => anything
+    (set-handler- serv handler) => anything
+    (start- serv) => anything
     (do-request json-req) => {:a 1}
-    (stop serv) => anything))
+    (stop- serv) => anything))
 
 (def res-request {:url "http://localhost:8099/css/test.css"})
 (facts "JettyServer serves static files"
@@ -43,10 +43,10 @@
         sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
              :renderer (->JsonRenderer)}
         handler (make-ring-handler sys)]
-    (set-handler serv handler) => anything
-    (start serv) => anything
+    (set-handler- serv handler) => anything
+    (start- serv) => anything
     (:body (do-request res-request)) => "hello world\n"
-    (stop serv) => anything))
+    (stop- serv) => anything))
 
 
 

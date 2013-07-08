@@ -18,12 +18,12 @@
 
 (defrecord JettyServer [port handler server]
   IServer
-  (set-handler [self newhandler]
+  (set-handler- [self newhandler]
     (reset! handler newhandler))
   IStartable
-  (start [self]
+  (start- [self]
     (reset! server (jetty/run-jetty @handler (jetty-opts self))))
-  (stop [self]
+  (stop- [self]
     (when @server (.stop @server))))
   ;IPersistent
   ;(get-state [self])

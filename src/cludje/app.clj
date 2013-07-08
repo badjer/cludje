@@ -34,20 +34,6 @@
   ([opts]
    (merge (default-system opts) opts)))
 
-(defn start-system [sys]
-  (let [handler (make-ring-handler sys)]
-    ; Set the server handler
-    (set-handler (:server sys) handler)
-    (doseq [subsys (vals sys)]
-      (when (extends? IStartable (type subsys))
-        (start subsys)))
-    sys))
-
-
-(defn stop-system [sys]
-  (doseq [subsys (vals sys)]
-    (when (extends? IStartable (type subsys))
-      (stop subsys))))
 ;
 ;(auth :update company (= user.companyid company.companyid))
 ;(auth :delete TimeEntry (= user.companyid (?in :timeentry :companyid)))

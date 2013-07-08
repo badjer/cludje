@@ -144,11 +144,11 @@
   (render- [self request output] "Generate output for the user"))
 
 (defprotocol IServer
-  (set-handler [self handler]))
+  (set-handler- [self handler]))
 
 (defprotocol IStartable
-  (start [self])
-  (stop [self]))
+  (start- [self])
+  (stop- [self]))
 
 ; TODO: Do something with this
 ;(defprotocol IPersistent
@@ -312,3 +312,21 @@
       (file-info/wrap-file-info) 
       (kw/wrap-keyword-params) 
       (json/wrap-json-params)))
+
+
+; System stuff
+
+(defn start-system [sys]
+  (let [handler (make-ring-handler sys)]
+    ; Set the server handler
+    (set-handler- (:server sys) handler)
+    (doseq [subsys (vals sys)]
+      (when (extends? IStartable (type subsys))
+        (start- subsys)))
+    sys))
+
+
+(defn stop-system [sys]
+  (doseq [subsys (vals sys)]
+    (when (extends? IStartable (type subsys))
+      (stop- subsys))))

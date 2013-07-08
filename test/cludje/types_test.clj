@@ -177,7 +177,7 @@
   (validate Timespan "0.25") => truthy
   (validate Timespan "abc") => falsey)
 
-(future-fact "DateTime"
+(fact "DateTime"
   (parse DateTime nil) => nil
   (parse DateTime "") => nil
   (parse DateTime oh-one-am) => oh-one-am
