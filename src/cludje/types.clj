@@ -116,3 +116,159 @@
         :else nil))
     (show [self x] (if x "yes" "no"))
     (validate [self txt] (or (empty? (str txt)) (not (nil? (parse Bool txt)))))))
+
+
+(def one-minute (* 60 1000))
+(def one-hour (* 60 one-minute))
+(def one-day (* 24 one-hour))
+
+(defn- new-date [ts]
+  (when ts
+    (let [dt (java.util.Calendar/getInstance (java.util.SimpleTimeZone. 0 ""))]
+      (.setTimeInMillis dt ts)
+      dt)))
+
+(defn- ts-from-date [y m d]
+  (let [dt (new-date 0)]
+    (.set dt (to-int y) (- (to-int m) 1) (to-int d))
+    (.getTimeInMillis dt)))
+
+(defn- match-time [s]
+  (if-let [time-match (first (re-seq #"^ *(\d{1,2}):(\d\d) (AM|PM) *$" (str s)))]
+    (let [[_ h m half] time-match
+          pm? (= "PM" half)
+          int-h (to-int h)
+          adj-h (cond
+                  (and pm? (= 12 int-h)) 12
+                  (and (not pm?) (= 12 int-h)) 0
+                  pm? (+ int-h 12)
+                  :else int-h)]
+      (+ (* one-minute (to-int m)) (* one-hour adj-h)))))
+
+(defn- match-duration [s]
+  (if-let [duration-match (first (re-seq #"^ *(\d{1,2}):(\d\d) *$" (str s)))]
+    (let [[_ h m] duration-match]
+      (+ (* one-minute (to-int m)) (* one-hour (to-int h))))))
+
+(defn- match-duration-dec [s]
+  (if-let [[_ n] (re-find #"^ *([\d\.]+) *$" (str s))] 
+    (let [nu (to-decimal n)]
+      (if (>= nu one-minute)
+        nil ; If it's a number with no decimal, but 60000 or more
+        (-> nu
+            (* one-hour)
+            (to-int))))))
+
+(defn- match-date [s]
+  (if-let [date-match (first (re-seq #"^ *(\d{4})-(\d{2})-(\d{2}) *$" (str s)))]
+    (let [[_ y m d] date-match]
+      (ts-from-date y m d))))
+
+(defn- match-number [x]
+  (if (number? x) 
+    x
+    (if-let [num-match (first (re-seq #"^\d+$" (str x)))]
+      (to-int x))))
+
+(defn- to-time [s]
+  (let [time-match (match-time s)
+        duration-match (match-duration s)
+        duration-dec-match (match-duration-dec s)
+        date-match (match-date s)
+        number-match (match-number s)]
+    (first (filter identity 
+                   [time-match duration-match duration-dec-match
+                    date-match number-match]))))
+
+(defn- year [ts]
+  (when-let [d (new-date ts)]
+    (.get d java.util.Calendar/YEAR)))
+(defn- month [ts]
+  (when-let [d (new-date ts)]
+    (+ 1 (.get d java.util.Calendar/MONTH))))
+(defn- day [ts]
+  (when-let [d (new-date ts)]
+    (.get d java.util.Calendar/DAY_OF_MONTH)))
+(defn- hour [ts]
+  (when-let [d (new-date ts)]
+    (.get d java.util.Calendar/HOUR_OF_DAY)))
+(defn- minute [ts]
+  (when-let [d (new-date ts)]
+    (.get d java.util.Calendar/MINUTE)))
+(defn- day-of-week [ts]
+  (when-let [d (new-date ts)]
+    (.get d java.util.Calendar/DAY_OF_WEEK)))
+
+(defn- now [] 
+  (let [tz (java.util.TimeZone/getDefault)
+        offset (.getRawOffset tz)
+        dst (.getDSTSavings tz)
+        ts (System/currentTimeMillis)]
+    (+ ts offset dst)))
+
+
+
+(def months ["" "Jan" "Feb" "Mar" "Apr" "May" "Jun"
+             "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"])
+
+(def days-of-week ["" "Sun" "Mon" "Tue" "Wed" "Thu" "Fri" "Sat"])
+
+(defn- date-str [ts]
+  (when ts
+    (let [y (year ts)
+          cur-year (year (now))]
+      (if (not= y cur-year)
+        (str (get months (month ts)) " " (day ts) ", " (year ts))
+        (str (get days-of-week (day-of-week ts)) " "
+             (get months (month ts)) " " (day ts))))))
+
+(def Date
+  (reify IFieldType
+    (parse [self txt] (to-time txt))
+    (show [self x] (date-str x))
+    (validate [self txt] 
+      (or (nil? txt) (= "" txt) (not (nil? (parse Date txt)))))))
+
+(defn- time-str [ts]
+  (let [h (hour ts)
+        m (minute ts)
+        adj-h (cond (= 0 h) 12
+                    (> h 12) (- h 12)
+                    :else h)
+        pm? (< 11 h)]
+    (str (to-2-digit adj-h) ":" (to-2-digit m) " " (if pm? "PM" "AM"))))
+
+(def Time
+  (reify IFieldType
+    (parse [self txt] (to-time txt))
+    (show [self x] (time-str x))
+    (validate [self txt] 
+      (or (nil? txt) (= "" txt) (not (nil? (parse Time txt)))))))
+
+(defn percentage [total part] 
+  (if (zero? total) 
+    0 
+    (quot (* 100 part) total)))
+
+(defn- duration-str [ts]
+  (let [d (- (day ts) 1)
+        h (hour ts)
+        hours (+ h (* 24 d))
+        m (minute ts)
+        m-dec (percentage 60 m)]
+    (str hours "." (to-2-digit m-dec))))
+
+(def Timespan
+  (reify IFieldType
+    (parse [self txt] (to-time txt))
+    (show [self x] (duration-str x))
+    (validate [self txt]
+      (or (nil? txt) (= "" txt) (not (nil? (parse Timespan txt)))))))
+
+(def DateTime
+  (reify IFieldType
+    (parse [self txt] (to-time txt))
+    (show [self x] (time-str x))
+    (validate [self txt]
+      (or (nil? txt) (= "" txt) (not (nil? (parse DateTime txt)))))))
+

@@ -98,3 +98,107 @@
       (validate Bool v) => truthy)
     (for [v ["asdf" -1 2]]
       (validate Bool v) => falsey)))
+
+
+(def feb20 1361318400000)
+
+(fact "Date"
+  (parse Date "1970-01-01") => 0 
+  (parse Date "1970-01-02") => 86400000 
+  (parse Date "2013-02-20") => feb20
+  (parse Date "") => nil
+  (parse Date nil) => nil
+  (show Date feb20) => "Wed Feb 20" 
+  (show Date nil) => nil 
+  (show Date (+ feb20 10000)) => "Wed Feb 20"
+  (facts "show Date with different year shows year" 
+    (show Date (parse Date "2008-01-21")) => "Jan 21, 2008")
+  (validate Date nil) => truthy
+  (validate Date "") => truthy
+  (validate Date feb20) => truthy
+  (validate Date "2013-02-20") => truthy
+  (validate Date "abc") => falsey)
+
+(def oh-one-am 60000)
+(def one-oh-one-pm 46860000)
+
+(fact "Time"
+  (parse Time nil) => nil
+  (parse Time "") => nil
+  (parse Time oh-one-am) => oh-one-am
+  (parse Time one-oh-one-pm) => one-oh-one-pm
+  (parse Time "0:01 AM") => oh-one-am
+  (parse Time "1:01 PM") => one-oh-one-pm
+  (parse Time "00:00 AM") => 0
+  (parse Time "00:01 AM") => 60000
+  (parse Time "01:00 AM") => 3600000
+  (parse Time "12:00 PM") => 43200000
+  (parse Time "12:00 AM") => 0
+  (parse Time "01:01 AM") => 3660000
+  (parse Time "01:00 PM") => 46800000
+  (parse Time "01:01 PM") => 46860000
+  (parse Time "1:00 AM") => 3600000
+  (parse Time (+ oh-one-am feb20)) => (+ feb20 oh-one-am)
+  (show Time oh-one-am) => "12:01 AM"
+  (show Time one-oh-one-pm) => "01:01 PM"
+  (show Time (+ feb20 oh-one-am)) => "12:01 AM"
+  (validate Time nil) => truthy
+  (validate Time "") => truthy
+  (validate Time oh-one-am) => truthy
+  (validate Time one-oh-one-pm) => truthy
+  (validate Time "abc") => falsey)
+
+(def one-min 60000)
+(def fifteen-min (* 15 one-min))
+(def thirteen-hour 46800000)
+(def thirteen-oh-one (+ thirteen-hour one-min))
+
+(fact "Timespan"
+  (parse Timespan nil) => nil
+  (parse Timespan "") => nil
+  (parse Timespan one-min) => one-min
+  (parse Timespan thirteen-oh-one) => thirteen-oh-one
+  (parse Timespan fifteen-min) => fifteen-min
+  (parse Timespan "1") => (* 60 one-min)
+  (parse Timespan "13") => thirteen-hour
+  (parse Timespan "13.25") => (+ thirteen-hour fifteen-min)
+  (parse Timespan ".25") => fifteen-min
+  (parse Timespan "0.25") => fifteen-min
+  (show Timespan one-min) => "0.01"
+  (show Timespan thirteen-oh-one) => "13.01"
+  (show Timespan fifteen-min) => "0.25"
+  (show Timespan thirteen-hour) => "13.00"
+  (show Timespan (+ thirteen-hour fifteen-min)) => "13.25"
+  (validate Timespan nil) => truthy
+  (validate Timespan "") => truthy
+  (validate Timespan one-min) => truthy
+  (validate Timespan "1") => truthy
+  (validate Timespan ".25") => truthy
+  (validate Timespan "0.25") => truthy
+  (validate Timespan "abc") => falsey)
+
+(future-fact "DateTime"
+  (parse DateTime nil) => nil
+  (parse DateTime "") => nil
+  (parse DateTime oh-one-am) => oh-one-am
+  (parse DateTime one-oh-one-pm) => one-oh-one-pm
+  (parse DateTime "0:01 AM") => oh-one-am
+  (parse DateTime "1:01 PM") => one-oh-one-pm
+  (parse DateTime "00:00 AM") => 0
+  (parse DateTime "00:01 AM") => 60000
+  (parse DateTime "01:00 AM") => 3600000
+  (parse DateTime "12:00 PM") => 43200000
+  (parse DateTime "12:00 AM") => 0
+  (parse DateTime "01:01 AM") => 3660000
+  (parse DateTime "01:00 PM") => 46800000
+  (parse DateTime "01:01 PM") => 46860000
+  (parse DateTime "1:00 AM") => 3600000
+  (parse DateTime (+ oh-one-am feb20)) => (+ feb20 oh-one-am)
+  (show DateTime oh-one-am) => "12:01 AM"
+  (show DateTime one-oh-one-pm) => "01:01 PM"
+  (show DateTime (+ feb20 oh-one-am)) => "12:01 AM"
+  (validate DateTime nil) => truthy
+  (validate DateTime "") => truthy
+  (validate DateTime oh-one-am) => truthy
+  (validate DateTime one-oh-one-pm) => truthy
+  (validate DateTime "abc") => falsey)
