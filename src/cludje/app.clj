@@ -11,19 +11,16 @@
 
 (defaction hello-world {:msg "hello world"})
 
-(defn controller-ns []
-  nil)
-
 (defn default-system 
   ([] (default-system {}))
-  ([{:keys [port controller-ns default-action] 
+  ([{:keys [port action-ns default-action] 
      :or {port 8888 default-action hello-world} :as opts}]
    {:db (->MemDb (atom {}))
     :mailer (->MemMailer (atom []))
     :logger (->MemLogger (atom []))
     :login (make-MockLogin false)
     :auth (make-auth mock-auth-fn)
-    :dispatcher (make-dispatcher controller-ns {:default default-action})
+    :dispatcher (make-dispatcher action-ns {:default default-action})
     :renderer (->JsonRenderer)
     :server (jetty port)}))
 

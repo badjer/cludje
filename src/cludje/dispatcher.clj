@@ -21,7 +21,7 @@
   ; and build them into a dictionary that we can 
   ; give to a Dispatcher
   (when root-ns
-    (let [ns-str (s/replace (name root-ns) #"^[^\.]+\." "")]
+    (let [ns-str (s/replace (str "/" (name root-ns)) "." "/")]
       (load ns-str)
       (into {} (for [[k v] (ns-publics root-ns)]
                  (when (is-action? v)
