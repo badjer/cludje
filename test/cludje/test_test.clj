@@ -1,5 +1,7 @@
 (ns cludje.test-test
   (:use cludje.test 
+        cludje.core
+        cludje.types
         midje.sweet))
 
 (fact "has-keys"
@@ -41,3 +43,15 @@
 
 (fact "<-json"
   (<-json "{\"a\":1}") => {:a 1})
+
+(defmodel Cog {:amt Int})
+
+(defaction ac-cog
+  ; Save a new cog and then return the list of all cogs
+  (save Cog input)
+  (query Cog nil))
+
+(fact "test-system works for crud"
+  (let [sys (test-system)]
+    (count (ac-cog sys {:amt 1})) => 1
+    (count (ac-cog sys {:amt 1})) => 2))

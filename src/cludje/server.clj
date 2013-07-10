@@ -32,3 +32,9 @@
 
 (defn jetty [port]
   (->JettyServer port (atom nil) (atom nil)))
+
+
+(defrecord MockServer []
+  IServer
+  (set-handler- [self newhandler]))
+  

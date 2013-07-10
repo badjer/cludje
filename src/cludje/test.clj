@@ -1,7 +1,12 @@
 (ns cludje.test
   (:use midje.sweet)
   (:require [clj-http.client :as http]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [cludje.server :as server]
+            [cludje.app :as app]))
+
+(defn test-system []
+  (app/make-system {:server (server/->MockServer)}))
 
 (defn has-keys [& kees]
   "A midje checker that returns truthy if the thing
