@@ -1,4 +1,5 @@
 (ns cludje.types
+  (:use [cludje.validation :only [IValidateable validate]])
   (:require [clojure.string :as s]))
 
 (defprotocol IParseable
@@ -6,13 +7,6 @@
 
 (defprotocol IShowable
   (show [self x]))
-
-(defprotocol IValidateable
-  (problems? [self m] "Get the problems trying to make m"))
-
-(defn validate [ivalidateable x]
-  "Determine if x is a valid value of the supplied type"
-  (not (problems? ivalidateable x)))
 
 (def Str 
   (reify 

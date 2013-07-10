@@ -1,5 +1,17 @@
 (ns cludje.validation)
 
+(defprotocol IValidateable
+  (problems? [self m] "Get the problems trying to make m"))
+
+(defn validate [ivalidateable x]
+  "Determine if x is a valid value of the supplied type"
+  (not (problems? ivalidateable x)))
+
+(defn validate-test [pred-or-ivalidateable x]
+  (if (extends? IValidateable (type pred-or-ivalidateable))
+    (validate pred-or-ivalidateable x)
+    (pred-or-ivalidateable x)))
+
 (defn value? [x]
   "Returns true if x is truthy and not an empty string."
   (and x (not= x "")))
@@ -11,22 +23,14 @@
            (if-not (value? (kee data)) 
              {kee (str "Please supply a value")}))))
 
-(defn email? [x]
-  "Returns true if x is an email address"
-  (re-matches #"(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?" x))
-
-(defn min-length? [x len]
-  "Returns true if x is greater than or equal to the given len"
-  (>= (count x) len))
-
 (defn bad [f x]
   "Returns true only if x has a value and f also fails"
-  (and (value? x) (not (f x))))
+  (and (value? x) (not (validate-test f x))))
 
 (defn no-bad [f m & kees]
   "Returns a map of errors if any of the supplied kees are bad f"
   (apply merge
          (for [kee kees]
-           (if (bad f (kee m))
+           (if (bad f (get m kee))
              {kee (str "Can't understand " (name kee))}))))
 

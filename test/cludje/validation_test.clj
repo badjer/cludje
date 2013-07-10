@@ -1,6 +1,7 @@
 (ns cludje.validation-test
   (:use midje.sweet
         cludje.test
+        cludje.types
         cludje.validation))
 
 (fact "value?"
@@ -18,26 +19,23 @@
   (needs {:a 1} :b) => (has-keys :b)
   (needs {:a 1 :b 2} :a :b) => falsey)
 
-(fact "email?"
-  (email? "") => falsey
-  (email? "a") => falsey
-  (email? "a@b.cd") => truthy)
+(fact "bad should work with a cludje type"
+  (bad Email "a") => truthy
+  (bad Email "a@b.cd") => falsey)
 
-(fact "min-length?"
-  (min-length? "" 3) => falsey
-  (min-length? "asdf" 3) => truthy
-  (min-length? "asd" 3) => truthy)
+(fact "bad should work with a fn"
+  (bad even? 1) => truthy
+  (bad even? 2) => falsey)
 
 (fact "bad should return truthy only if the value? and not the given test"
-  (bad email? nil) => falsey
-  (bad email? "") => falsey
-  (bad email? "a") => truthy
-  (bad email? "a@b.cd") => falsey)
+  (bad Email nil) => falsey
+  (bad Email "") => falsey
+  (bad Email "a") => truthy
+  (bad Email "a@b.cd") => falsey)
 
 (fact "no-bad should return an entry for each field that 
       isn't null and is invlid"
-  (no-bad email? {} :a) => falsey
-  (no-bad email? {:a ""} :a) => falsey
-  (no-bad email? {:a "a"} :a) => (has-keys :a)
-  (no-bad email? {:a "a@b.cd"} :a) => falsey)
-
+  (no-bad Email {} :a) => falsey
+  (no-bad Email {:a ""} :a) => falsey
+  (no-bad Email {:a "a"} :a) => (has-keys :a)
+  (no-bad Email {:a "a@b.cd"} :a) => falsey)

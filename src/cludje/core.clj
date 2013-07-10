@@ -1,5 +1,6 @@
 (ns cludje.core
-  (:use cludje.types)
+  (:use cludje.types
+        [cludje.validation :only [IValidateable validate-test validate problems?]])
   (:require [cludje.types]
             [clojure.string :as s]
             [cludje.validation]
@@ -48,7 +49,7 @@
   (merge
     (apply cludje.validation/needs input (:require model-meta))
     (into {} (for [[field typ] (:fields model-meta)]
-               (when-not (cludje.types/validate typ (get input field))
+               (when-not (validate typ (get input field))
                  [field (str "Invalid format for " field)])))))
 
 (defn- defmodel-problems [nam]
@@ -272,10 +273,6 @@
 (defn render [renderer request output]
   (render- renderer request output))
 
-(defn- validate-test [pred-or-ivalidateable x]
-  (if (extends? IValidateable (type pred-or-ivalidateable))
-    (validate pred-or-ivalidateable x)
-    (pred-or-ivalidateable x)))
 
 ; Request api
 (defn ? 

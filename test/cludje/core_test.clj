@@ -2,6 +2,7 @@
   (:use midje.sweet
         cludje.test
         cludje.types
+        cludje.validation
         cludje.database
         cludje.logger
         cludje.mailer

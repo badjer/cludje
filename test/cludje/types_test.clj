@@ -1,5 +1,6 @@
 (ns cludje.types-test
   (:use midje.sweet
+        cludje.validation
         cludje.types))
 
 (fact "Str"
