@@ -1,6 +1,7 @@
 (ns cludje.core
   (:use cludje.types)
-  (:require [clojure.string :as s]
+  (:require [cludje.types]
+            [clojure.string :as s]
             [cludje.validation]
             [ring.middleware.resource :as resource]
             [ring.middleware.file-info :as file-info]
