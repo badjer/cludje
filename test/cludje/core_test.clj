@@ -328,6 +328,33 @@
     (ac-authorize sys nil) => falsey
     (ac-can? sys nil) => falsey))
 
+(defaction ac-?? (?? :a))
+
+(facts "??"
+  (ac-?? nil {:a 1}) => 1
+  (ac-?? nil {:b 1}) => nil
+  (ac-?? nil nil) => nil
+  (ac-?? nil {}) => nil)
+
+(defaction ac-??-default (?? :a -1))
+
+(facts "?? with default value"
+  (ac-??-default nil {:a 1}) => 1
+  (ac-??-default nil {:b 1}) => -1
+  (ac-??-default nil nil) => -1
+  (ac-??-default nil {}) => -1)
+
+(defaction ac-? (? :a))
+
+(facts "?"
+  (ac-? nil {:a 1}) => 1
+  (ac-? nil {:b 1}) => (has-problems :a)
+  (ac-? nil {}) => (has-problems :a)
+  (ac-? nil nil) => (has-problems :a))
+
+
+
+
 (defability ab-cog
   :add Cog (= (:amt input) 1))
 

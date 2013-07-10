@@ -275,6 +275,24 @@
 (defn render [renderer request output]
   (render- renderer request output))
 
+; Request api
+(defn ? [input kee]
+  "Returns kee from input, throwing an exception if it's not found.
+  The exception will contain problem data, so that it will be
+  caught by the handler if defaction, meaning errors won't 
+  crash an action"
+  (when (not (contains? input kee))
+    (throw-problems {kee (str kee " is required but was not provided")}))
+  (get input kee))
+
+(defn ?? 
+  "Returns kee from input, but does NOT throw an exception if it's
+  not found (unlike ?) - return default (or nil) instead"
+  ([input kee]
+   (?? input kee nil))
+  ([input kee default]
+    (get input kee default)))
+
 
 
 (defmacro defaction [nam & forms]
@@ -294,7 +312,9 @@
              ~'check-hash (partial check-hash (:login ~'system))
              ~'authorize (partial authorize (:auth ~'system))
              ~'can? (partial can? (:auth ~'system) (:login ~'system))
-             ~'user (~'current-user)]
+             ~'user (~'current-user)
+             ~'? (partial ? ~'input)
+             ~'?? (partial ?? ~'input)]
          (try
            ~@forms
            (catch clojure.lang.ExceptionInfo ex#
