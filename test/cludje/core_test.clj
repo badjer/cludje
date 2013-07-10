@@ -352,6 +352,14 @@
   (ac-? nil {}) => (has-problems :a)
   (ac-? nil nil) => (has-problems :a))
 
+(defaction ac-?-validator (? :a Int))
+
+(facts "? with validator"
+  (ac-?-validator nil {:a 1}) => 1
+  (ac-?-validator nil {:a "abc"}) => (has-problems :a)
+  (ac-?-validator nil {:b 1}) => (has-problems :a)
+  (ac-?-validator nil nil) => (has-problems :a)
+  (ac-?-validator nil {}) => (has-problems :a))
 
 
 

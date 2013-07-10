@@ -8,24 +8,20 @@
             [ring.middleware.json :as json]))
 
 ; ####
-; Model protocols
+; Model builder
 ; ####
 
-(defprotocol IBuildable
-  (build [self m] "Make an instance from something"))
-
 (defn make 
-  "Make an instance (calls build)"
-  ([ibuildable]
-   (build ibuildable nil))
-  ([ibuildable m]
-   (build ibuildable m))
-  ([ibuildable f v & kvs]
-   (build ibuildable (-> (apply hash-map kvs) 
+  "Make an instance from a map (calls parse).
+  This is used to parse models nicely"
+  ([iparseable]
+   (parse iparseable nil))
+  ([iparseable m]
+   (parse iparseable m))
+  ([iparseable f v & kvs]
+   (parse iparseable (-> (apply hash-map kvs) 
                          (assoc f v)))))
 
-(defprotocol IValidatable
-  (problems? [self m] "Get a map of problems trying to make m"))
 
 ; ####
 ; Model construction
@@ -57,7 +53,7 @@
 (defn- defmodel-problems [nam]
   (let [rec-name (record-name nam)]
     `(extend ~rec-name
-       IValidatable
+       IValidateable
        {:problems? 
         (fn [self# m#] 
           (let [p# (get-problems (meta ~nam) m#)]
@@ -68,8 +64,8 @@
   (let [rec-name (record-name nam)
         constructor (symbol (str "->" rec-name))]
     `(extend ~rec-name
-       IBuildable
-       {:build 
+       IParseable
+       {:parse 
         (fn [self# m#]
           (let [parsed# 
                 (into {} 
@@ -275,15 +271,27 @@
 (defn render [renderer request output]
   (render- renderer request output))
 
+(defn- validate-test [pred-or-ivalidateable x]
+  (if (extends? IValidateable (type pred-or-ivalidateable))
+    (validate pred-or-ivalidateable x)
+    (pred-or-ivalidateable x)))
+
 ; Request api
-(defn ? [input kee]
-  "Returns kee from input, throwing an exception if it's not found.
+(defn ? 
+  "Returns kee from input, throwing an exception if it's not found,
+  or if the fn pred fails when applied to the value.
   The exception will contain problem data, so that it will be
   caught by the handler if defaction, meaning errors won't 
   crash an action"
-  (when (not (contains? input kee))
-    (throw-problems {kee (str kee " is required but was not provided")}))
-  (get input kee))
+  ([input kee]
+   (? input kee (constantly true)))
+  ([input kee pred] 
+   (when-not (contains? input kee)
+     (throw-problems {kee (str " is required but was not provided")}))
+   (let [v (get input kee)]
+     (if (validate-test pred v)
+       v
+       (throw-problems {kee (str kee " was not valid")})))))
 
 (defn ?? 
   "Returns kee from input, but does NOT throw an exception if it's

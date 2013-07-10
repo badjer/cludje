@@ -1,31 +1,54 @@
 (ns cludje.types
   (:require [clojure.string :as s]))
 
-(defprotocol IFieldType 
-  (parse [self txt])
-  (show [self x])
-  (validate [self txt]))
+(defprotocol IParseable
+  (parse [self txt]))
+
+(defprotocol IShowable
+  (show [self x]))
+
+(defprotocol IValidateable
+  (problems? [self m] "Get the problems trying to make m"))
+
+(defn validate [ivalidateable x]
+  "Determine if x is a valid value of the supplied type"
+  (not (problems? ivalidateable x)))
 
 (def Str 
-  (reify IFieldType 
+  (reify 
+    IParseable 
     (parse [self txt] (when txt (str txt)))
+    IShowable
     (show [self x] x) 
-    (validate [self txt] true)))
+    IValidateable
+    ; Never any problems with str
+    (problems? [self txt])))
 
 (def Email
-  (reify IFieldType 
+  (reify 
+    IParseable 
     (parse [self txt] (when txt (str txt)))
+    IShowable
     (show [self x] x) 
-    (validate [self txt] 
-      (or (nil? txt) (or (empty? (str txt))
-                         (re-find #"(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?" txt))))))
+    IValidateable
+    (problems? [self txt]
+      (cond
+        (nil? txt) nil
+        (empty? (str txt)) nil 
+        (not (re-find #"(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?" txt))
+        "Not a valid email"))))
 
 (def Password
-  (reify IFieldType
+  (reify 
+    IParseable
     (parse [self txt] (when txt (str txt)))
+    IShowable
     (show [self x] "")
-    (validate [self txt] (or (empty? txt)
-                             (< 2 (.length txt))))))
+    IValidateable
+    (problems? [self txt]
+      (cond
+        (empty? txt) nil
+        (> 2 (.length txt)) "Not long enough"))))
 
 (defn- to-int [x]
   (if-not (nil? x)
@@ -42,11 +65,16 @@
     (BigDecimal. x)))
 
 (def Int
-  (reify IFieldType
+  (reify 
+    IParseable
     (parse [self txt] (when-not (empty? (str txt)) (to-int txt)))
+    IShowable
     (show [self x] (str x))
-    (validate [self txt]
-      (re-find #"^\d*$" (str txt)))))
+    IValidateable
+    (problems? [self txt]
+      (when (not (re-find #"^\d*$" (str txt)))
+        "Not a number"))))
+
 
 (defn to-2-digit 
   ([x] (to-2-digit x true))
@@ -86,7 +114,8 @@
 (def money-regex #"^ *\$? *(\-?) *(\d+\.?\d*) *$")
 
 (def Money
-  (reify IFieldType
+  (reify 
+    IParseable
     (parse [self txt]
       (cond
         (number? txt) txt
@@ -97,11 +126,18 @@
                   numstr (str sign n)
                   decversion (to-decimal numstr)]
               (to-int (* 100 decversion))))))
+    IShowable
     (show [self x] (money-str x))
-    (validate [self txt] (or (empty? (str txt)) (re-find money-regex (str txt))))))
+    IValidateable
+    (problems? [self txt]
+      (cond
+        (empty? (str txt)) nil 
+        (not (re-find money-regex (str txt)))
+        "Invalid money amount"))))
 
 (def Bool
-  (reify IFieldType
+  (reify 
+    IParseable
     (parse [self txt]
       (cond
         (empty? txt) nil
@@ -114,8 +150,14 @@
         (re-find #"^[Nn](o)?$" (str txt)) false
         (re-find #"^[fF](alse)$" (str txt)) false
         :else nil))
+    IShowable
     (show [self x] (if x "yes" "no"))
-    (validate [self txt] (or (empty? (str txt)) (not (nil? (parse Bool txt)))))))
+    IValidateable
+    (problems? [self txt]
+      (cond
+        (empty? (str txt)) nil
+        (nil? (parse Bool txt))
+        "Not a true/false value"))))
 
 
 (def one-minute (* 60 1000))
@@ -223,11 +265,18 @@
              (get months (month ts)) " " (day ts))))))
 
 (def Date
-  (reify IFieldType
+  (reify 
+    IParseable
     (parse [self txt] (to-time txt))
+    IShowable
     (show [self x] (date-str x))
-    (validate [self txt] 
-      (or (nil? txt) (= "" txt) (not (nil? (parse Date txt)))))))
+    IValidateable
+    (problems? [self txt]
+      (cond
+        (nil? txt) nil
+        (= txt "") nil
+        (nil? (parse Date txt))
+        "Not a date"))))
 
 (defn- time-str [ts]
   (let [h (hour ts)
@@ -239,11 +288,18 @@
     (str (to-2-digit adj-h) ":" (to-2-digit m) " " (if pm? "PM" "AM"))))
 
 (def Time
-  (reify IFieldType
+  (reify 
+    IParseable
     (parse [self txt] (to-time txt))
+    IShowable
     (show [self x] (time-str x))
-    (validate [self txt] 
-      (or (nil? txt) (= "" txt) (not (nil? (parse Time txt)))))))
+    IValidateable
+    (problems? [self txt]
+      (cond
+        (nil? txt) nil
+        (= "" txt) nil
+        (nil? (parse Time txt))
+        "Not valid time"))))
 
 (defn percentage [total part] 
   (if (zero? total) 
@@ -259,16 +315,30 @@
     (str hours "." (to-2-digit m-dec))))
 
 (def Timespan
-  (reify IFieldType
+  (reify 
+    IParseable
     (parse [self txt] (to-time txt))
+    IShowable
     (show [self x] (duration-str x))
-    (validate [self txt]
-      (or (nil? txt) (= "" txt) (not (nil? (parse Timespan txt)))))))
+    IValidateable
+    (problems? [self txt]
+      (cond
+        (nil? txt) nil
+        (= "" txt) nil
+        (nil? (parse Timespan txt))
+        "Not valid timespan"))))
 
 (def DateTime
-  (reify IFieldType
+  (reify 
+    IParseable
     (parse [self txt] (to-time txt))
+    IShowable
     (show [self x] (time-str x))
-    (validate [self txt]
-      (or (nil? txt) (= "" txt) (not (nil? (parse DateTime txt)))))))
+    IValidateable
+    (problems? [self txt]
+      (cond
+        (nil? txt) nil
+        (= "" txt) nil
+        (nil? (parse DateTime txt))
+        "Not valid date/time"))))
 
