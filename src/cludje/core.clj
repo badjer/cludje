@@ -44,10 +44,7 @@
     model
     (? (meta model) :table)))
 
-(defn key-name [model]
-  (if (keyword? model)
-    model
-    (? (meta model) :key)))
+(defn key-name [model] :_id)
 
 (defn field-types [model]
   (? (meta model) :fields))
@@ -125,9 +122,7 @@
   (let [optmap (apply hash-map opts)
         table (s/lower-case (name nam))
         no-key? (:no-key optmap)
-        kee (if no-key? 
-              nil
-              (keyword (str table "_id")))
+        kee (if no-key?  nil :_id)
         ; Required fields don't include key
         reqfields (vec (keys fields))
         allfields (if no-key? 

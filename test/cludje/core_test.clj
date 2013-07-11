@@ -13,7 +13,7 @@
 
 (defmodel User {:name Str :email Email :pwd Password})
 (defmodel Cog {:price Money :amt Int})
-(defmodel Person {:name Str :age Int :user_id Str} :require [:name])
+(defmodel Person {:name Str :age Int :_id Str} :require [:name])
 
 (def User-copy User)
 
@@ -25,12 +25,12 @@
     (:require (meta User)) => [:name :email :pwd]
     (:table (meta User)) => "user"
     (table-name User) => "user"
-    (key-name User) => :user_id
+    (key-name User) => :_id
     (field-types User) => (has-keys :name :email :pwd))
   (fact "metadata on another var"
     (meta User-copy) => (has-keys :fields :require :table)
     (table-name User-copy) => "user"
-    (key-name User-copy) => :user_id)
+    (key-name User-copy) => :_id)
   (fact "make"
     User =not=> nil
     User => (has-keys :name :email :pwd)
@@ -40,7 +40,7 @@
     (make User :name "abc" :email "d@e.fg") => 
       (contains {:name "abc" :email "d@e.fg"}))
   (fact "make adds key"
-    (make User {}) => (has-keys :user_id))
+    (make User {}) => (has-keys :_id))
   (fact "problems? checks field existence"
     (problems? User {}) =not=> empty?
     (problems? User {}) => (has-keys :name :email :pwd)
@@ -51,7 +51,7 @@
     (make User {}) => (has-keys :name :email :pwd)
     (make User {:name "a"}) => (has-keys :name :email :pwd))
   (fact "make removes any extra keys"
-    (make User {:foosums "a"}) => (just-keys :name :email :pwd :user_id))
+    (make User {:foosums "a"}) => (just-keys :name :email :pwd :_id))
   (fact "parse converts field values"
     (make Cog {:amt "12"}) => (contains {:amt 12})
     (make Cog {:price "$12.34"}) => (contains {:price 1234}))
@@ -107,6 +107,15 @@
     (fact "save returns something key-like"
       (save db Cog cog) =not=> empty?)))
 
+(fact "save will set the key field"
+  (let [dba (atom {})
+        db (->MemDb dba)
+        id (save db Cog cog)]
+    (count (:cog @dba)) => 1
+    (first (:cog @dba)) => (has-keys :_id)
+    (:_id (first (:cog @dba))) => id
+    (fetch db Cog id) => (contains {:_id id})))
+
 (fact "save knows when to insert"
   (let [db (->MemDb (atom {}))
         id (write db Cog nil cog)]
@@ -137,10 +146,8 @@
     @dba => (just {:cog anything})))
 
 
-
-
 (fact "get-key"
-  (get-key Cog {:cog_id 1}) => 1
+  (get-key Cog {:_id 1}) => 1
   (get-key Cog {}) => nil)
 
 (fact "throw-problems"
@@ -154,7 +161,7 @@
 (fact "save knows when to update"
   (let [db (->MemDb (atom {}))
         id (write db Cog nil cog)
-        with-id (assoc cog :cog_id id)]
+        with-id (assoc cog :_id id)]
     (save db Cog with-id) => id
     (count (query db Cog nil)) => 1))
 
@@ -224,7 +231,7 @@
 
 (defaction add-person
   (let [uid (save User input)
-        dt (assoc input :user_id uid)]
+        dt (assoc input :_id uid)]
     (save Person dt)))
 
 (def person {:name "a" :age 2})
