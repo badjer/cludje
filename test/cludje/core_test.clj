@@ -15,13 +15,22 @@
 (defmodel Cog {:price Money :amt Int})
 (defmodel Person {:name Str :age Int :user_id Str} :require [:name])
 
+(def User-copy User)
+
 (fact "defmodel"
   (fact "metadata"
     (meta User) => (has-keys :fields :require :table)
     (:fields (meta User)) => (has-keys :name :email :pwd)
     (:email (:fields (meta User))) => Email
     (:require (meta User)) => [:name :email :pwd]
-    (:table (meta User)) => "user")
+    (:table (meta User)) => "user"
+    (table-name User) => "user"
+    (key-name User) => :user_id
+    (field-types User) => (has-keys :name :email :pwd))
+  (fact "metadata on another var"
+    (meta User-copy) => (has-keys :fields :require :table)
+    (table-name User-copy) => "user"
+    (key-name User-copy) => :user_id)
   (fact "make"
     User =not=> nil
     User => (has-keys :name :email :pwd)
@@ -110,6 +119,24 @@
     (count (query db Cog nil)) => 1
     (save db Cog cog) => anything
     (count (query db Cog nil)) => 2))
+
+(facts "db operations work with keyword table names"
+  (let [db (->MemDb (atom {}))
+        id (write db :cog nil cog)]
+    (count (query db :cog nil)) => 1
+    (fetch db :cog id) => (contains cog)
+    (delete db :cog id) => anything
+    (query db :cog nil) => empty?))
+
+(facts "db ops with keywords and models update same table"
+  (let [dba (atom {})
+        db (->MemDb dba)]
+    (write db Cog nil cog) => anything
+    @dba => (just {:cog anything})
+    (write db :cog nil cog) => anything
+    @dba => (just {:cog anything})))
+
+
 
 
 (fact "get-key"

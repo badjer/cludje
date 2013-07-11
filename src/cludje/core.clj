@@ -7,6 +7,51 @@
             [ring.middleware.keyword-params :as kw]
             [ring.middleware.json :as json]))
 
+(defn throw-problems 
+  ([]
+   (throw-problems {}))
+  ([problems]
+   (throw (ex-info "Problems" {:problems problems}))))
+
+; Request api
+(defn ? 
+  "Returns kee from input, throwing an exception if it's not found,
+  or if the fn pred fails when applied to the value.
+  The exception will contain problem data, so that it will be
+  caught by the handler if defaction, meaning errors won't 
+  crash an action"
+  ([input kee]
+   (? input kee (constantly true)))
+  ([input kee pred] 
+   (when-not (contains? input kee)
+     (throw-problems {kee (str kee " is required but was not provided")}))
+   (let [v (get input kee)]
+     (if (validate-test pred v)
+       v
+       (throw-problems {kee (str kee " was not valid")})))))
+
+(defn ?? 
+  "Returns kee from input, but does NOT throw an exception if it's
+  not found (unlike ?) - return default (or nil) instead"
+  ([input kee]
+   (?? input kee nil))
+  ([input kee default]
+    (get input kee default)))
+
+
+(defn table-name [model]
+  (if (keyword? model)
+    model
+    (? (meta model) :table)))
+
+(defn key-name [model]
+  (if (keyword? model)
+    model
+    (? (meta model) :key)))
+
+(defn field-types [model]
+  (? (meta model) :fields))
+
 ; ####
 ; Model builder
 ; ####
@@ -39,9 +84,9 @@
   (let [rec-name (record-name nam)
         constructor (symbol (str "->" rec-name))
         numkeys (count (keys fields))]
-    `(def ~nam (with-meta 
-                 (apply ~constructor (repeat ~numkeys nil))
-                 ~opts))))
+    `(def ~nam 
+       (with-meta (apply ~constructor (repeat ~numkeys nil)) 
+                  ~opts))))
 
 (defn get-problems [model-meta input]
   (merge
@@ -69,8 +114,8 @@
         (fn [self# m#]
           (let [parsed# 
                 (into {} 
-                      (for [[field# typ#] (:fields (meta ~nam))] 
-                        [field# (cludje.types/parse typ# (get m# field#))]))]
+                      (for [[field# typ#] (field-types ~nam)]
+                        [field# (parse typ# (get m# field#))]))]
             (merge
               (apply ~constructor (repeat (count (keys ~nam)) nil))
               parsed#)))})))
@@ -87,7 +132,7 @@
         reqfields (vec (keys fields))
         allfields (if no-key? 
                     fields 
-                    (assoc fields kee cludje.types/Str))
+                    (assoc fields kee (symbol "Str")))
         modelopts (merge {:require reqfields
                           :fields allfields
                           :table table
@@ -154,21 +199,15 @@
 
 
 
-
 ; ####
 ; API 
 ; ####
 
 ; DB API
-(defn- table-name [model]
-  (:table (meta model)))
-
-(defn- key-name [model]
-  (:key (meta model)))
-
 (defn fetch [db model kee]
-  (let [tbl (table-name model)]
-    (fetch- db tbl kee)))
+  (when model
+    (let [tbl (table-name model)]
+      (fetch- db tbl kee))))
 
 (defn query [db model params]
   (let [tbl (table-name model)]
@@ -182,11 +221,6 @@
   (let [tbl (table-name model)]
     (delete- db tbl kee)))
 
-(defn throw-problems 
-  ([]
-   (throw-problems {}))
-  ([problems]
-   (throw (ex-info "Problems" {:problems problems}))))
 
 (defn get-key [model m]
   (get m (key-name model) nil))
@@ -279,31 +313,6 @@
 (defn render [renderer request output]
   (render- renderer request output))
 
-
-; Request api
-(defn ? 
-  "Returns kee from input, throwing an exception if it's not found,
-  or if the fn pred fails when applied to the value.
-  The exception will contain problem data, so that it will be
-  caught by the handler if defaction, meaning errors won't 
-  crash an action"
-  ([input kee]
-   (? input kee (constantly true)))
-  ([input kee pred] 
-   (when-not (contains? input kee)
-     (throw-problems {kee (str " is required but was not provided")}))
-   (let [v (get input kee)]
-     (if (validate-test pred v)
-       v
-       (throw-problems {kee (str kee " was not valid")})))))
-
-(defn ?? 
-  "Returns kee from input, but does NOT throw an exception if it's
-  not found (unlike ?) - return default (or nil) instead"
-  ([input kee]
-   (?? input kee nil))
-  ([input kee default]
-    (get input kee default)))
 
 
 
