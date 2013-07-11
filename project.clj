@@ -1,4 +1,4 @@
-(defproject cludje "0.0.9"
+(defproject cludje "0.0.10"
   :description "Cludje - A clojure web framework"
   :url "http://github.com/badjer/cludje"
   :license {:name "Eclipse Public License"
@@ -10,8 +10,7 @@
                  [clj-http "0.7.2"]
                  [ring "1.1.8"]
                  [ring/ring-jetty-adapter "1.1.8"]
-                 [ring/ring-json "0.2.0"]
-                 [potemkin "0.3.0"]]
+                 [ring/ring-json "0.2.0"]]
   :source-paths ["src"]
   :test-paths ["test"]
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.3"] 

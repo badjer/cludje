@@ -1,9 +1,7 @@
 (ns cludje.core
-  (:use cludje.types
-        [cludje.validation :only [IValidateable validate-test validate problems?]])
+  (:use cludje.types)
   (:require [cludje.types]
             [clojure.string :as s]
-            [cludje.validation]
             [ring.middleware.resource :as resource]
             [ring.middleware.file-info :as file-info]
             [ring.middleware.keyword-params :as kw]
@@ -47,7 +45,7 @@
 
 (defn get-problems [model-meta input]
   (merge
-    (apply cludje.validation/needs input (:require model-meta))
+    (apply needs input (:require model-meta))
     (into {} (for [[field typ] (:fields model-meta)]
                (when-not (validate typ (get input field))
                  [field (str "Invalid format for " field)])))))
