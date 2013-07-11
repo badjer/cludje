@@ -104,6 +104,14 @@
     (save db Cog cog) =not=> id
     (count (query db Cog nil)) => 2))
 
+(fact "save knows when to update"
+  (let [db (->MemDb (atom {}))
+        id (save db Cog cog)]
+    (count (query db Cog nil)) => 1
+    (save db Cog cog) => anything
+    (count (query db Cog nil)) => 2))
+
+
 (fact "get-key"
   (get-key Cog {:cog_id 1}) => 1
   (get-key Cog {}) => nil)
@@ -406,6 +414,15 @@
   (ab-cog-person :add Person {:username "a"} {:name "b"}) => false
   (ab-cog-person :remove Person {:username "a"} {:name "a"}) => false
   (ab-cog-person :add Person {:username "b"} {:name "a"}) => false)
+
+(defability ab-ac-vector
+  [:add :delete] Cog true)
+
+(facts "defability with a vector of actions"
+  (ab-ac-vector :add Cog nil cog) => true
+  (ab-ac-vector :delete Cog nil cog) => true
+  (ab-ac-vector :list Cog nil cog) => false
+  (ab-ac-vector :add Person nil person) => false)
 
 (facts "auth works with defability"
   (let [auth (make-auth ab-cog)
