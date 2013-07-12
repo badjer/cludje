@@ -10,13 +10,15 @@
 
 (def system nil)
 
-(def sys-opts {:port 8123 :controller-ns 'user})
-
 (defn init
   "Constructs the current development system."
   []
   (alter-var-root #'system
-    (constantly (make-system {:port 8123}))))
+    (constantly (make-system {:port 8123 
+                              :template-ns 'cludje.templates.angular
+                              :model-ns 'cludje.demo.models
+                              :action-ns 'cludje.demo.actions}))))
+
 
 (defn start
   "Starts the current development system."

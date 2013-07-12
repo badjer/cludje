@@ -38,11 +38,6 @@
 (defn jetty [port]
   (->JettyServer port (atom nil) (atom nil)))
 
-(defn make-ring-handler-l [sys]
-  (fn [request]
-    (ng/angular-layout "Test" {}
-                       (ng/list-model LoginUser {:username "abc"}))))
-
 (def template-regex #"/templates/([^/]+)/([^/.]+)\.tpl\.html$")
 
 (defn get-modelname [request]
@@ -72,7 +67,7 @@
   (fn [request]
     (let [modelname (get-modelname request)
           templatename (get-templatename request)
-          model (find-in-ns model-ns modelname)
+          model @(find-in-ns model-ns modelname)
           template (find-in-ns template-ns templatename)]
       (when (and template model)
         (html-response (template model))))))

@@ -5,15 +5,17 @@
         cludje.types))
 
 (defprotocol IAngularField
-  (ng [self field v] "Render v as some angular.js markup with the id field"))
+  (ng [self field] "Render some angular.js markup with the id field"))
 
 (extend-type (type Str)
   IAngularField
-  (ng [self field v] [:input {:id field :type "text" :name field :value (show Str v)}]))
+  (ng [self field] [:input {:id field :type "text" :name field}]))
 (extend-type (type Password)
   IAngularField
-  (ng [self field v] [:input {:id field :type "password" :name field :value (show Password v)}]))
-
+  (ng [self field] [:input {:id field :type "password" :name field}]))
+(extend-type (type Int)
+  IAngularField
+  (ng [self field] [:input {:id field :type "text" :name field}]))
 ;(extend-protocol IAngularField
   ;(type Str)
   ;(ng [self field v] [:input {:id field :type "text" :name field} (show v)])
@@ -27,7 +29,8 @@
                              [:body menu-opts body ]]))]
     output))
 
-(defn list-model [model m]
-  [:div
-   (for [[field typ] (field-types model)]
-     (ng typ field (get m field)))])
+(defn list-template [model]
+  (angular-layout "Test" {}
+    [:div
+     (for [[field typ] (dissoc (field-types model) :_id)]
+       (ng typ field))]))
