@@ -63,7 +63,7 @@
     (stop-system sys) => anything))
 
 (defmodel Cog {:amt Int})
-(def template-request {:url "http://localhost:8888/templates/Cog/list.tpl.html"})
+(def template-request {:url "http://localhost:8888/templates/Cog/edit.tpl.html"})
 (def bad-template-request {:url "http://localhost:8888/templates/Cog/foosuamsdf.tpl.html"})
 
 (fact "making a system with :template-ns and :model-ns set 

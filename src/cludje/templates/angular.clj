@@ -165,19 +165,26 @@
       (when action
         (form-line (button "Save" :action ac-name))))))
 
+
+
+; Basic templates
+; NOTE: These are NOT the same as the actions you can take on 
+; a model - these are purely screens. We're intentionally making
+; a separation between UI and data - we're trying not to conflate
+; them like rails does
+
 (defn edit-template [model]
   (angular-layout
-    (_form-template model (str "Edit " (table-name model)) :edit)))
+    (_form-template model (str "Edit " (table-name model)) :update)))
 
 (defn new-template [model]
   (angular-layout
     (_form-template model (str "New " (table-name model)) :add)))
 
-
-
-
-(defn list-template [model]
+(defn index-template [model]
   (angular-layout
-    [:div
-     (for [[field typ] (dissoc (field-types model) :_id)]
-       (ng-field typ field))]))
+    [:h3 "List of " (table-name model)]))
+
+(defn show-template [model]
+  (angular-layout
+    [:h3 "Printout of one " (table-name model)]))

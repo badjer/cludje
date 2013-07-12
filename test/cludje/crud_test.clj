@@ -13,10 +13,10 @@
 (fact "def-crud-actions"
   (let [db (->MemDb (atom {}))
         sys {:db db} 
-        id (add-gear sys gear)]
+        id (post-gear sys gear)]
     (count (list-gears sys nil)) => 1
     (first (list-gears sys nil)) => (contains gear)
-    (edit-gear sys {:_id id :teeth 5}) => anything
+    (put-gear sys {:_id id :teeth 5}) => anything
     (get-gear sys {:_id id}) => (contains {:teeth 5})
     (delete-gear sys {:_id id}) => anything
     (list-gears sys nil) => empty?))
