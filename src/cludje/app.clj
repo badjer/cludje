@@ -13,7 +13,7 @@
 
 (defn default-system 
   ([] (default-system {}))
-  ([{:keys [port action-ns default-action] 
+  ([{:keys [port model-ns action-ns template-ns default-action] 
      :or {port 8888 default-action hello-world} :as opts}]
    {:db (->MemDb (atom {}))
     :mailer (->MemMailer (atom []))
@@ -22,7 +22,10 @@
     :auth (make-auth mock-auth-fn)
     :dispatcher (make-dispatcher action-ns {:default default-action})
     :renderer (->JsonRenderer)
-    :server (jetty port)}))
+    :server (jetty port)
+    :action-ns action-ns
+    :model-ns model-ns
+    :template-ns template-ns}))
 
 (defn make-system 
   "Create a system. Use defaults if none provided"
@@ -31,6 +34,26 @@
   ([opts]
    (merge (default-system opts) opts)))
 
+
+; System stuff
+
+(defn start-system [sys]
+  (let [templates (when-let [ts (:template-ns sys)] 
+                    (template-handler (:model-ns sys) ts))
+        actions (action-handler sys)
+        handler (ring-handler templates actions)]
+    ; Set the server handler
+    (set-handler- (:server sys) handler)
+    (doseq [subsys (vals sys)]
+      (when (satisfies? IStartable subsys)
+        (start- subsys)))
+    sys))
+
+
+(defn stop-system [sys]
+  (doseq [subsys (vals sys)]
+    (when (satisfies? IStartable subsys)
+      (stop- subsys))))
 ;
 ;(auth :update company (= user.companyid company.companyid))
 ;(auth :delete TimeEntry (= user.companyid (?in :timeentry :companyid)))

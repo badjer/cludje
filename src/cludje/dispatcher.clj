@@ -4,12 +4,9 @@
 
 (defrecord Dispatcher [dispatches]
   IDispatcher
-  (get-action- [self request]
-    (let [default (get @dispatches :default)]
-      (if-let [action (get request :action)]
-        (get @dispatches (keyword (name action)) default)
-        default))))
-
+  (get-action- [self input]
+    (if-let [action (get input :action)]
+      (get @dispatches (keyword (name action))))))
 
 (defn is-action? [vr]
   (let [m (meta vr)]

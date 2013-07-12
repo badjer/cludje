@@ -9,6 +9,7 @@
                  [cheshire "5.2.0"]
                  [clj-http "0.7.2"]
                  [ring "1.1.8"]
+                 [hiccup "1.0.3"]
                  [ring/ring-jetty-adapter "1.1.8"]
                  [ring/ring-json "0.2.0"]]
   :source-paths ["src"]

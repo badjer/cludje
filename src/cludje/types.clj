@@ -15,7 +15,7 @@
   (not (problems? ivalidateable x)))
 
 (defn validate-test [pred-or-ivalidateable x]
-  (if (extends? IValidateable (type pred-or-ivalidateable))
+  (if (satisfies? IValidateable pred-or-ivalidateable)
     (validate pred-or-ivalidateable x)
     (pred-or-ivalidateable x)))
 

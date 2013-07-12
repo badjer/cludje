@@ -1,12 +1,12 @@
 (ns user
-  (:use cludje.core)
+  (:use cludje.core
+        cludje.app)
   (:require [clojure.java.io :as io]
             [clojure.string :as s]
             [clojure.pprint :refer (pprint)]
             [clojure.repl :refer :all]
             [clojure.test :as test]
-            [clojure.tools.namespace.repl :refer (refresh refresh-all)]
-            [cludje.app :as app]))
+            [clojure.tools.namespace.repl :refer (refresh refresh-all)]))
 
 (def system nil)
 
@@ -16,7 +16,7 @@
   "Constructs the current development system."
   []
   (alter-var-root #'system
-    (constantly (app/make-system {:port 8123}))))
+    (constantly (make-system {:port 8123}))))
 
 (defn start
   "Starts the current development system."

@@ -1,8 +1,10 @@
 (ns cludje.server-test
   (:use midje.sweet
+        cludje.testcontrollers
         cludje.test
         cludje.core
         cludje.app
+        cludje.types
         cludje.renderer
         cludje.dispatcher
         cludje.server))
@@ -25,28 +27,52 @@
 
 (defaction ac-echo input)
 
-(def json-req {:url "http://localhost:8099" :method :json :body {:a 1}})
+(def json-req {:url "http://localhost:8099" :method :json :body {:action :default :a 1}})
 
-(facts "JettyServer handles JSON with make-ring-handler"
+(facts "action-handler returns default action"
+  (let [sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
+             :renderer (->LiteralRenderer)}
+        handler (action-handler sys)]
+    (handler json-req) =not=> nil?
+    (handler json-req) => {:action :default :a 1}))
+
+(facts "JettyServer handles JSON with ring-handler"
   (let [serv (->JettyServer 8099 (atom nil) (atom nil))
         sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
              :renderer (->JsonRenderer)}
-        handler (make-ring-handler sys)]
+        handler (ring-handler (action-handler sys))]
     (set-handler- serv handler) => anything
     (start- serv) => anything
-    (do-request json-req) => {:a 1}
+    (do-request json-req) => {:a 1 :action "default"}
     (stop- serv) => anything))
+
+(defmodel Cog {:amt Int})
+(defn edit-template [model] "<p>Hello</p>") 
+
+(facts "find-in-ns"
+  (find-in-ns 'cludje.server-test "Cog") => #'Cog
+  (find-in-ns 'cludje.server-test "FSDasdf") => nil)
 
 (def res-request {:url "http://localhost:8099/css/test.css"})
-(facts "JettyServer serves static files"
-  (let [serv (->JettyServer 8099 (atom nil) (atom nil))
-        sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
-             :renderer (->JsonRenderer)}
-        handler (make-ring-handler sys)]
-    (set-handler- serv handler) => anything
+
+(def template-request {:url "http://localhost:8099/templates/Cog/edit.tmpl.html"})
+
+(let [serv (->JettyServer 8099 (atom nil) (atom nil))
+      sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
+           :renderer (->JsonRenderer)}]
+  (facts "JettyServer serves static files"
+    (set-handler- serv (ring-handler (action-handler sys))) => anything
     (start- serv) => anything
     (:body (do-request res-request)) => "hello world\n"
+    (stop- serv) => anything)
+  (facts "JettyServer serves templates"
+    (set-handler- serv (ring-handler 
+                         (template-handler 'cludje.server-test 
+                                           'cludje.server-test))) => anything
+    (start- serv) => anything
+    (:body (do-request template-request)) => "<p>Hello</p>"
     (stop- serv) => anything))
+
 
 
 

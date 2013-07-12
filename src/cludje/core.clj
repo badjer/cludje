@@ -1,11 +1,6 @@
 (ns cludje.core
   (:use cludje.types)
-  (:require [cludje.types]
-            [clojure.string :as s]
-            [ring.middleware.resource :as resource]
-            [ring.middleware.file-info :as file-info]
-            [ring.middleware.keyword-params :as kw]
-            [ring.middleware.json :as json]))
+  (:require [clojure.string :as s]))
 
 (defn throw-problems 
   ([]
@@ -173,7 +168,7 @@
   (authorize- [self action model user input] "Is the user allowed to do this?"))
 
 (defprotocol IDispatcher
-  (get-action- [self request] "Get the action to execute"))
+  (get-action- [self input] "Get the action to execute"))
 
 (defprotocol IRenderer
   "Handle rendering output"
@@ -338,31 +333,4 @@
                (assoc ~'input :problems problems#)))))) 
      (alter-meta! (var ~nam) assoc :action true)))
 
-(defn make-ring-handler [{:keys [dispatcher renderer] :as system}] 
-  (-> (fn [request] 
-        (when-let [action (get-action dispatcher request)] 
-          (let [input (:params request)
-                output (action system input)] 
-            (render renderer request output))))
-      (resource/wrap-resource "public")
-      (file-info/wrap-file-info) 
-      (kw/wrap-keyword-params) 
-      (json/wrap-json-params)))
 
-
-; System stuff
-
-(defn start-system [sys]
-  (let [handler (make-ring-handler sys)]
-    ; Set the server handler
-    (set-handler- (:server sys) handler)
-    (doseq [subsys (vals sys)]
-      (when (extends? IStartable (type subsys))
-        (start- subsys)))
-    sys))
-
-
-(defn stop-system [sys]
-  (doseq [subsys (vals sys)]
-    (when (extends? IStartable (type subsys))
-      (stop- subsys))))
