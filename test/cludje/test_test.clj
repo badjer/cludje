@@ -23,18 +23,18 @@
 
 (fact "has-problems?"
   {} =not=> has-problems?
-  {:problems {}} => has-problems?
+  {:__problems {}} => has-problems?
   nil =not=> has-problems?
   {:a 1} =not=> has-problems?)
 
 (fact "has-problems"
-  {:problems {:a 1}} => (has-problems :a)
-  {:problems {:a 1}} =not=> (has-problems :b)
-  {:problems {}} =not=> (has-problems :a)
+  {:__problems {:a 1}} => (has-problems :a)
+  {:__problems {:a 1}} =not=> (has-problems :b)
+  {:__problems {}} =not=> (has-problems :a)
   {} =not=> (has-problems :a)
-  {:problems {:a 1 :b 1}} => (has-problems :a :b)
-  {:problems {:a 1}} => (has-problems)
-  {:problems {}} => (has-problems)
+  {:__problems {:a 1 :b 1}} => (has-problems :a :b)
+  {:__problems {:a 1}} => (has-problems)
+  {:__problems {}} => (has-problems)
   {} =not=> (has-problems)
   nil =not=> (has-problems))
 

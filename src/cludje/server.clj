@@ -67,10 +67,10 @@
   (fn [request]
     (let [modelname (get-modelname request)
           templatename (get-templatename request)
-          model @(find-in-ns model-ns modelname)
+          model (find-in-ns model-ns modelname)
           template (find-in-ns template-ns templatename)]
       (when (and template model)
-        (html-response (template model))))))
+        (html-response (template @model))))))
 
 (defn request-data [request]
   (get request :params (get request :body)))
@@ -79,13 +79,13 @@
   "Generates a fn that runs an action"
   (fn [request]
     (let [data (request-data request)]
-    (when-let [action (get-action dispatcher data)]
-      (render renderer request (action sys data))))))
+      (when-let [action (get-action dispatcher data)]
+        (render renderer request (action sys data))))))
 
 (defn ring-handler [& handlers]
   (let [handlers (filter identity handlers)]
     (-> (fn [request]
-          (first (map #(% request) handlers))) 
+          (first (filter identity (map #(% request) handlers))))
         (resource/wrap-resource "public")
         (file-info/wrap-file-info) 
         (kw/wrap-keyword-params) 

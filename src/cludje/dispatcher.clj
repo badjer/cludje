@@ -5,7 +5,7 @@
 (defrecord Dispatcher [dispatches]
   IDispatcher
   (get-action- [self input]
-    (if-let [action (get input :action)]
+    (when-let [action (get input :action)]
       (get @dispatches (keyword (name action))))))
 
 (defn is-action? [vr]

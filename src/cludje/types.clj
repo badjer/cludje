@@ -23,12 +23,14 @@
   "Returns true if x is truthy and not an empty string."
   (and x (not= x "")))
 
+(defn friendly-name [field] (s/capitalize (name field)))
+
 (defn needs [data & kees]
   "Generate an error if any of the supplied keys is missing from data"
   (apply merge
          (for [kee kees]
            (if-not (value? (kee data)) 
-             {kee (str "Please supply a value")}))))
+             {kee (str "Please supply a value for " (friendly-name kee))}))))
 
 (defn bad [f x]
   "Returns true only if x has a value and f also fails"
@@ -39,7 +41,7 @@
   (apply merge
          (for [kee kees]
            (if (bad f (get m kee))
-             {kee (str "Can't understand " (name kee))}))))
+             {kee (str "Can't understand " (friendly-name kee))}))))
 
 (def Str 
   (reify 

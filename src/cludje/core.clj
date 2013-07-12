@@ -19,11 +19,11 @@
    (? input kee (constantly true)))
   ([input kee pred] 
    (when-not (contains? input kee)
-     (throw-problems {kee (str kee " is required but was not provided")}))
+     (throw-problems {kee (str (friendly-name kee) " is required but was not provided")}))
    (let [v (get input kee)]
      (if (validate-test pred v)
        v
-       (throw-problems {kee (str kee " was not valid")})))))
+       (throw-problems {kee (str (friendly-name kee) " was not valid")})))))
 
 (defn ?? 
   "Returns kee from input, but does NOT throw an exception if it's
@@ -85,7 +85,7 @@
     (apply needs input (:require model-meta))
     (into {} (for [[field typ] (:fields model-meta)]
                (when-not (validate typ (get input field))
-                 [field (str "Invalid format for " field)])))))
+                 [field (str "Invalid format for " (friendly-name field))])))))
 
 (defn- defmodel-problems [nam]
   (let [rec-name (record-name nam)]
@@ -330,7 +330,7 @@
            ~@forms
            (catch clojure.lang.ExceptionInfo ex#
              (let [problems# (:problems (ex-data ex#))]
-               (assoc ~'input :problems problems#)))))) 
+               (assoc ~'input :__problems problems#)))))) 
      (alter-meta! (var ~nam) assoc :action true)))
 
 
