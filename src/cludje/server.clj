@@ -43,7 +43,7 @@
     (ng/angular-layout "Test" {}
                        (ng/list-model LoginUser {:username "abc"}))))
 
-(def template-regex #"/templates/([^/]+)/([^/.]+)\.tmpl\.html$")
+(def template-regex #"/templates/([^/]+)/([^/.]+)\.tpl\.html$")
 
 (defn get-modelname [request]
   (when-let [uri (:uri request)]

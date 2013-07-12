@@ -1,6 +1,7 @@
 (ns cludje.app-test
   (:use midje.sweet
         cludje.test
+        cludje.types
         cludje.core
         cludje.dispatcher
         cludje.renderer
@@ -28,7 +29,6 @@
       (do-request req) => (throws))))
 
 (defaction ac-a1 {:a 1})
-
 
 (fact "started app responds with json"
   (let [dispatches {:default ac-a1}
@@ -61,3 +61,15 @@
     (start-system sys) => anything
     (do-request req) => 3
     (stop-system sys) => anything))
+
+(defmodel Cog {:amt Int})
+(def template-request "http://localhost:8888/templates/Cog/list.tpl.html")
+
+(fact "making a system with :template-ns and :model-ns set 
+  has it serve templates"
+  (let [sys (make-system {:template-ns 'cludje.templates.angular
+                          :model-ns 'cludje.app-test})]
+    (start-system sys) => anything
+    (do-request template-request) => (contains {:status 200})
+    (stop-system sys)))
+

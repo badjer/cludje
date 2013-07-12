@@ -55,7 +55,7 @@
 
 (def res-request {:url "http://localhost:8099/css/test.css"})
 
-(def template-request {:url "http://localhost:8099/templates/Cog/edit.tmpl.html"})
+(def template-request {:url "http://localhost:8099/templates/Cog/edit.tpl.html"})
 
 (let [serv (->JettyServer 8099 (atom nil) (atom nil))
       sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
@@ -72,7 +72,4 @@
     (start- serv) => anything
     (:body (do-request template-request)) => "<p>Hello</p>"
     (stop- serv) => anything))
-
-
-
 
