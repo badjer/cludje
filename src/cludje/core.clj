@@ -8,6 +8,14 @@
   ([problems]
    (throw (ex-info "Problems" {:problems problems}))))
 
+(defn friendly-name 
+  ([model field]
+   (if-let [names (:fieldnames (meta model))]
+     (get names field)
+     (friendly-name field)))
+  ([field] (s/capitalize (name field))))
+
+
 ; Request api
 (defn ? 
   "Returns kee from input, throwing an exception if it's not found,
@@ -43,6 +51,24 @@
 
 (defn field-types [model]
   (? (meta model) :fields))
+
+(defn needs [data & kees]
+  "Generate an error if any of the supplied keys is missing from data"
+  (apply merge
+         (for [kee kees]
+           (if-not (value? (kee data)) 
+             {kee (str "Please supply a value for " (friendly-name kee))}))))
+
+(defn bad [f x]
+  "Returns true only if x has a value and f also fails"
+  (and (value? x) (not (validate-test f x))))
+
+(defn no-bad [f m & kees]
+  "Returns a map of errors if any of the supplied kees are bad f"
+  (apply merge
+         (for [kee kees]
+           (if (bad f (get m kee))
+             {kee (str "Can't understand " (friendly-name kee))}))))
 
 ; ####
 ; Model builder
@@ -80,12 +106,13 @@
        (with-meta (apply ~constructor (repeat ~numkeys nil)) 
                   ~opts))))
 
-(defn get-problems [model-meta input]
+(defn get-problems [model input]
   (merge
-    (apply needs input (:require model-meta))
-    (into {} (for [[field typ] (:fields model-meta)]
+    (apply needs input (:require (meta model)))
+    (into {} (for [[field typ] (:fields (meta model))]
                (when-not (validate typ (get input field))
-                 [field (str "Invalid format for " (friendly-name field))])))))
+                 [field (str "Invalid format for " 
+                             (friendly-name model field))])))))
 
 (defn- defmodel-problems [nam]
   (let [rec-name (record-name nam)]
@@ -93,7 +120,7 @@
        IValidateable
        {:problems? 
         (fn [self# m#] 
-          (let [p# (get-problems (meta ~nam) m#)]
+          (let [p# (get-problems ~nam m#)]
             (if-not (empty? p#)
               p#)))})))
 
@@ -123,11 +150,16 @@
         allfields (if no-key? 
                     fields 
                     (assoc fields kee (symbol "Str")))
+        fieldnames (merge 
+                     (zipmap (keys allfields) 
+                             (map friendly-name (keys allfields)))
+                          (get optmap :fieldnames {}))
         modelopts (merge {:require reqfields
                           :fields allfields
+                          :fieldnames fieldnames
                           :table table
                           :key kee}
-                         optmap)]
+                         (dissoc optmap :fieldnames))]
     `(do
        ~(defmodel-record nam fields)
        ~(defmodel-singleton nam fields modelopts)
