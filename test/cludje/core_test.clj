@@ -13,7 +13,8 @@
 
 (defmodel User {:name Str :email Email :pwd Password})
 (defmodel Cog {:price Money :amt Int})
-(defmodel Person {:name Str :age Int :_id Str} :require [:name])
+(defmodel Person {:name Str :age Int :_id Str} 
+  :require [:name])
 
 (def User-copy User)
 

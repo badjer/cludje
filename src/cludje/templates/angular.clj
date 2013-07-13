@@ -196,11 +196,11 @@
 
 (defn edit-template [model]
   (angular-layout
-    (_form-template model (str "Edit " (table-name model)) :update)))
+    (_form-template model (str "Edit " (table-name model)) :put)))
 
 (defn new-template [model]
   (angular-layout
-    (_form-template model (str "New " (table-name model)) :add)))
+    (_form-template model (str "New " (table-name model)) :post)))
 
 (defn index-template [model]
   (angular-layout
