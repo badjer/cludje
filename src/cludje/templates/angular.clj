@@ -135,11 +135,11 @@
 
 (defn form-line
   ([control]
-   (form-line control nil))
-  ([control field]
+   (form-line control nil nil))
+  ([control field label]
     [:div.control-group
-     (when field
-       [:label.control-label {:for field} (friendly-name field)])
+     (when label
+       [:label.control-label {:for field} label])
      [:div.controls control]]))
 
 (defn button [txt & args]
@@ -161,7 +161,9 @@
       (when title [:h3 title])
       (ng-field Hidden :_id)
       (for [[field typ] (dissoc (field-types model) :_id)] 
-        (form-line (ng-field typ field) field))
+        (form-line (ng-field typ field) 
+                   field 
+                   (friendly-name model field)))
       (when action
         (form-line (button "Save" :action ac-name))))))
 
@@ -217,6 +219,9 @@
      [:h3 "Printout of one " (table-name model)]
      (ng-field Hidden :_id)
      (for [[field typ] (dissoc (field-types model) :_id)]
-       (form-line (ng-data "data." field) field))])) 
+       (form-line 
+         (ng-data "data." field) 
+         field
+         (friendly-name field)))]))
 
 
