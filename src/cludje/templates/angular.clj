@@ -47,7 +47,7 @@
   (ng-field [self field] [:input {:id field :type "text" :name field :ng-model (ng-path "data." field)}]))
                                                    
 
-(defn ng-data [& path] (str "{{" (apply str path) "}}"))
+(defn ng-data [& path] (str "{{" (apply ng-path path) "}}"))
 
 (defn angular-layout [body]
   (html (html5 
@@ -165,6 +165,27 @@
       (when action
         (form-line (button "Save" :action ac-name))))))
 
+(defn model-title-field [model]
+  (let [fts (field-types model)]
+    (if (:name fts)
+      :name
+      (first (keys fts)))))
+
+(defn _summarize-template [model]
+  (let [tablename (table-name model)]
+    [:div
+     [:h4 (ng-data tablename "." (model-title-field model))]]))
+
+(defn _item-template [summarize-template model] 
+  [:li.span4.thumbnail.well
+   (summarize-template model)])
+
+(defn _list-template [item-template model]
+  (let [tablename (table-name model)]
+    [:ul.thumbnails {:ng-repeat (str tablename " in " tablename "s")}
+     (item-template model)]))
+
+
 
 
 ; Basic templates
@@ -183,8 +204,19 @@
 
 (defn index-template [model]
   (angular-layout
-    [:h3 "List of " (table-name model)]))
+    [:div 
+     [:h3 "List of " (table-name model)]
+     (_list-template 
+       (partial _item-template _summarize-template)
+       model)]))
+
 
 (defn show-template [model]
   (angular-layout
-    [:h3 "Printout of one " (table-name model)]))
+    [:div 
+     [:h3 "Printout of one " (table-name model)]
+     (ng-field Hidden :_id)
+     (for [[field typ] (dissoc (field-types model) :_id)]
+       (form-line (ng-data "data." field) field))])) 
+
+

@@ -15,3 +15,4 @@
     ; responsibility of our JSON lib
     ; Just make sure it works at least a little bit
     (:body (render- renderer nil {:a 1 :b 2})) => "{\"a\":1,\"b\":2}"))
+

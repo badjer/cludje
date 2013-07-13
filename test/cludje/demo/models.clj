@@ -2,4 +2,4 @@
   (:use cludje.core
         cludje.types))
 
-(defmodel Cog {:amt Int})
+(defmodel Cog {:name Str :amt Int})
