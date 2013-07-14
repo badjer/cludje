@@ -169,7 +169,7 @@
     (count (query db :cog nil)) => 1
     (fetch db :cog id) => (contains cog)
     (delete db :cog id) => anything
-    (query db :cog nil) => empty?))
+    (query db :cog nil) => nil))
 
 (facts "db ops with keywords and models update same table"
   (let [dba (atom {})

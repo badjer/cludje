@@ -26,7 +26,7 @@
     (fact "query-"
       (count (query- db tbl {:a 1})) => 1
       (first (query- db tbl {:a 1})) => (contains row)
-      (query- db tbl {:a 2}) => empty?
+      (query- db tbl {:a 2}) => nil
       (count (query- db tbl {})) => 1
       (first (query- db tbl {:a 1})) => (contains row)
       (count (query- db tbl nil)) => 1
@@ -43,7 +43,9 @@
       (delete- db tbl nil) => anything
       (count (query- db tbl nil)) => 1
       (delete- db tbl id) => anything
-      (count (query- db tbl nil)) => 0)))
+      (count (query- db tbl nil)) => 0)
+    (fact "query- with empty table"
+      (query- db tbl nil) => nil)))
 
 (facts "MemDb multiple rows"
   (let [db (->MemDb (atom {}))

@@ -28,11 +28,13 @@
     (let [_ (validate-db-data params)
           kwcoll (keyword coll)]
       (if (empty? params)
-        (get @dbatom kwcoll)
+        (let [res (get @dbatom kwcoll)]
+          (if (empty? res) nil res))
         (let [table (get @dbatom kwcoll)
               comparison-keys (keys params)
-              row-matches? #(= params (select-keys % comparison-keys))]
-          (filter row-matches? table)))))
+              row-matches? #(= params (select-keys % comparison-keys))
+              res (filter row-matches? table)]
+          (if (empty? res) nil res)))))
   (write- [self coll kee data] 
     (let [kee (if kee kee (new-id)) ; If no kee is supplied, create a new one
           keemap {:_id kee}
