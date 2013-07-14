@@ -154,12 +154,14 @@
                      (zipmap (keys allfields) 
                              (map friendly-name (keys allfields)))
                           (get optmap :fieldnames {}))
+        invisible (conj (get optmap :invisible []) :_id)
         modelopts (merge {:require reqfields
                           :fields allfields
                           :fieldnames fieldnames
                           :table table
+                          :invisible invisible
                           :key kee}
-                         (dissoc optmap :fieldnames))]
+                         (dissoc optmap :fieldnames :invisible))]
     `(do
        ~(defmodel-record nam fields)
        ~(defmodel-singleton nam fields modelopts)

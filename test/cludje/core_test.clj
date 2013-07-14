@@ -45,7 +45,8 @@
 (defmodel Cog {:price Money :amt Int})
 (defmodel Person {:name Str :age Int :_id Str} 
   :fieldnames {:age "How Old"}
-  :require [:name])
+  :require [:name]
+  :invisible [:age])
 
 (def User-copy User)
 
@@ -58,6 +59,7 @@
     (:table (meta User)) => "user"
     (:fieldnames (meta User)) => (has-keys :name :email :pwd)
     (:fieldnames (meta Person)) => (contains {:age "How Old"})
+    (:invisible (meta Person)) => [:age :_id]
     (table-name User) => "user"
     (key-name User) => :_id
     (field-types User) => (has-keys :name :email :pwd))

@@ -91,11 +91,15 @@
   (str (table-name model) "-" (name action)))
 
 (defn _form-template [model title action]
-  (let [ac-name (action-name model action)]
+  (let [ac-name (action-name model action)
+        fields (field-types model)
+        invisible (? (meta model) :invisible)
+        visible-fields (apply dissoc fields invisible)]
     (form 
       (when title [:h3 title])
-      (ng-field Hidden :_id)
-      (for [[field typ] (dissoc (field-types model) :_id)] 
+      (for [field invisible]
+        (ng-field Hidden field))
+      (for [[field typ] visible-fields]
         (form-line (ng-field typ field) 
                    field 
                    (friendly-name model field)))
@@ -249,15 +253,19 @@
        model)]))
 
 (defn template-show [model]
-  (common-layout
-    [:div 
-     [:h3 "Printout of one " (table-name model)]
-     (ng-field Hidden :_id)
-     (for [[field typ] (dissoc (field-types model) :_id)]
-       (form-line 
-         (ng-data "data." field) 
-         field
-         (friendly-name field)))]))
+  (let [fields (field-types model)
+        invisible (? (meta model) :invisible)
+        visible-fields (apply dissoc fields invisible)]
+    (common-layout
+      [:div 
+       [:h3 "Printout of one " (table-name model)]
+       (for [field invisible]
+         (ng-field Hidden field))
+       (for [[field typ] visible-fields] 
+         (form-line 
+           (ng-data "data." field) 
+           field
+           (friendly-name field)))])))
 
 (defmacro use-default-templates []
   `(do 
