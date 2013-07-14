@@ -116,7 +116,7 @@
 
 (defn _list-template [item-template model]
   (let [tablename (table-name model)]
-    [:ul.thumbnails {:ng-repeat (str tablename " in " tablename "s")}
+    [:ul.thumbnails {:ng-repeat (str tablename " in data." tablename "s")}
      (item-template model)]))
 
 
