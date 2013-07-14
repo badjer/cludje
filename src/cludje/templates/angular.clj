@@ -5,7 +5,9 @@
         cludje.core
         cludje.types))
 
-(defn ng-path [& path] (apply str (map name path)))
+(defn ng-path [& path] 
+  (let [res (apply str (map name (filter identity path)))]
+    res))
 
 (defprotocol IAngularField
   (ng-field [self field] "Render some angular.js markup with the id field"))
@@ -50,12 +52,8 @@
 (defn ng-data [& path] (str "{{" (apply ng-path path) "}}"))
 
 (defn problem [field]
-  [:p.help-inline {:ng-show (str "data.__problems." field)}
+  [:p.help-inline {:ng-show (ng-path "data.__problems." field)}
    (ng-data "data.__problems." field)])
-
-(defn problem-list []
-  [:p.text-error {:ng-repeat "problem in data.__problems"}
-   (ng-data "problem")])
 
 (defn form-to [opts & contents]
   (let [attrs (merge {:method "POST" :class "form-horizontal"} opts)]
@@ -69,10 +67,15 @@
   ([control]
    (form-line control nil nil))
   ([control field label]
-    [:div.control-group
+    [:div.control-group 
+     {:ng-class (str "{error: " 
+                     (ng-path "data.__problems." field) " != undefined}")}
      (when label
        [:label.control-label {:for field} label])
-     [:div.controls control]]))
+     [:div.controls 
+      control
+      (when field (problem field))
+      ]]))
 
 (defn button [txt & args]
   (let [passed-opts (apply hash-map args)
@@ -85,7 +88,7 @@
     [:input opts]))
 
 (defn action-name [model action]
-  (str (name action) "-" (table-name model)))
+  (str (table-name model) "-" (name action)))
 
 (defn _form-template [model title action]
   (let [ac-name (action-name model action)]
@@ -171,7 +174,6 @@
               ]
              ]
             [:div.container-fluid 
-             (problem-list)
              body]
             [:footer]
             ] 
@@ -209,13 +211,13 @@
     var actname = function(){
       if(window.location.hash){
         return window.location.hash.substring(1);
-      }else{
+      //}else{
         // If there's no hash, call an action that is the
         // same as the name of the template
-        var re = /^\\/templates\\/([^\\/]+)\\/([^\\/.]+)\\..*$/;
-        if(re.test(window.location.pathname)){
-          return window.location.pathname.replace(re, \"$1-$2\");
-        }
+        //var re = /^\\/templates\\/([^\\/]+)\\/([^\\/.]+)\\..*$/;
+        //if(re.test(window.location.pathname)){
+          //return window.location.pathname.replace(re, \"$1-$2\");
+        //}
       }
       return null;
     };
@@ -232,11 +234,11 @@
 
 (defn template-edit [model]
   (common-layout
-    (_form-template model (str "Edit " (table-name model)) :put)))
+    (_form-template model (str "Edit " (table-name model)) :edit)))
 
 (defn template-new [model]
   (common-layout
-    (_form-template model (str "New " (table-name model)) :post)))
+    (_form-template model (str "New " (table-name model)) :new)))
 
 (defn template-index [model]
   (common-layout
