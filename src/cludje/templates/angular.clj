@@ -215,13 +215,13 @@
     var actname = function(){
       if(window.location.hash){
         return window.location.hash.substring(1);
-      //}else{
+      }else{
         // If there's no hash, call an action that is the
         // same as the name of the template
-        //var re = /^\\/templates\\/([^\\/]+)\\/([^\\/.]+)\\..*$/;
-        //if(re.test(window.location.pathname)){
-          //return window.location.pathname.replace(re, \"$1-$2\");
-        //}
+        var re = /^\\/templates\\/([^\\/]+)\\/([^\\/.]+)\\..*$/;
+        if(re.test(window.location.pathname)){
+          return window.location.pathname.replace(re, \"$1-$2\");
+        }
       }
       return null;
     };
@@ -238,13 +238,13 @@
 
 (defn template-edit [model]
   (common-layout
-    (_form-template model (str "Edit " (table-name model)) :edit)))
+    (_form-template model (str "Edit " (table-name model)) :alter)))
 
 (defn template-new [model]
   (common-layout
-    (_form-template model (str "New " (table-name model)) :new)))
+    (_form-template model (str "New " (table-name model)) :add)))
 
-(defn template-index [model]
+(defn template-list [model]
   (common-layout
     [:div 
      [:h3 "List of " (table-name model)]
@@ -278,6 +278,6 @@
      (defn ~'template-new [~'model]
        (cludje.templates.angular/template-new ~'model))
      (defn ~'template-list [~'model]
-       (cludje.templates.angular/template-index ~'model))
+       (cludje.templates.angular/template-list ~'model))
      (defn ~'template-show [~'model]
        (cludje.templates.angular/template-show ~'model))))
