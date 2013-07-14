@@ -203,16 +203,29 @@
         });
     };
 
+    // Figure out what the current action is, based on the url
+    var actname = function(){
+      if(window.location.hash){
+        return window.location.hash.substring(1);
+      }else{
+        // If there's no hash, call an action that is the
+        // same as the name of the template
+        var re = /^\\/templates\\/([^\\/]+)\\/([^\\/.]+)\\..*$/;
+        if(re.test(window.location.pathname)){
+          return window.location.pathname.replace(re, \"$1-$2\");
+        }
+      }
+      return null;
+    };
+
     // Ok, the only other thing we want to do is initialize
     // with our first-time data. To do this, we'll pull the 
     // action name and params off the url hash
     // This code should only get run once (when the page is first
     // loaded)
-    if(window.location.hash){
-      var actname = window.location.hash.substring(1);
-      $scope.action(actname);
+    if(actname()){
+      $scope.action(actname());
     }
-    
   };")
 
 (defn template-edit [model]
@@ -252,7 +265,7 @@
        (cludje.templates.angular/template-edit ~'model))
      (defn ~'template-new [~'model]
        (cludje.templates.angular/template-new ~'model))
-     (defn ~'template-index [~'model]
+     (defn ~'template-list [~'model]
        (cludje.templates.angular/template-index ~'model))
      (defn ~'template-show [~'model]
        (cludje.templates.angular/template-show ~'model))))
