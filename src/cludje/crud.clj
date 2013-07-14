@@ -9,7 +9,7 @@
         modelname (table-name model)
         keename (key-name model)]
     `(do
-      (defaction ~(symbol (str "list-" modelname "s"))
+      (defaction ~(symbol (str "list-" modelname))
          (~'query ~model-sym nil))
       (defaction ~(symbol (str "post-" modelname))
          (~'save ~model-sym ~'input))

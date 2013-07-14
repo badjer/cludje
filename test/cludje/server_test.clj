@@ -47,8 +47,8 @@
     (stop- serv) => anything))
 
 (defmodel Cog {:amt Int})
-(defn edit-template [model] "<p>Hello</p>")
-(defn foo-Cog [] "Instance")
+(defn template-edit [model] "<p>Hello</p>")
+(defn cog-foo [] "Instance")
 
 (facts "find-in-ns"
   (find-in-ns 'cludje.server-test "Cog") => #'Cog

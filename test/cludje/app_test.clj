@@ -63,15 +63,23 @@
     (stop-system sys) => anything))
 
 (defmodel Cog {:amt Int})
-(def template-request {:url "http://localhost:8888/templates/Cog/edit.tpl.html"})
-(def bad-template-request {:url "http://localhost:8888/templates/Cog/foosuamsdf.tpl.html"})
+; This is a generic template, it provides the edit template for any model
+(defn template-edit [model] "Template")
+; This is an instance template - it provides the foo template for cog
+(defn cog-foo [] "Instance")
+
+(def template-request {:url "http://localhost:8888/templates/cog/edit.tpl.html"})
+(def bad-template-request {:url "http://localhost:8888/templates/cog/foosuamsdf.tpl.html"})
+(def template-instance-req {:url "http://localhost:8888/templates/cog/foo.tpl.html"})
 
 (fact "making a system with :template-ns and :model-ns set 
   has it serve templates"
-  (let [sys (make-system {:template-ns 'cludje.templates.angular
+  (let [sys (make-system {:template-ns 'cludje.app-test
                           :model-ns 'cludje.app-test})]
     (start-system sys) => anything
     (do-request template-request) => (contains {:status 200})
     (do-request bad-template-request) => (throws)
-    (stop-system sys)))
+    (fact "Can also do template instances"
+      (:body (do-request template-instance-req)) => "Instance"
+    (stop-system sys))))
 

@@ -1,7 +1,6 @@
 (ns cludje.server
   (:use cludje.core)
-  (:require [cludje.templates.angular :as ng]
-            [clojure.string :as s]
+  (:require [clojure.string :as s]
             [ring.adapter.jetty :as jetty]
             [ring.middleware.json :as json]
             [ring.middleware.resource :as resource]
@@ -49,12 +48,12 @@
 (defn get-templatename [request]
   (when-let [uri (:uri request)]
     (when-let [n (last (re-find template-regex uri))]
-      (str n "-template"))))
+      (str "template-" n))))
 
 (defn get-template-instance-name [request]
   (when-let [uri (:uri request)]
     (when-let [n (last (re-find template-regex uri))]
-      (str n "-" (s/lower-case (get-modelname request))))))
+      (str (s/lower-case (get-modelname request)) "-" n))))
 
 
 (defn find-in-ns [nas thing]

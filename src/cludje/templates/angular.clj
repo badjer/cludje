@@ -49,93 +49,6 @@
 
 (defn ng-data [& path] (str "{{" (apply ng-path path) "}}"))
 
-(defn angular-layout [body]
-  (html (html5 
-          [:html {:lang "en" :ng-app "mainapp"}
-           [:head 
-            [:meta {:charset "utf-8"}]
-            [:meta {:http-equiv "X-UA-Compatible" :content "IE Edge,chrome 1"}]
-            [:meta {:name "viewport" :content "width device-width, initial-scale 1.0"}]
-            [:title "Cludje"]
-            [:meta {:http-equiv "Content-Type" :content "text/html; charset utf-8"}]
-
-            "<!--[if lt IE 9] 
-            <script src='//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.6.1/html5shiv.js' type 'text/javascript'></script>
-            <![endif]-->"
-            [:link {:href "//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" :rel "stylesheet"}]
-
-            [:link {:href "/img/apple-touch-icon-144x144-precomposed.png" :rel "apple-touch-icon-precompiled"}] 
-            [:link {:href "/img/apple-touch-icon-114x114-precomposed.png" :rel "apple-touch-icon-precompiled"}]
-            [:link {:href "/img/apple-touch-icon-72x72-precomposed.png" :rel "apple-touch-icon-precompiled"}]
-            [:link {:href "/img/apple-touch-icon--precomposed.png" :rel "apple-touch-icon-precompiled"}]
-
-            [:link {:href "/img/favicon.ico" :rel "shortcut icon"}]
-            ]
-           [:body {:style "padding-top: 0px;" :ng-controller "MainCntl"}
-            [:div.navbar.navbar-static-top
-             [:div.navbar-inner
-              [:div.container
-               [:a.btn.btn-navbar {:data-toggle "collapse" :data-target ".nav-collapse"}
-                [:span.icon-bar]
-                [:span.icon-bar]
-                [:span.icon-bar]
-                ]
-               [:a.brand {:href "/"} [:strong "Cludje"]]
-               [:div.nav-collapse.collapse
-                [:ul.nav
-                 [:li [:a {:href "/a"} "A"]]
-                 [:li [:a {:href "/b"} "B"]]
-                 ]
-                [:ul.nav.pull-right]
-                ]
-               ]
-              ]
-             ]
-            [:div.container-fluid body]
-            [:footer]
-            ] 
-           [:script {:src "//ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"}]
-           [:script {:src "/templates/js/app.js"}]
-            ])))
-
-(defn app-js []
-  "Serves the angular.js controller and module."
-  ;This isn't a static file because I think we'll probably
-  ;want to generate this dynamically pretty soon
-  "angular.module('mainapp', [], 
-      function($routeProvider, $locationProvider){
-    });
-
-  function MainCntl($scope, $http){ 
-    // Initialize our data
-    $scope.data = {};
-
-    // Define our action - an action for calling actions... named action
-    // That might be confusing
-    $scope.action = function(actname){
-      // Set the server-side action we want to call
-      $scope.data.action = actname;
-      console.log('Calling ' + actname);
-      $http.post('/', $scope.data)
-        .success(function(data){
-          // Set the result of the server action to our scope
-          $scope.data = data;
-          console.log(data);
-        });
-    };
-
-    // Ok, the only other thing we want to do is initialize
-    // with our first-time data. To do this, we'll pull the 
-    // action name and params off the url hash
-    // This code should only get run once (when the page is first
-    // loaded)
-    if(window.location.hash){
-      var actname = window.location.hash.substring(1);
-      $scope.action(actname);
-    }
-    
-  };")
-
 (defn problem [field]
   [:p.help-inline {:ng-show (str "data.__problems." field)}
    (ng-data "data.__problems." field)])
@@ -215,25 +128,111 @@
 ; a separation between UI and data - we're trying not to conflate
 ; them like rails does
 
-(defn edit-template [model]
-  (angular-layout
+(defn common-layout [body]
+  (html (html5 
+          [:html {:lang "en" :ng-app "mainapp"}
+           [:head 
+            [:meta {:charset "utf-8"}]
+            [:meta {:http-equiv "X-UA-Compatible" :content "IE Edge,chrome 1"}]
+            [:meta {:name "viewport" :content "width device-width, initial-scale 1.0"}]
+            [:title "Cludje"]
+            [:meta {:http-equiv "Content-Type" :content "text/html; charset utf-8"}]
+
+            "<!--[if lt IE 9] 
+            <script src='//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.6.1/html5shiv.js' type 'text/javascript'></script>
+            <![endif]-->"
+            [:link {:href "//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" :rel "stylesheet"}]
+
+            [:link {:href "/img/apple-touch-icon-144x144-precomposed.png" :rel "apple-touch-icon-precompiled"}] 
+            [:link {:href "/img/apple-touch-icon-114x114-precomposed.png" :rel "apple-touch-icon-precompiled"}]
+            [:link {:href "/img/apple-touch-icon-72x72-precomposed.png" :rel "apple-touch-icon-precompiled"}]
+            [:link {:href "/img/apple-touch-icon--precomposed.png" :rel "apple-touch-icon-precompiled"}]
+
+            [:link {:href "/img/favicon.ico" :rel "shortcut icon"}]
+            ]
+           [:body {:style "padding-top: 0px;" :ng-controller "MainCntl"}
+            [:div.navbar.navbar-static-top
+             [:div.navbar-inner
+              [:div.container
+               [:a.btn.btn-navbar {:data-toggle "collapse" :data-target ".nav-collapse"}
+                [:span.icon-bar]
+                [:span.icon-bar]
+                [:span.icon-bar]
+                ]
+               [:a.brand {:href "/"} [:strong "Cludje"]]
+               [:div.nav-collapse.collapse
+                [:ul.nav
+                 [:li [:a {:href "/a"} "A"]]
+                 [:li [:a {:href "/b"} "B"]]
+                 ]
+                [:ul.nav.pull-right]
+                ]
+               ]
+              ]
+             ]
+            [:div.container-fluid body]
+            [:footer]
+            ] 
+           [:script {:src "//ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"}]
+           [:script {:src "/templates/js/app.js"}]
+            ])))
+
+(defn js-app []
+  "Serves the angular.js controller and module."
+  ;This isn't a static file because I think we'll probably
+  ;want to generate this dynamically pretty soon
+  "angular.module('mainapp', [], 
+      function($routeProvider, $locationProvider){
+    });
+
+  function MainCntl($scope, $http){ 
+    // Initialize our data
+    $scope.data = {};
+
+    // Define our action - an action for calling actions... named action
+    // That might be confusing
+    $scope.action = function(actname){
+      // Set the server-side action we want to call
+      $scope.data.action = actname;
+      console.log('Calling ' + actname);
+      $http.post('/', $scope.data)
+        .success(function(data){
+          // Set the result of the server action to our scope
+          $scope.data = data;
+          console.log(data);
+        });
+    };
+
+    // Ok, the only other thing we want to do is initialize
+    // with our first-time data. To do this, we'll pull the 
+    // action name and params off the url hash
+    // This code should only get run once (when the page is first
+    // loaded)
+    if(window.location.hash){
+      var actname = window.location.hash.substring(1);
+      $scope.action(actname);
+    }
+    
+  };")
+
+(defn template-edit [model]
+  (common-layout
     (_form-template model (str "Edit " (table-name model)) :put)))
 
-(defn new-template [model]
-  (angular-layout
+(defn template-new [model]
+  (common-layout
     (_form-template model (str "New " (table-name model)) :post)))
 
-(defn index-template [model]
-  (angular-layout
+(defn template-index [model]
+  (common-layout
     [:div 
      [:h3 "List of " (table-name model)]
      (_list-template 
        (partial _item-template _summarize-template)
        model)]))
 
-
-(defn show-template [model]
-  (angular-layout
+(defn template-show [model]
+  (common-layout
     [:div 
      [:h3 "Printout of one " (table-name model)]
      (ng-field Hidden :_id)
