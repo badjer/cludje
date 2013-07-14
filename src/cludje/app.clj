@@ -41,7 +41,9 @@
   (let [templates (when-let [ts (:template-ns sys)] 
                     (template-handler (:model-ns sys) ts))
         actions (action-handler sys)
-        handler (ring-handler templates actions)]
+        instances (when-let [ts (:template-ns sys)]
+                    (template-instance-handler (:model-ns sys) ts))
+        handler (ring-handler instances templates actions)]
     ; Set the server handler
     (set-handler- (:server sys) handler)
     (doseq [subsys (vals sys)]

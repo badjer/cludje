@@ -95,27 +95,46 @@
             [:footer]
             ] 
            [:script {:src "//ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"}]
-           [:script {:type "text/javascript"}
-            "angular.module('mainapp', [], 
-                function($routeProvider, $locationProvider){
-              });
-
-            function MainCntl($scope, $http){ 
-              $scope.data = {};
-              $scope.action = function(actname){
-                // Do some ajax here
-                $scope.data.action = actname;
-                console.log('Calling ' + actname);
-                console.log('With: ' + $scope.data);
-                $http.post('/', $scope.data)
-                  .success(function(data){
-                    $scope.data = data;
-                    console.log(data);
-                  });
-              };
-            };"]
+           [:script {:src "/templates/js/app.js"}]
             ])))
 
+(defn app-js []
+  "Serves the angular.js controller and module."
+  ;This isn't a static file because I think we'll probably
+  ;want to generate this dynamically pretty soon
+  "angular.module('mainapp', [], 
+      function($routeProvider, $locationProvider){
+    });
+
+  function MainCntl($scope, $http){ 
+    // Initialize our data
+    $scope.data = {};
+
+    // Define our action - an action for calling actions... named action
+    // That might be confusing
+    $scope.action = function(actname){
+      // Set the server-side action we want to call
+      $scope.data.action = actname;
+      console.log('Calling ' + actname);
+      $http.post('/', $scope.data)
+        .success(function(data){
+          // Set the result of the server action to our scope
+          $scope.data = data;
+          console.log(data);
+        });
+    };
+
+    // Ok, the only other thing we want to do is initialize
+    // with our first-time data. To do this, we'll pull the 
+    // action name and params off the url hash
+    // This code should only get run once (when the page is first
+    // loaded)
+    if(window.location.hash){
+      var actname = window.location.hash.substring(1);
+      $scope.action(actname);
+    }
+    
+  };")
 
 (defn problem [field]
   [:p.help-inline {:ng-show (str "data.__problems." field)}

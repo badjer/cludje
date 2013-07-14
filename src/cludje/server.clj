@@ -1,6 +1,7 @@
 (ns cludje.server
   (:use cludje.core)
   (:require [cludje.templates.angular :as ng]
+            [clojure.string :as s]
             [ring.adapter.jetty :as jetty]
             [ring.middleware.json :as json]
             [ring.middleware.resource :as resource]
@@ -38,16 +39,22 @@
 (defn jetty [port]
   (->JettyServer port (atom nil) (atom nil)))
 
-(def template-regex #"/templates/([^/]+)/([^/.]+)\.tpl\.html$")
+(def template-regex #"/templates/([^/]+)/([^/.]+)\..")
 
 (defn get-modelname [request]
   (when-let [uri (:uri request)]
-    (second (re-find template-regex uri))))
+    (when-let [n (second (re-find template-regex uri))]
+      (s/capitalize n))))
 
 (defn get-templatename [request]
   (when-let [uri (:uri request)]
     (when-let [n (last (re-find template-regex uri))]
       (str n "-template"))))
+
+(defn get-template-instance-name [request]
+  (when-let [uri (:uri request)]
+    (when-let [n (last (re-find template-regex uri))]
+      (str n "-" (s/lower-case (get-modelname request))))))
 
 
 (defn find-in-ns [nas thing]
@@ -71,6 +78,16 @@
           template (find-in-ns template-ns templatename)]
       (when (and template model)
         (html-response (template @model))))))
+
+(defn template-instance-handler [model-ns template-ns]
+  "Generates a fn that returns specific templates for a model.
+  ie, if the app defined a get-project template, then calls to
+  /templates/Project/get.tpl.html would get routed to it"
+  (fn [request]
+    (let [templatename (get-template-instance-name request)
+          template (find-in-ns template-ns templatename)]
+      (when template
+        (html-response (template))))))
 
 (defn request-data [request]
   (get request :params (get request :body)))

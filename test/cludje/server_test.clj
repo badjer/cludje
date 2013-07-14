@@ -47,7 +47,8 @@
     (stop- serv) => anything))
 
 (defmodel Cog {:amt Int})
-(defn edit-template [model] "<p>Hello</p>") 
+(defn edit-template [model] "<p>Hello</p>")
+(defn foo-Cog [] "Instance")
 
 (facts "find-in-ns"
   (find-in-ns 'cludje.server-test "Cog") => #'Cog
@@ -55,7 +56,9 @@
 
 (def res-request {:url "http://localhost:8099/css/test.css"})
 
-(def template-request {:url "http://localhost:8099/templates/Cog/edit.tpl.html"})
+(def template-request {:url "http://localhost:8099/templates/cog/edit.tpl.html"})
+
+(def template-instance-req {:url "http://localhost:8099/templates/cog/foo.tpl.html"})
 
 (let [serv (->JettyServer 8099 (atom nil) (atom nil))
       sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
@@ -71,5 +74,15 @@
                                            'cludje.server-test))) => anything
     (start- serv) => anything
     (:body (do-request template-request)) => "<p>Hello</p>"
-    (stop- serv) => anything))
+    (stop- serv) => anything)
+  (facts "JettyServer serves template instances"
+    (set-handler- 
+      serv (ring-handler 
+             (template-instance-handler 
+               'cludje.server-test 
+               'cludje.server-test))) => anything
+    (start- serv) => anything
+    (:body (do-request template-instance-req)) => "Instance"
+    (stop- serv)))
+
 
