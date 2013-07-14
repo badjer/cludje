@@ -55,7 +55,7 @@
 
 (defn problem-list []
   [:p.text-error {:ng-repeat "problem in data.__problems"}
-   (ng-data "problem") ": " (ng-data "problem.msg")])
+   (ng-data "problem")])
 
 (defn form-to [opts & contents]
   (let [attrs (merge {:method "POST" :class "form-horizontal"} opts)]
