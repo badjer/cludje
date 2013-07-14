@@ -170,7 +170,9 @@
                ]
               ]
              ]
-            [:div.container-fluid body]
+            [:div.container-fluid 
+             (problem-list)
+             body]
             [:footer]
             ] 
            [:script {:src "//ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"}]
