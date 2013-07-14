@@ -15,7 +15,7 @@
   []
   (alter-var-root #'system
     (constantly (make-system {:port 8123 
-                              :template-ns 'cludje.templates.angular
+                              :template-ns 'cludje.demo.templates
                               :model-ns 'cludje.demo.models
                               :action-ns 'cludje.demo.actions}))))
 

@@ -242,4 +242,17 @@
          field
          (friendly-name field)))]))
 
-
+(defmacro use-default-templates []
+  `(do 
+     (defn ~'common-layout [~'body] 
+       (cludje.templates.angular/common-layout ~'body))
+     (defn ~'js-app []
+       (cludje.templates.angular/js-app))
+     (defn ~'template-edit [~'model]
+       (cludje.templates.angular/template-edit ~'model))
+     (defn ~'template-new [~'model]
+       (cludje.templates.angular/template-new ~'model))
+     (defn ~'template-index [~'model]
+       (cludje.templates.angular/template-index ~'model))
+     (defn ~'template-show [~'model]
+       (cludje.templates.angular/template-show ~'model))))
