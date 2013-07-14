@@ -5,6 +5,7 @@
             [ring.middleware.json :as json]
             [ring.middleware.resource :as resource]
             [ring.middleware.file-info :as file-info]
+            [ring.middleware.params :as params]
             [ring.middleware.keyword-params :as kw]))
 
 
@@ -30,9 +31,9 @@
     (reset! server (jetty/run-jetty @handler (jetty-opts self))))
   (stop- [self]
     (when @server (.stop @server))))
-  ;IPersistent
-  ;(get-state [self])
-  ;(init-state [self state]))
+;IPersistent
+;(get-state [self])
+;(init-state [self state]))
 
 
 (defn jetty [port]
@@ -91,12 +92,20 @@
 (defn request-data [request]
   (get request :params (get request :body)))
 
-(defn action-handler [{:keys [dispatcher renderer] :as sys}]
+(defn action-handler 
   "Generates a fn that runs an action"
-  (fn [request]
-    (let [data (request-data request)]
-      (when-let [action (get-action dispatcher data)]
-        (render renderer request (action sys data))))))
+  ([{:keys [dispatcher renderer] :as sys}]
+    (let [allow-get? (get sys :allow-api-get? false)
+          post-check (if allow-get? 
+                       identity 
+                       #(= (:request-method %) :post))
+          api-uri-check #(= "/api" (:uri %))
+          is-api-call? #(and (api-uri-check %) (post-check %))]
+      (fn [request]
+        (let [data (request-data request)]
+          (when (is-api-call? request)
+            (when-let [action (get-action dispatcher data)]
+              (render renderer request (action sys data)))))))))
 
 (defn ring-handler [& handlers]
   (let [handlers (filter identity handlers)]
@@ -105,11 +114,12 @@
         (resource/wrap-resource "public")
         (file-info/wrap-file-info) 
         (kw/wrap-keyword-params) 
-        (json/wrap-json-params))))
+        (json/wrap-json-params)
+        (params/wrap-params))))
 
 
 
 (defrecord MockServer []
   IServer
   (set-handler- [self newhandler]))
-  
+

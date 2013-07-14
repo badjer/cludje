@@ -195,7 +195,7 @@
       // Set the server-side action we want to call
       $scope.data.action = actname;
       console.log('Calling ' + actname);
-      $http.post('/', $scope.data)
+      $http.post('/api', $scope.data)
         .success(function(data){
           // Set the result of the server action to our scope
           $scope.data = data;

@@ -27,24 +27,27 @@
 
 (defaction ac-echo input)
 
-(def json-req {:url "http://localhost:8099" :method :json :body {:action :default :a 1}})
+(def json-req {:url "http://localhost:8099/api" :method :json :body {:action :default :a 1}})
+(def get-req {:url "http://localhost:8099/api?a=1&action=default"})
 
-(facts "action-handler returns default action"
-  (let [sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
-             :renderer (->LiteralRenderer)}
-        handler (action-handler sys)]
-    (handler json-req) =not=> nil?
-    (handler json-req) => {:action :default :a 1}))
-
-(facts "JettyServer handles JSON with ring-handler"
-  (let [serv (->JettyServer 8099 (atom nil) (atom nil))
-        sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
-             :renderer (->JsonRenderer)}
-        handler (ring-handler (action-handler sys))]
-    (set-handler- serv handler) => anything
-    (start- serv) => anything
-    (do-request json-req) => {:a 1 :action "default"}
-    (stop- serv) => anything))
+(let [serv (->JettyServer 8099 (atom nil) (atom nil))
+      sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
+           :renderer (->JsonRenderer)}
+      handler (ring-handler (action-handler sys))]
+  (set-handler- serv handler) => anything
+  (start- serv) => anything
+  (facts "JettyServer handles JSON with ring-handler"
+    (do-request json-req) => {:a 1 :action "default"})
+  (fact "JettyServer denies get api calls by default"
+    (do-request get-req) => throws)
+  (stop- serv) => anything
+  (fact "JettyServer handles get request is explicitly enabled"
+    (set-handler- serv 
+                  (ring-handler 
+                    (action-handler (assoc sys :allow-api-get? true))))
+    (start- serv)
+    (<-json (do-request get-req)) => (contains {:a "1"})
+    (stop- serv)))
 
 (defmodel Cog {:amt Int})
 (defn template-edit [model] "<p>Hello</p>")

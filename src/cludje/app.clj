@@ -25,7 +25,8 @@
     :server (jetty port)
     :action-ns action-ns
     :model-ns model-ns
-    :template-ns template-ns}))
+    :template-ns template-ns
+    :allow-api-get? false}))
 
 (defn make-system 
   "Create a system. Use defaults if none provided"

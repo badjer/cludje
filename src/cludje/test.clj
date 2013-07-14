@@ -35,8 +35,9 @@
   (cheshire/generate-string x))
 
 (defn <-json [s]
-  (cheshire/parse-string s true))
-
+  (if (:body s)
+    (recur (:body s))
+    (cheshire/parse-string s true)))
 
 (defn do-request [{:keys [url body method] :or {url "http://google.ca"
                                                 body ""
@@ -44,3 +45,4 @@
   (case method 
     :get (http/get url)
     :json (<-json (:body (http/post url {:form-params body :content-type :json})))))
+
