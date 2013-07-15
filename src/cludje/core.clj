@@ -262,6 +262,9 @@
         id (write db model kee parsed)]
     {:_id id}))
 
+(defn insert [db model m]
+  (save db model (dissoc m (key-name model))))
+
 
 ; Logger api
 (defn log [logger s]
@@ -347,6 +350,7 @@
   `(do
      (defn ~nam [~'system ~'input]
        (let [~'save (partial save (:db ~'system))
+             ~'insert (partial insert (:db ~'system))
              ~'fetch (partial fetch (:db ~'system))
              ~'query (partial query (:db ~'system))
              ~'write (partial write (:db ~'system))

@@ -14,7 +14,7 @@
        (defaction ~(symbol (str modelname "-new"))
          {})
        (defaction ~(symbol (str modelname "-add"))
-         (~'save ~model-sym ~'input))
+         (~'insert ~model-sym ~'input))
        (defaction ~(symbol (str modelname "-show"))
          (~'fetch ~model-sym (~'? ~keename)))
        (defaction ~(symbol (str modelname "-edit"))

@@ -158,9 +158,43 @@
 
 (fact "save knows when to update"
   (let [db (->MemDb (atom {}))
-        id (save db Cog cog)]
+        kee (save db Cog cog)]
     (count (query db Cog nil)) => 1
-    (save db Cog cog) => anything
+    (save db Cog (merge cog kee)) => anything
+    (count (query db Cog nil)) => 1))
+
+(fact "insert"
+  (let [db (->MemDb (atom {}))]
+    (fact "insert exceptions"
+      (insert db Cog {}) => (throws Exception)
+      (insert db Cog {:price 123}) => (throws Exception)
+      (insert db Cog {:price 123 :amt 1}) => anything
+      (insert db Cog {:price "abc" :amt 1}) => (throws Exception)
+      (insert db Cog {:price 123 :amt "a"}) => (throws Exception))
+    (fact "insert with extra fields is fine"
+      (insert db Cog {:price 123 :amt 1 :x 1}) => anything)
+    (fact "insert returns something key-like"
+      (insert db Cog cog) =not=> empty?)))
+
+(fact "insert will set the key field"
+  (let [dba (atom {})
+        db (->MemDb dba)
+        kee (insert db Cog cog)]
+    (count (:cog @dba)) => 1
+    (first (:cog @dba)) => (contains kee)
+    (fetch db Cog (:_id kee)) => (contains kee)))
+
+(fact "insert knows when to insert"
+  (let [db (->MemDb (atom {}))
+        id (write db Cog nil cog)]
+    (insert db Cog cog) =not=> id
+    (count (query db Cog nil)) => 2))
+
+(fact "insert knows when to update"
+  (let [db (->MemDb (atom {}))
+        id (insert db Cog cog)]
+    (count (query db Cog nil)) => 1
+    (insert db Cog cog) => anything
     (count (query db Cog nil)) => 2))
 
 (facts "db operations work with keyword table names"
@@ -171,9 +205,10 @@
     (delete db :cog id) => anything
     (query db :cog nil) => nil))
 
-(facts "save a new record returns a map"
+(facts "save and insert return a map"
   (let [dba (atom {})
         db (->MemDb dba)]
+    (insert db Cog cog) => map?
     (save db Cog cog) => map?))
 
 
@@ -226,6 +261,7 @@
       (ident-sys sys nil) => sys)))
 
 (defaction ident-save save)
+(defaction ident-insert insert)
 (defaction ident-fetch fetch)
 (defaction ident-query query)
 (defaction ident-write write)
@@ -238,6 +274,8 @@
       ; There should be a save method, with a smaller arity 
       ; (the first argument should already be bound)
       ((ident-save sys nil) Cog cog) =not=> (throws))
+    (fact "defaction defines a new insert"
+      ((ident-insert sys nil) Cog cog) =not=> (throws))
     (fact "defaction defines a new fetch"
       ((ident-fetch sys nil) Cog nil) =not=> (throws))
     (fact "defaction defines a new query"
