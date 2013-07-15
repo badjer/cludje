@@ -14,14 +14,17 @@
        (defaction ~(symbol (str modelname "-new"))
          {})
        (defaction ~(symbol (str modelname "-add"))
-         (~'save ~model-sym ~'input))
+         (let [~'id (~'save ~model-sym ~'input)]
+           {:_id ~'id}))
        (defaction ~(symbol (str modelname "-show"))
          (~'fetch ~model-sym (~'? ~keename)))
        (defaction ~(symbol (str modelname "-edit"))
          (~'fetch ~model-sym (~'? ~keename)))
        (defaction ~(symbol (str modelname "-alter"))
          (~'? ~keename)
-         (~'save ~model-sym ~'input))
+         (let [~'id (~'save ~model-sym ~'input)]
+           {:_id ~'id}))
        (defaction ~(symbol (str modelname "-delete"))
-         (~'delete ~model-sym (~'? ~keename))))))
+         (~'delete ~model-sym (~'? ~keename))
+         {}))))
 

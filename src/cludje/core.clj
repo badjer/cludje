@@ -363,8 +363,9 @@
          (try
            ~@forms
            (catch clojure.lang.ExceptionInfo ex#
-             (let [problems# (:problems (ex-data ex#))]
-               (assoc ~'input :__problems problems#)))))) 
+             (if-let [problems# (:problems (ex-data ex#))]
+               (assoc ~'input :__problems problems#)
+               (throw ex#))))))
      (alter-meta! (var ~nam) assoc :action true)))
 
 

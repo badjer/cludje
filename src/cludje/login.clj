@@ -3,6 +3,7 @@
 
 (def mockuser {:username "a@b.cd" :pwd "123"})
 
+; TODO: Replace this with TestLogin everywhere and delete this?
 (defrecord MockLogin [logged-in?]
   ILogin
   (current-user- [self] (when @logged-in? mockuser))
