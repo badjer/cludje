@@ -39,7 +39,7 @@
 (defn jetty [port]
   (->JettyServer port (atom nil) (atom nil)))
 
-(def template-regex #"/templates/([^/]+)/([^/.]+)")
+(def template-regex #"/([^/]+)/([^/.]+)")
 
 (defn get-modelname [request]
   (when-let [uri (:uri request)]

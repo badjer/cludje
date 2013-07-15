@@ -182,7 +182,7 @@
             [:footer]
             ] 
            [:script {:src "//ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"}]
-           [:script {:src "/templates/js/app.js"}]
+           [:script {:src "/js/app.js"}]
             ])))
 
 (defn js-app []

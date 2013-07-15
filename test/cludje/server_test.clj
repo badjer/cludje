@@ -59,13 +59,13 @@
 
 (def res-request {:url "http://localhost:8099/css/test.css"})
 
-(def template-request {:url "http://localhost:8099/templates/cog/edit.tpl.html"})
+(def template-request {:url "http://localhost:8099/cog/edit.tpl.html"})
 
-(def template-req-no-ext {:url "http://localhost:8099/templates/cog/edit"})
+(def template-req-no-ext {:url "http://localhost:8099/cog/edit"})
 
-(def template-instance-req {:url "http://localhost:8099/templates/cog/foo.tpl.html"})
+(def template-instance-req {:url "http://localhost:8099/cog/foo.tpl.html"})
 
-(def template-inst-req-no-ext {:url "http://localhost:8099/templates/cog/foo"})
+(def template-inst-req-no-ext {:url "http://localhost:8099/cog/foo"})
 
 (let [serv (->JettyServer 8099 (atom nil) (atom nil))
       sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))

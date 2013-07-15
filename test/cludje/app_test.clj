@@ -68,9 +68,9 @@
 ; This is an instance template - it provides the foo template for cog
 (defn cog-foo [] "Instance")
 
-(def template-request {:url "http://localhost:8888/templates/cog/edit.tpl.html"})
-(def bad-template-request {:url "http://localhost:8888/templates/cog/foosuamsdf.tpl.html"})
-(def template-instance-req {:url "http://localhost:8888/templates/cog/foo.tpl.html"})
+(def template-request {:url "http://localhost:8888/cog/edit.tpl.html"})
+(def bad-template-request {:url "http://localhost:8888/cog/foosuamsdf.tpl.html"})
+(def template-instance-req {:url "http://localhost:8888/cog/foo.tpl.html"})
 
 (fact "making a system with :template-ns and :model-ns set 
   has it serve templates"
