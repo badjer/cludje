@@ -21,7 +21,7 @@
 
 (defn value? [x]
   "Returns true if x is truthy and not an empty string."
-  (and x (not= x "")))
+  (not (or (nil? x) (= x ""))))
 
 (def Str 
   (reify 
@@ -149,6 +149,7 @@
     IParseable
     (parse [self txt]
       (cond
+        (= java.lang.Boolean (type txt)) txt
         (empty? txt) nil
         1 true
         true true
@@ -179,7 +180,7 @@
       (.setTimeInMillis dt ts)
       dt)))
 
-(defn- ts-from-date [y m d]
+(defn ts-from-date [y m d]
   (let [dt (new-date 0)]
     (.set dt (to-int y) (- (to-int m) 1) (to-int d))
     (.getTimeInMillis dt)))
@@ -250,14 +251,24 @@
   (when-let [d (new-date ts)]
     (.get d java.util.Calendar/DAY_OF_WEEK)))
 
-(defn- now [] 
+(defn now [] 
   (let [tz (java.util.TimeZone/getDefault)
         offset (.getRawOffset tz)
         dst (.getDSTSavings tz)
         ts (System/currentTimeMillis)]
     (+ ts offset dst)))
 
+(defn just-date [ts]
+  (when ts
+    (ts-from-date (year ts) (month ts) (day ts))))
 
+(defn hours [x]
+  "Get a ts representing x hours"
+  (* one-hour x))
+
+(defn minutes [x]
+  "Get a ts representing x minutes"
+  (* one-minute x))
 
 (def months ["" "Jan" "Feb" "Mar" "Apr" "May" "Jun"
              "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"])
@@ -276,7 +287,7 @@
 (def Date
   (reify 
     IParseable
-    (parse [self txt] (to-time txt))
+    (parse [self txt] (just-date (to-time txt)))
     IShowable
     (show [self x] (date-str x))
     IValidateable
@@ -286,6 +297,15 @@
         (= txt "") nil
         (nil? (parse Date txt))
         "Not a date"))))
+
+(defn date-range [cur start end]
+  "Get a list of dates from (cur + start <days>) to (cur + end <days>)
+  Dates are represented as {:text String :val epoch-timestamp}"
+  (let [today (just-date cur)
+        start-ts (+ today (* one-day start))
+        end-ts (+ today (* one-day end))]
+    (for [d (range start-ts (+ 1 end-ts) one-day)] 
+      {:text (show Date d) :val d})))
 
 (defn- time-str [ts]
   (let [h (hour ts)
@@ -309,6 +329,17 @@
         (= "" txt) nil
         (nil? (parse Time txt))
         "Not valid time"))))
+
+(defn time-range 
+  "Get a list of times from start <milliseconds> to end <milliseconds>
+  Incrementing by step <milliseconds>
+  They are represented as {:text String :val milliseconds}"
+  ([start end step]
+    (for [d (range start (+ 1 end) step)]
+      {:text (show Time d) :val d}))
+  ([end step]
+   (time-range 0 end step)))
+
 
 (defn percentage [total part] 
   (if (zero? total) 
@@ -336,6 +367,16 @@
         (= "" txt) nil
         (nil? (parse Timespan txt))
         "Not valid timespan"))))
+
+(defn timespan-range 
+  "Get a list of timespans from start <milliseconds> to end <milliseconds>
+  Incrementing by step <milliseconds>
+  They are represented as {:text String :val milliseconds}"
+  ([start end step]
+    (for [d (range start (+ 1 end) step)]
+      {:text (show Timespan d) :val d}))
+  ([end step]
+   (timespan-range 0 end step)))
 
 (def DateTime
   (reify 

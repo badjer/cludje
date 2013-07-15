@@ -9,13 +9,21 @@
   (let [res (apply str (map name (filter identity path)))]
     res))
 
+(defn ng-options [& path]
+  (str "d.val as d.text for d in " (apply ng-path path)))
+
+(defn select-box [field]
+  [:select {:id field :name field :ng-model (ng-path "data." field)
+            :ng-options (ng-options "data." field "_options")}
+   [:option "Choose"]])
+
+
 (defprotocol IAngularField
   (ng-field [self field] "Render some angular.js markup with the id field"))
 
 (def Hidden
   (reify IAngularField
     (ng-field [self field] [:input {:id field :type "hidden" :name field :ng-model (ng-path "data." field)}])))
-
 
 (extend-type (type Str)
   IAngularField
@@ -34,19 +42,20 @@
   (ng-field [self field] [:input {:id field :type "text" :name field :ng-model (ng-path "data." field)}]))
 (extend-type (type Bool)
   IAngularField
-  (ng-field [self field] [:input {:id field :type "text" :name field :ng-model (ng-path "data." field)}]))
+  (ng-field [self field] 
+    [:input {:id field :name field :type "checkbox" :ng-model (ng-path "data." field)}]))
 (extend-type (type Date)
   IAngularField
-  (ng-field [self field] [:input {:id field :type "text" :name field :ng-model (ng-path "data." field)}]))
+  (ng-field [self field] (select-box field)))
 (extend-type (type Time)
   IAngularField
-  (ng-field [self field] [:input {:id field :type "text" :name field :ng-model (ng-path "data." field)}]))
+  (ng-field [self field] (select-box field)))
 (extend-type (type Timespan)
   IAngularField
-  (ng-field [self field] [:input {:id field :type "text" :name field :ng-model (ng-path "data." field)}]))
+  (ng-field [self field] (select-box field)))
 (extend-type (type DateTime)
   IAngularField
-  (ng-field [self field] [:input {:id field :type "text" :name field :ng-model (ng-path "data." field)}]))
+  (ng-field [self field] (select-box field)))
                                                    
 
 (defn ng-data [& path] (str "{{" (apply ng-path path) "}}"))
@@ -182,6 +191,8 @@
             [:footer]
             ] 
            [:script {:src "//ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"}]
+           ; Only if we need angular-ui-bootstrap - it's mostly just animations etc
+           ;[:script {:src "//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.4.0/ui-bootstrap-tpls.min.js"}]
            [:script {:src "/js/app.js"}]
             ])))
 
@@ -189,6 +200,9 @@
   "Serves the angular.js controller and module."
   ;This isn't a static file because I think we'll probably
   ;want to generate this dynamically pretty soon
+  ;
+  ; If you want to use angular.ui.bootstrap, change the first line to this:
+  ;"angular.module('mainapp', ['ui.bootstrap'], 
   "angular.module('mainapp', [], 
       function($routeProvider, $locationProvider){
     });
@@ -211,6 +225,7 @@
         });
     };
 
+
     // Figure out what the current action is, based on the url
     var actname = function(){
       if(window.location.hash){
@@ -218,7 +233,7 @@
       }else{
         // If there's no hash, call an action that is the
         // same as the name of the template
-        var re = /^\\/templates\\/([^/]+)\\/([^.]+).*$/;
+        var re = /^\\/([^/]+)\\/([^.]+).*$/;
         if(re.test(window.location.pathname)){
           return window.location.pathname.replace(re, \"$1-$2\");
         }
@@ -235,6 +250,7 @@
       $scope.action(actname());
     }
   };")
+
 
 (defn template-edit [model]
   (common-layout

@@ -7,7 +7,8 @@
   (value? nil) => falsey
   (value? "") => falsey
   (value? "a") => truthy
-  (value? 1) => truthy)
+  (value? 1) => truthy
+  (value? false) => truthy)
 
 (fact "Str"
   (show Str "a") => "a"
@@ -209,3 +210,32 @@
   (validate DateTime oh-one-am) => truthy
   (validate DateTime one-oh-one-pm) => truthy
   (validate DateTime "abc") => falsey)
+
+
+; Misc date/time helpers
+(fact "hours"
+  (hours 2) => (* 2 one-hour))
+
+(fact "minutes"
+  (minutes 15) => (* 15 one-minute))
+
+(fact "just-date"
+  (let [n (now)]
+    (just-date (+ 1 n)) => (just-date n)))
+
+(fact "date-range"
+  (let [day (ts-from-date 2013 7 15)
+        res (date-range day -1 1)]
+    (map :text res) => ["Sun Jul 14" "Mon Jul 15" "Tue Jul 16"]
+    (map :val res) => [(- day one-day) day (+ day one-day)]))
+
+(fact "time-range"
+  (let [res (time-range (hours 8) (hours 9) (minutes 30))]
+    (map :text res) => ["08:00 AM" "08:30 AM" "09:00 AM"]
+    (map :val res) => [(hours 8) (+ (hours 8) (minutes 30)) (hours 9)]))
+
+(fact "timespan-range"
+  (let [res (timespan-range (hours 2) (minutes 30))]
+    (map :text res) => ["0.00" "0.50" "1.00" "1.50" "2.00"]
+    (map :val res) => [0 (minutes 30) (hours 1) (minutes 90) (hours 2)]))
+
