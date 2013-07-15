@@ -218,7 +218,7 @@
       }else{
         // If there's no hash, call an action that is the
         // same as the name of the template
-        var re = /^\\/templates\\/([^\\/]+)\\/([^\\/.]+)\\..*$/;
+        var re = /^\\/templates\\/([^/]+)\\/([^.]+).*$/;
         if(re.test(window.location.pathname)){
           return window.location.pathname.replace(re, \"$1-$2\");
         }

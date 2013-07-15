@@ -61,7 +61,11 @@
 
 (def template-request {:url "http://localhost:8099/templates/cog/edit.tpl.html"})
 
+(def template-req-no-ext {:url "http://localhost:8099/templates/cog/edit"})
+
 (def template-instance-req {:url "http://localhost:8099/templates/cog/foo.tpl.html"})
+
+(def template-inst-req-no-ext {:url "http://localhost:8099/templates/cog/foo"})
 
 (let [serv (->JettyServer 8099 (atom nil) (atom nil))
       sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
@@ -77,6 +81,8 @@
                                            'cludje.server-test))) => anything
     (start- serv) => anything
     (:body (do-request template-request)) => "<p>Hello</p>"
+    (fact "...and without a .tpl.html extension"
+      (:body (do-request template-req-no-ext)) => "<p>Hello</p>")
     (stop- serv) => anything)
   (facts "JettyServer serves template instances"
     (set-handler- 
@@ -86,6 +92,10 @@
                'cludje.server-test))) => anything
     (start- serv) => anything
     (:body (do-request template-instance-req)) => "Instance"
+    (fact "...and without a .tpl.html extension"
+      (:body (do-request template-inst-req-no-ext)) => "Instance")
     (stop- serv)))
 
+
+(future-facts "JettyServer serves static template files without a .tpl.html extension")
 
