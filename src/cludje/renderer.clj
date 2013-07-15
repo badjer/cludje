@@ -13,6 +13,6 @@
     (when-not (map? output)
       (throw (ex-info "We tried to render something that wasn't a map!
                       Generally, this means that your action didn't return a map.
-                      Always return a map from actions")))
+                      Always return a map from actions" {})))
     {:body (cheshire/generate-string output)}))
 

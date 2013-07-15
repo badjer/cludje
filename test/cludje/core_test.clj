@@ -113,7 +113,6 @@
     (write db Cog id cog2) => id
     (count (query db Cog nil)) => 1))
 
-
 (fact "fetch"
   (let [db (->MemDb (atom {}))
         id (write db Cog nil cog)]
@@ -146,11 +145,10 @@
 (fact "save will set the key field"
   (let [dba (atom {})
         db (->MemDb dba)
-        id (save db Cog cog)]
+        kee (save db Cog cog)]
     (count (:cog @dba)) => 1
-    (first (:cog @dba)) => (has-keys :_id)
-    (:_id (first (:cog @dba))) => id
-    (fetch db Cog id) => (contains {:_id id})))
+    (first (:cog @dba)) => (contains kee)
+    (fetch db Cog (:_id kee)) => (contains kee)))
 
 (fact "save knows when to insert"
   (let [db (->MemDb (atom {}))
@@ -173,13 +171,10 @@
     (delete db :cog id) => anything
     (query db :cog nil) => nil))
 
-(facts "db ops with keywords and models update same table"
+(facts "save a new record returns a map"
   (let [dba (atom {})
         db (->MemDb dba)]
-    (write db Cog nil cog) => anything
-    @dba => (just {:cog anything})
-    (write db :cog nil cog) => anything
-    @dba => (just {:cog anything})))
+    (save db Cog cog) => map?))
 
 
 (fact "get-key"
@@ -197,8 +192,8 @@
 (fact "save knows when to update"
   (let [db (->MemDb (atom {}))
         id (write db Cog nil cog)
-        with-id (assoc cog :_id id)]
-    (save db Cog with-id) => id
+        with-kee (assoc cog :_id id)]
+    (save db Cog with-kee) => (contains {:_id id})
     (count (query db Cog nil)) => 1))
 
 (def mail {:to "a@b.cd" :from "b@b.cd" :subject "test"

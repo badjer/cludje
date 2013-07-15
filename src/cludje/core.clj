@@ -238,12 +238,14 @@
     (query- db tbl params)))
 
 (defn write [db model kee data]
-  (let [tbl (table-name model)]
+  (let [tbl (table-name model)] 
     (write- db tbl kee data)))
 
 (defn delete [db model kee]
-  (let [tbl (table-name model)]
-    (delete- db tbl kee)))
+  (when kee
+    (let [tbl (table-name model)]
+      (delete- db tbl kee)
+      kee)))
 
 
 (defn get-key [model m]
@@ -256,8 +258,9 @@
 
 (defn save [db model m]
   (let [parsed (parse-model model m)
-        kee (get-key model parsed)] 
-    (write db model kee parsed)))
+        kee (get-key model parsed)
+        id (write db model kee parsed)]
+    {:_id id}))
 
 
 ; Logger api
