@@ -3,10 +3,16 @@
   (:require [clj-http.client :as http]
             [cheshire.core :as cheshire]
             [cludje.server :as server]
+            [cludje.login :as login]
             [cludje.app :as app]))
 
-(defn test-system []
-  (app/make-system {:server (server/->MockServer)}))
+(defn test-system 
+  ([] (test-system nil))
+  ([cur-user]
+   (let [lgin (login/make-TestLogin cur-user)]
+     (app/make-system {:server (server/->MockServer)
+                       :login lgin}))))
+
 
 (defn has-keys [& kees]
   "A midje checker that returns truthy if the thing

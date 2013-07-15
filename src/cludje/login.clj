@@ -19,3 +19,16 @@
 (defn make-MockLogin [logged-in?]
   (->MockLogin (atom logged-in?)))
 
+
+(defrecord TestLogin [u]
+  ILogin
+  (current-user- [self] @u)
+  (login- [self user] (reset! u user))
+  (logout- [self] (reset! u nil))
+  (encrypt- [self txt] txt)
+  (check-hash- [self txt cypher] (= (encrypt self txt) cypher)))
+
+(defn make-TestLogin
+  ([] (->TestLogin (atom nil)))
+  ([user] (->TestLogin (atom user))))
+
