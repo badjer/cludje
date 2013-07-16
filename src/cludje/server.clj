@@ -85,23 +85,13 @@
       (when template
         (html-response (template))))))
 
-(defn request-data [request]
-  (get request :params (get request :body)))
 
 (defn action-handler 
   "Generates a fn that runs an action"
-  ([{:keys [dispatcher renderer] :as sys}]
-    (let [allow-get? (get sys :allow-api-get? false)
-          post-check (if allow-get? 
-                       identity 
-                       #(= (:request-method %) :post))
-          api-uri-check #(= "/api" (:uri %))
-          is-api-call? #(and (api-uri-check %) (post-check %))]
-      (fn [request]
-        (let [data (request-data request)]
-          (when (is-api-call? request)
-            (when-let [action (get-action dispatcher data)]
-              (render renderer request (action sys data)))))))))
+  ([{:keys [renderer parser] :as system}]
+   (fn [request]
+     (when-let [input (parse-input- parser request)]
+       (render renderer request (do-action system input))))))
 
 (defn ring-handler [& handlers]
   (let [handlers (filter identity handlers)]

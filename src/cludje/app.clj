@@ -8,6 +8,7 @@
         cludje.dispatcher
         cludje.modelstore
         cludje.renderer
+        cludje.parser
         cludje.server))
 
 (defaction hello-world {:msg "hello world"})
@@ -21,13 +22,14 @@
     :logger (->MemLogger (atom []))
     :login (make-MockLogin false)
     :auth (make-auth mock-auth-fn)
-    :dispatcher (make-dispatcher action-ns {:default default-action})
+    :dispatcher (make-dispatcher opts);action-ns {:default default-action})
     :modelstore (->ModelStore model-ns)
+    :parser (make-webinputparser opts)
     :renderer (->JsonRenderer)
     :server (jetty port)
-    :action-ns action-ns
-    :model-ns model-ns
-    :template-ns template-ns
+    ;:action-ns action-ns
+    ;:model-ns model-ns
+    ;:template-ns template-ns
     :allow-api-get? false}))
 
 (defn make-system 

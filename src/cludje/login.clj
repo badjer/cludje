@@ -17,7 +17,7 @@
   (encrypt- [self txt] txt)
   (check-hash- [self txt cypher] (= (encrypt self txt) cypher)))
 
-(defn make-MockLogin [logged-in?]
+(defn make-MockLogin [{:keys [logged-in?]}]
   (->MockLogin (atom logged-in?)))
 
 

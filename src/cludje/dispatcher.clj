@@ -32,11 +32,9 @@
                    [(keyword (name k)) v])))
     )))
 
-(defn make-dispatcher 
-  ([root-ns]
-   (make-dispatcher root-ns {}))
-  ([root-ns otherdispatches]
-    (let [dispatches (find-actions root-ns)
-          disp (merge dispatches otherdispatches)]
-      (->Dispatcher (atom disp)))))
+(defn make-dispatcher [{:keys [action-ns dispatches default-action]}]
+  (let [dispatches (find-actions action-ns)
+        default-dispatch (when default-action {:default default-action})
+        disp (merge dispatches dispatches default-dispatch)]
+    (->Dispatcher (atom disp))))
 

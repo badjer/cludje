@@ -12,4 +12,4 @@
 
 (defn not-an-action [] 5)
 
-(defaction index input)
+(defaction foo-index input)

@@ -572,7 +572,7 @@
 (defaction cog-forbidden {:secret "foo"})
 
 (fact "do-action"
-  (let [sys (make-system {:login (make-MockLogin true)
+  (let [sys (make-system {:login (make-MockLogin {:logged-in? true})
                           :dispatcher (->Dispatcher (atom {:cog-add cog-add
                                                            :cog-forbidden
                                                            cog-forbidden}))
@@ -595,8 +595,3 @@
       (try (do-action sys {:action "cog-add"})
         (catch clojure.lang.ExceptionInfo ex
           (ex-data ex))) => (has-keys :__notloggedin))))
-
-
-
-  
-

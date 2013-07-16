@@ -27,13 +27,13 @@
     (get-action- disp {:_action "3"}) => nil?))
 
 (fact "find-actions on a single namespace"
-  (find-actions 'cludje.testcontrollers) => (has-keys :index)
+  (find-actions 'cludje.testcontrollers) => (has-keys :foo-index)
   (fact "can actually execute the found action"
-    ((:index find-actions 'cludje.testcontrollers)
+    ((:foo-index find-actions 'cludje.testcontrollers)
      nil {:a 1}) => {:a 1}))
 
 (fact "find-actions only finds actions, not other fns"
-  (find-actions 'cludje.testcontrollers) => (just-keys :index))
+  (find-actions 'cludje.testcontrollers) => (just-keys :foo-index))
 
 (future-fact "find-actions finds things in sub-namespaces"
   (let [dis (find-actons 'cludje.testcontrollers)]
@@ -44,7 +44,7 @@
     dis => (has-keys :guest#new-guest) ))
 
 (fact "make-dispactcher"
-  (let [disp (make-dispatcher 'cludje.testcontrollers)]
-    (get-action- disp {:_action :index}) =not=> nil?
+  (let [disp (make-dispatcher {:action-ns 'cludje.testcontrollers})]
+    (get-action- disp {:_action :foo-index}) =not=> nil?
     ; Try executing the action to make sure we actually got it
-    ((get-action- disp {:_action :index}) nil {:a 1}) => {:a 1}))
+    ((get-action- disp {:_action :foo-index}) nil {:a 1}) => {:a 1}))

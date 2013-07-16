@@ -5,6 +5,7 @@
         cludje.core
         cludje.dispatcher
         cludje.renderer
+        cludje.login
         cludje.app))
 
 (facts "make-system initializes all subsystems"
@@ -17,10 +18,12 @@
         sys (make-system sysoverrides)]
     (:dispatcher sys) => dispatcher))
 
+
 (def req {:url "http://localhost:8888/api" :method :json :body {:_action :default :a 1}})
 
 (fact "a start-system -ed system can respond to requests"
-  (let [sys (make-system)]
+  (let [sys (make-system {:login (make-MockLogin {:logged-in? true})
+                          :default-action hello-world})]
     (start-system sys) => anything
     ; Now that the system is started, we should be able to connect to it 
     (do-request req) => {:msg "hello world"}
@@ -34,7 +37,8 @@
   (let [dispatches {:default ac-a1}
         dispatcher (->Dispatcher (atom {:default ac-a1}))
         renderer (->JsonRenderer)
-        sysoverrides {:dispatcher dispatcher :renderer renderer}
+        login (make-MockLogin {:logged-in? true})
+        sysoverrides {:dispatcher dispatcher :renderer renderer :login login}
         sys (make-system sysoverrides)]
     (start-system sys) => anything
     (do-request req) => {:a 1}
@@ -50,7 +54,8 @@
   (let [dispatches {:default ac-add1}
         dispatcher (->Dispatcher (atom {:default ac-add1}))
         renderer (->LiteralRenderer)
-        sysoverrides {:dispatcher dispatcher :renderer renderer}
+        login (make-MockLogin {:logged-in? true})
+        sysoverrides {:dispatcher dispatcher :renderer renderer :login login}
         sys (make-system sysoverrides)]
     (:dispatcher sys) => dispatcher
     (start-system sys) => anything

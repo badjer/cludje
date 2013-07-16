@@ -7,6 +7,10 @@
         cludje.types
         cludje.renderer
         cludje.dispatcher
+        cludje.modelstore
+        cludje.parser
+        cludje.login
+        cludje.auth
         cludje.server))
 
 (def req {:url "http://localhost:8099"})
@@ -32,6 +36,10 @@
 
 (let [serv (->JettyServer 8099 (atom nil) (atom nil))
       sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
+           :parser (make-webinputparser {:allow-api-get? true})
+           :login (make-MockLogin {:logged-in? true})
+           :auth (make-auth mock-auth-fn)
+           :modelstore (->ModelStore 'cludje.server-test)
            :renderer (->JsonRenderer)}
       handler (ring-handler (action-handler sys))]
   (set-handler- serv handler) => anything

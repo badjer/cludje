@@ -242,6 +242,10 @@
   "Handle rendering output"
   (render- [self request output] "Generate output for the user"))
 
+(defprotocol IInputParser
+  "Handle converting input into our standard input format"
+  (parse-input- [self request]))
+
 
 ; TODO: Do something with this
 ;(defprotocol IPersistent
