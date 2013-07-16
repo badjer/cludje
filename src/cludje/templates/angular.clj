@@ -96,6 +96,21 @@
                     (dissoc passed-opts :action))]
     [:input opts]))
 
+(defn alert
+  "klasses can be nil, :error, :success, :info, :block"
+  ([condition text & klasses]
+   (let [klass-strs (into ["alert"] (map #(str "alert-" (name %)) klasses))
+         klass-str (s/join " " klass-strs)]
+     [:div {:class klass-str :ng-show condition}
+      [:button.close {:type "button" :data-dismiss "alert"} "&times;"]
+      text])))
+
+
+(defn alerts []
+  [:alert {:ng-repeat "alert in data.__alerts"
+           :type "alert.type" :close "closeAlert($index)"}
+   (ng-data "alert.text")])
+
 (defn action-name [model action]
   (str (table-name model) "-" (name action)))
 
@@ -106,6 +121,8 @@
         visible-fields (apply dissoc fields invisible)]
     (form 
       (when title [:h3 title])
+      (alerts)
+      ;(alert (ng-path "data." :_id) "Saved" :success)
       (for [field invisible]
         (ng-field Hidden field))
       (for [[field typ] visible-fields]
@@ -192,7 +209,7 @@
             ] 
            [:script {:src "//ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"}]
            ; Only if we need angular-ui-bootstrap - it's mostly just animations etc
-           ;[:script {:src "//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.4.0/ui-bootstrap-tpls.min.js"}]
+           [:script {:src "//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.4.0/ui-bootstrap-tpls.min.js"}]
            [:script {:src "/js/app.js"}]
             ])))
 
@@ -200,32 +217,11 @@
   "Serves the angular.js controller and module."
   ;This isn't a static file because I think we'll probably
   ;want to generate this dynamically pretty soon
-  ;
-  ; If you want to use angular.ui.bootstrap, change the first line to this:
-  ;"angular.module('mainapp', ['ui.bootstrap'], 
-  "angular.module('mainapp', [], 
+  "angular.module('mainapp', ['ui.bootstrap'], 
       function($routeProvider, $locationProvider){
     });
 
   function MainCntl($scope, $http){ 
-    // Initialize our data
-    $scope.data = {};
-
-    // Define our action - an action for calling actions... named action
-    // That might be confusing
-    $scope.action = function(actname){
-      // Set the server-side action we want to call
-      $scope.data.action = actname;
-      console.log('Calling ' + actname);
-      $http.post('/api', $scope.data)
-        .success(function(data){
-          // Set the result of the server action to our scope
-          $scope.data = data;
-          console.log(data);
-        });
-    };
-
-
     // Figure out what the current action is, based on the url
     var actname = function(){
       if(window.location.hash){
@@ -241,14 +237,43 @@
       return null;
     };
 
+    // Run the action that this page was loaded with
+    var reload = function(){
+      if(actname()){
+        $scope.action(actname());
+      }
+    };
+
+    // Initialize our data
+    $scope.data = {};
+
+    // Define our action - an action for calling actions... named action
+    // That might be confusing
+    $scope.action = function(actname, paras, should_reload){
+      // Set the server-side action we want to call
+      $scope.data.action = actname;
+      var payload = (paras === undefined || paras === nil)? $scope.data : paras;
+      $http.post('/api', payload)
+        .success(function(data){
+          // Set the result of the server action to our scope
+          $scope.data = data;
+          if(should_reload === true){
+            reload();
+          }
+        });
+    };
+
+    // We need an action to dismiss alerts
+    $scope.closeAlert = function(index){
+      $scope.data.__alerts.splice(index,1);
+    };
+
     // Ok, the only other thing we want to do is initialize
     // with our first-time data. To do this, we'll pull the 
     // action name and params off the url hash
     // This code should only get run once (when the page is first
     // loaded)
-    if(actname()){
-      $scope.action(actname());
-    }
+    reload();
   };")
 
 
