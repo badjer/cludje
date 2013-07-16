@@ -6,7 +6,6 @@
         cludje.app
         cludje.types
         cludje.renderer
-        cludje.dispatcher
         cludje.modelstore
         cludje.parser
         cludje.login
@@ -35,12 +34,10 @@
 (def get-req {:url "http://localhost:8099/api?a=1&_action=default"})
 
 (let [serv (->JettyServer 8099 (atom nil) (atom nil))
-      sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
-           :parser (make-webinputparser {:allow-api-get? true})
-           :login (make-MockLogin {:logged-in? true})
-           :auth (make-auth mock-auth-fn)
-           :modelstore (->ModelStore 'cludje.server-test)
-           :renderer (->JsonRenderer)}
+      sys (make-system {:default-action ac-echo
+                        :allow-api-get? true
+                        :login (make-MockLogin {:logged-in? true})
+                        :model-ns 'cludje.server-test})
       handler (ring-handler (action-handler sys))]
   (set-handler- serv handler) => anything
   (start- serv) => anything
@@ -76,8 +73,7 @@
 (def template-inst-req-no-ext {:url "http://localhost:8099/cog/foo"})
 
 (let [serv (->JettyServer 8099 (atom nil) (atom nil))
-      sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
-           :renderer (->JsonRenderer)}]
+      sys (make-system {:default-action ac-echo})]
   (facts "JettyServer serves static files"
     (set-handler- serv (ring-handler (action-handler sys))) => anything
     (start- serv) => anything

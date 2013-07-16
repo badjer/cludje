@@ -2,7 +2,7 @@
   (:require [clojure.string :as s]))
 
 (defprotocol IParseable
-  (parse [self txt]))
+  (parse [self in]))
 
 (defprotocol IShowable
   (show [self x]))

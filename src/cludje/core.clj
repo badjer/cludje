@@ -4,9 +4,11 @@
 
 (defn find-in-ns [nas thing]
   (when (and nas thing)
-    (if (symbol? thing)
-      (ns-resolve nas thing)
-      (ns-resolve nas (symbol thing)))))
+    (cond 
+      (symbol? thing) (ns-resolve nas thing)
+      (keyword? thing) (ns-resolve nas (symbol (name thing)))
+      (= "" thing) nil
+      :else (ns-resolve nas (symbol thing)))))
 
 (defn throw-problems 
   ([]
@@ -216,12 +218,13 @@
   "Controls permissions"
   (authorize- [self action model user input] "Is the user allowed to do this?"))
 
-(defprotocol IDispatcher
-  (get-action- [self input] "Get the action to execute")
-  ; TODO: Break this up
-  (get-modelname- [self input] "Get the name of the model")
-  (get-actionkey- [self input] "Get the keyword name of the action kee (ie, :add"))
+(defprotocol IActionParser
+  (get-action-name- [self input] "Get the full name of the action from input")
+  (get-model-name- [self input] "Get the name of the model associated with the action")
+  (get-action-key- [self input] "Get the keyword/crud (ie, :add) portion of the action name"))
 
+(defprotocol IActionStore
+  (get-action- [self action-name] "Get the action, or nil if it doesn't exist"))
 
 (defprotocol IModelStore
   (get-model- [self modelname] "Get the model, or nil if it doesn't exist"))
@@ -368,14 +371,6 @@
   (let [user (current-user logn)]
     (authorize auth action model user m)))
 
-; Dispatcher api
-(defn get-action [dispatcher input]
-  (get-action- dispatcher input))
-(defn get-actionkey [dispatcher input]
-  (get-actionkey- dispatcher input))
-(defn get-modelname [dispatcher input]
-  (get-modelname- dispatcher input))
-
 
 ; Renderer api
 (defn render [renderer request output]
@@ -397,11 +392,7 @@
              ~'login (partial login (:login ~'system))
              ~'logout (partial logout (:login ~'system))
              ~'encrypt (partial encrypt (:login ~'system))
-             ~'check-hash (partial check-hash (:login ~'system))
              ~'authorize (partial authorize (:auth ~'system))
-             ~'get-modelname (partial get-modelname (:dispatcher ~'system))
-             ~'get-actionkey (partial get-actionkey (:dispatcher ~'system))
-             ~'get-model (partial get-model (:modelstore ~'system))
              ~'can? (partial can? (:auth ~'system) (:login ~'system))
              ~'user (~'current-user)
              ~'? (partial ? ~'input)
@@ -415,11 +406,13 @@
      (alter-meta! (var ~nam) assoc :_action true)))
 
 (defaction do-action
-  (let [action (get-action (:dispatcher system) input)
-        actkey (get-actionkey input)
-        model (get-model (get-modelname input))]
+  (let [action (->> (get-action-name- (:actionparser system) input)
+                   (get-action- (:actionstore system)))
+        action-key (get-action-key- (:actionparser system) input)
+        model (->> (get-model-name- (:actionparser system) input)
+                  (get-model- (:modelstore system)))]
     (cond 
       (nil? user) (throw-not-logged-in)
       (nil? action) (throw-not-found)
-      (not (authorize actkey model user input)) (throw-unauthorized)
+      (not (authorize action-key model user input)) (throw-unauthorized)
       :else (action system input))))

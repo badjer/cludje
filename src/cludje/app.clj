@@ -5,8 +5,9 @@
         cludje.logger
         cludje.auth
         cludje.login
-        cludje.dispatcher
         cludje.modelstore
+        cludje.actionparser
+        cludje.actionstore
         cludje.renderer
         cludje.parser
         cludje.server))
@@ -22,7 +23,8 @@
     :logger (->MemLogger (atom []))
     :login (make-MockLogin false)
     :auth (make-auth mock-auth-fn)
-    :dispatcher (make-dispatcher opts);action-ns {:default default-action})
+    :actionparser (map->ActionParser opts)
+    :actionstore (map->ActionStore opts)
     :modelstore (->ModelStore model-ns)
     :parser (make-webinputparser opts)
     :renderer (->JsonRenderer)

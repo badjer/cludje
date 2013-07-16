@@ -3,20 +3,20 @@
         cludje.test
         cludje.types
         cludje.core
-        cludje.dispatcher
+        cludje.actionparser
         cludje.renderer
         cludje.login
         cludje.app))
 
-(facts "make-system initializes all subsystems"
-  (make-system) => (has-keys :db :mailer :logger :auth :dispatcher
+(facts "make-system initializes subsystems"
+  (make-system) => (has-keys :db :mailer :logger :auth 
                              :renderer :server))
 
 (facts "make-system allows overriding subsystems"
-  (let [dispatcher (->Dispatcher (atom {}))
-        sysoverrides {:dispatcher dispatcher}
+  (let [actionparser (->ActionParser)
+        sysoverrides {:actionparser actionparser}
         sys (make-system sysoverrides)]
-    (:dispatcher sys) => dispatcher))
+    (:actionparser sys) => actionparser))
 
 
 (def req {:url "http://localhost:8888/api" :method :json :body {:_action :default :a 1}})
@@ -34,11 +34,9 @@
 (defaction ac-a1 {:a 1})
 
 (fact "started app responds with json"
-  (let [dispatches {:default ac-a1}
-        dispatcher (->Dispatcher (atom {:default ac-a1}))
-        renderer (->JsonRenderer)
+  (let [renderer (->JsonRenderer)
         login (make-MockLogin {:logged-in? true})
-        sysoverrides {:dispatcher dispatcher :renderer renderer :login login}
+        sysoverrides {:renderer renderer :login login :default-action ac-a1}
         sys (make-system sysoverrides)]
     (start-system sys) => anything
     (do-request req) => {:a 1}
@@ -51,13 +49,10 @@
   {:body (str (count (query :items nil)))})
 
 (facts "app db survives restart"
-  (let [dispatches {:default ac-add1}
-        dispatcher (->Dispatcher (atom {:default ac-add1}))
-        renderer (->LiteralRenderer)
+  (let [renderer (->LiteralRenderer)
         login (make-MockLogin {:logged-in? true})
-        sysoverrides {:dispatcher dispatcher :renderer renderer :login login}
+        sysoverrides {:default-action ac-add1 :renderer renderer :login login}
         sys (make-system sysoverrides)]
-    (:dispatcher sys) => dispatcher
     (start-system sys) => anything
     (do-request req) => 1
     (do-request req) => 2
