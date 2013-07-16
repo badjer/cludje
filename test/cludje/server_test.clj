@@ -27,8 +27,8 @@
 
 (defaction ac-echo input)
 
-(def json-req {:url "http://localhost:8099/api" :method :json :body {:action :default :a 1}})
-(def get-req {:url "http://localhost:8099/api?a=1&action=default"})
+(def json-req {:url "http://localhost:8099/api" :method :json :body {:_action :default :a 1}})
+(def get-req {:url "http://localhost:8099/api?a=1&_action=default"})
 
 (let [serv (->JettyServer 8099 (atom nil) (atom nil))
       sys {:dispatcher (->Dispatcher (atom {:default ac-echo}))
@@ -37,7 +37,7 @@
   (set-handler- serv handler) => anything
   (start- serv) => anything
   (facts "JettyServer handles JSON with ring-handler"
-    (do-request json-req) => {:a 1 :action "default"})
+    (do-request json-req) => {:a 1 :_action "default"})
   (fact "JettyServer denies get api calls by default"
     (do-request get-req) => throws)
   (stop- serv) => anything

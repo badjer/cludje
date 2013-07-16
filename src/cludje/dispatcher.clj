@@ -5,12 +5,12 @@
 (defrecord Dispatcher [dispatches]
   IDispatcher
   (get-action- [self input]
-    (when-let [action (get input :action)]
+    (when-let [action (get input :_action)]
       (get @dispatches (keyword (name action))))))
 
 (defn is-action? [vr]
   (let [m (meta vr)]
-    (get m :action)))
+    (get m :_action)))
 
 (defn find-actions [root-ns]
   ; Find all the defactions under the specified namespace

@@ -373,6 +373,6 @@
              (if-let [problems# (:problems (ex-data ex#))]
                (assoc ~'input :__problems problems#)
                (throw ex#))))))
-     (alter-meta! (var ~nam) assoc :action true)))
+     (alter-meta! (var ~nam) assoc :_action true)))
 
 

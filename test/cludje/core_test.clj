@@ -404,8 +404,8 @@
 (facts "defaction auth api"
   (let [auth (make-auth mock-auth-fn)
         sys {:auth auth}]
-    ((ident-authorize sys nil) :action :model mockuser :guest) =not=> (throws)
-    ((ident-can? sys nil) :action :model {}) =not=> (throws)))
+    ((ident-authorize sys nil) :add :model mockuser :guest) =not=> (throws)
+    ((ident-can? sys nil) :add :model {}) =not=> (throws)))
 
 (defaction ac-authorize (authorize :action Cog user input))
 (defaction ac-can? (can? :action Cog input))

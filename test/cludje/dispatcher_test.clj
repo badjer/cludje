@@ -9,13 +9,13 @@
 
 (fact "dispatcher"
   (let [disp (->Dispatcher (atom {:1 action1 :2 action2}))]
-    (get-action- disp {:action :1}) => #(= % action1)
-    (get-action- disp {:action :2}) => #(= % action2)
-    (get-action- disp {:action :3}) => nil?
+    (get-action- disp {:_action :1}) => #(= % action1)
+    (get-action- disp {:_action :2}) => #(= % action2)
+    (get-action- disp {:_action :3}) => nil?
     (get-action- disp {}) => nil?
     (get-action- disp nil) => nil?
-    (get-action- disp {:action "1"}) => #(= % action1)
-    (get-action- disp {:action "3"}) => nil?))
+    (get-action- disp {:_action "1"}) => #(= % action1)
+    (get-action- disp {:_action "3"}) => nil?))
 
 (fact "find-actions on a single namespace"
   (find-actions 'cludje.testcontrollers) => (has-keys :index)
@@ -36,6 +36,6 @@
 
 (fact "make-dispactcher"
   (let [disp (make-dispatcher 'cludje.testcontrollers)]
-    (get-action- disp {:action :index}) =not=> nil?
+    (get-action- disp {:_action :index}) =not=> nil?
     ; Try executing the action to make sure we actually got it
-    ((get-action- disp {:action :index}) nil {:a 1}) => {:a 1}))
+    ((get-action- disp {:_action :index}) nil {:a 1}) => {:a 1}))

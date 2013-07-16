@@ -17,7 +17,7 @@
         sys (make-system sysoverrides)]
     (:dispatcher sys) => dispatcher))
 
-(def req {:url "http://localhost:8888/api" :method :json :body {:action :default :a 1}})
+(def req {:url "http://localhost:8888/api" :method :json :body {:_action :default :a 1}})
 
 (fact "a start-system -ed system can respond to requests"
   (let [sys (make-system)]
