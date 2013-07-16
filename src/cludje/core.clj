@@ -39,7 +39,7 @@
   ([input kee]
    (?? input kee nil))
   ([input kee default]
-    (get input kee default)))
+   (get input kee default)))
 
 
 (defn table-name [model]
@@ -153,7 +153,7 @@
         fieldnames (merge 
                      (zipmap (keys allfields) 
                              (map friendly-name (keys allfields)))
-                          (get optmap :fieldnames {}))
+                     (get optmap :fieldnames {}))
         invisible (conj (get optmap :invisible []) :_id)
         modelopts (merge {:require reqfields
                           :fields allfields
@@ -314,16 +314,14 @@
 
 (defn- parse-action-forms [forms]
   (apply concat
-    (for [[action model expr] (partition 3 forms)]
-      (if (vector? action)
-        (for [act action] (match-ability? act model expr))
-        [(match-ability? action model expr)]))))
+         (for [[action model expr] (partition 3 forms)]
+           (if (vector? action)
+             (for [act action] (match-ability? act model expr))
+             [(match-ability? action model expr)]))))
 
 (defmacro defability [nam & forms]
   "Creates a function that can be used to authorize access to a model"
   (let [calls (parse-action-forms forms)]
-       ; (for [[auth-action auth-model expr] (partition 3 forms)]
-       ;         (match-ability? auth-action auth-model expr))]
     `(do
        (defn ~nam [~'action ~'model ~'user ~'input]
          (or ~@calls))

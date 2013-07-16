@@ -9,9 +9,8 @@
 (def row2 {:a 2})
 (def rowb {:a 1 :b 1})
 
-(facts "MemDb"
-  (let [db (->MemDb (atom {}))
-        id (write- db tbl nil row)]
+(defn test-db [db]
+  (let [id (write- db tbl nil row)]
     (fact "insert" 
       id =not=> nil?)
     (fact "fetch-"
@@ -45,11 +44,8 @@
       (delete- db tbl id) => anything
       (count (query- db tbl nil)) => 0)
     (fact "query- with empty table"
-      (query- db tbl nil) => nil)))
-
-(facts "MemDb multiple rows"
-  (let [db (->MemDb (atom {}))
-        id (write- db tbl nil row)
+      (query- db tbl nil) => nil))
+  (let [id (write- db tbl nil row)
         idb (write- db tbl nil rowb)]
     (fact "query- with multiple rows"
       (count (query- db tbl {:a 1})) => 2
@@ -65,4 +61,6 @@
       (count (query- db tbl nil)) => 1
       (first (query- db tbl nil)) => (contains rowb))))
 
+(facts "MemDb"
+  (test-db (->MemDb (atom {}))))
 
