@@ -22,15 +22,15 @@
           :configurator jetty-configurator}
          config))
 
-(defrecord JettyServer [port handler server]
+(defrecord JettyServer [port handler jetty-instance]
   IServer
   (set-handler- [self newhandler]
     (reset! handler newhandler))
   IStartable
   (start- [self]
-    (reset! server (jetty/run-jetty @handler (jetty-opts self))))
+    (reset! jetty-instance (jetty/run-jetty @handler (jetty-opts self))))
   (stop- [self]
-    (when @server (.stop @server))))
+    (when @jetty-instance (.stop @jetty-instance))))
 ;IPersistent
 ;(get-state [self])
 ;(init-state [self state]))
@@ -91,7 +91,7 @@
   ([{:keys [renderer parser] :as system}]
    (fn [request]
      (when-let [input (parse-input- parser request)]
-       (render renderer request (do-action system input))))))
+       (render- renderer request (do-action system input))))))
 
 (defn ring-handler [& handlers]
   (let [handlers (filter identity handlers)]

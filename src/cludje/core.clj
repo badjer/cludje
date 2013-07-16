@@ -239,7 +239,7 @@
 
 
 ; #####
-; Ring and server-internal apis
+; UI protocols
 ; #####
 (defprotocol IRenderer
   "Handle rendering output"
@@ -248,6 +248,7 @@
 (defprotocol IInputParser
   "Handle converting input into our standard input format"
   (parse-input- [self request]))
+
 
 
 ; TODO: Do something with this
@@ -329,15 +330,10 @@
   (logout- auth))
 (defn encrypt [auth txt]
   (encrypt- auth txt))
-(defn check-hash [auth txt cypher]
-  (check-hash- auth txt cypher))
 
 (defn authorize [auth action model user input]
   (authorize- auth action model user input))
 
-; Modelstore api
-(defn get-model [ms modelname]
-  (get-model- ms modelname))
 
 ;(defn arity [f]
 ;(let [m (first (.getDeclaredMethods (class f)))
@@ -371,10 +367,6 @@
   (let [user (current-user logn)]
     (authorize auth action model user m)))
 
-
-; Renderer api
-(defn render [renderer request output]
-  (render- renderer request output))
 
 
 (defmacro defaction [nam & forms]
