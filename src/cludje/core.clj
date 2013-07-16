@@ -2,11 +2,26 @@
   (:use cludje.types)
   (:require [clojure.string :as s]))
 
+(defn find-in-ns [nas thing]
+  (when (and nas thing)
+    (if (symbol? thing)
+      (ns-resolve nas thing)
+      (ns-resolve nas (symbol thing)))))
+
 (defn throw-problems 
   ([]
    (throw-problems {}))
   ([problems]
    (throw (ex-info "Problems" {:problems problems}))))
+
+(defn throw-unauthorized []
+  (throw (ex-info "Unauthorized" {:__unauthorized "Unauthorized"})))
+
+(defn throw-not-found []
+  (throw (ex-info "Not found" {:__notfound "Not found"})))
+
+(defn throw-not-logged-in []
+  (throw (ex-info "Not logged in" {:__notloggedin "Not logged in"})))
 
 (defn friendly-name 
   ([model field]
@@ -202,11 +217,14 @@
   (authorize- [self action model user input] "Is the user allowed to do this?"))
 
 (defprotocol IDispatcher
-  (get-action- [self input] "Get the action to execute"))
+  (get-action- [self input] "Get the action to execute")
+  ; TODO: Break this up
+  (get-modelname- [self input] "Get the name of the model")
+  (get-actionkey- [self input] "Get the keyword name of the action kee (ie, :add"))
 
-(defprotocol IRenderer
-  "Handle rendering output"
-  (render- [self request output] "Generate output for the user"))
+
+(defprotocol IModelStore
+  (get-model- [self modelname] "Get the model, or nil if it doesn't exist"))
 
 (defprotocol IServer
   (set-handler- [self handler]))
@@ -214,6 +232,16 @@
 (defprotocol IStartable
   (start- [self])
   (stop- [self]))
+
+
+
+; #####
+; Ring and server-internal apis
+; #####
+(defprotocol IRenderer
+  "Handle rendering output"
+  (render- [self request output] "Generate output for the user"))
+
 
 ; TODO: Do something with this
 ;(defprotocol IPersistent
@@ -300,6 +328,10 @@
 (defn authorize [auth action model user input]
   (authorize- auth action model user input))
 
+; Modelstore api
+(defn get-model [ms modelname]
+  (get-model- ms modelname))
+
 ;(defn arity [f]
 ;(let [m (first (.getDeclaredMethods (class f)))
 ;p (.getParameterTypes m)]
@@ -308,7 +340,7 @@
 
 (defn- match-ability? [auth-action auth-model expr]
   `(let [~(symbol (s/lower-case (name auth-model))) (make ~auth-model ~'input)]
-     (and (= ~'action ~auth-action) 
+     (and (= (name ~'action) (name ~auth-action))
           (= ~'model ~auth-model) 
           ~expr)))
 
@@ -333,15 +365,17 @@
     (authorize auth action model user m)))
 
 ; Dispatcher api
-(defn get-action [dispatcher request]
-  (get-action- dispatcher request))
+(defn get-action [dispatcher input]
+  (get-action- dispatcher input))
+(defn get-actionkey [dispatcher input]
+  (get-actionkey- dispatcher input))
+(defn get-modelname [dispatcher input]
+  (get-modelname- dispatcher input))
 
 
 ; Renderer api
 (defn render [renderer request output]
   (render- renderer request output))
-
-
 
 
 (defmacro defaction [nam & forms]
@@ -361,6 +395,9 @@
              ~'encrypt (partial encrypt (:login ~'system))
              ~'check-hash (partial check-hash (:login ~'system))
              ~'authorize (partial authorize (:auth ~'system))
+             ~'get-modelname (partial get-modelname (:dispatcher ~'system))
+             ~'get-actionkey (partial get-actionkey (:dispatcher ~'system))
+             ~'get-model (partial get-model (:modelstore ~'system))
              ~'can? (partial can? (:auth ~'system) (:login ~'system))
              ~'user (~'current-user)
              ~'? (partial ? ~'input)
@@ -373,4 +410,12 @@
                (throw ex#))))))
      (alter-meta! (var ~nam) assoc :_action true)))
 
-
+(defaction do-action
+  (let [action (get-action (:dispatcher system) input)
+        actkey (get-actionkey input)
+        model (get-model (get-modelname input))]
+    (cond 
+      (nil? user) (throw-not-logged-in)
+      (nil? action) (throw-not-found)
+      (not (authorize actkey model user input)) (throw-unauthorized)
+      :else (action system input))))

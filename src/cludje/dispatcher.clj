@@ -4,6 +4,13 @@
 
 (defrecord Dispatcher [dispatches]
   IDispatcher
+  (get-modelname- [self input]
+    (when-let [action (get input :_action)]
+      (s/capitalize (first (s/split action #"-")))))
+  (get-actionkey- [self input]
+    (when-let [action (get input :_action)]
+      (when-let [s (second (s/split action #"-"))]
+        (keyword s))))
   (get-action- [self input]
     (when-let [action (get input :_action)]
       (get @dispatches (keyword (name action))))))

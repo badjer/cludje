@@ -4,6 +4,15 @@
         cludje.core
         cludje.dispatcher))
 
+(fact "get-modelname and get-actionkey"
+  (let [disp (->Dispatcher (atom {}))]
+    (get-modelname- disp {:_action "cog-add"}) => "Cog"
+    (get-modelname- disp {}) => nil
+    (get-modelname- disp nil) => nil
+    (get-actionkey- disp {:_action "cog-add"}) => :add
+    (get-actionkey- disp {}) => nil
+    (get-actionkey- disp nil) => nil))
+
 (defaction action1 nil)
 (defaction action2 nil)
 

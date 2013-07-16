@@ -6,6 +6,7 @@
         cludje.auth
         cludje.login
         cludje.dispatcher
+        cludje.modelstore
         cludje.renderer
         cludje.server))
 
@@ -21,6 +22,7 @@
     :login (make-MockLogin false)
     :auth (make-auth mock-auth-fn)
     :dispatcher (make-dispatcher action-ns {:default default-action})
+    :modelstore (->ModelStore model-ns)
     :renderer (->JsonRenderer)
     :server (jetty port)
     :action-ns action-ns

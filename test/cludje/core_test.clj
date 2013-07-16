@@ -9,6 +9,8 @@
         cludje.login
         cludje.dispatcher
         cludje.renderer
+        cludje.modelstore
+        cludje.app
         cludje.core))
 
 (fact "needs should return an entry for each missing field"
@@ -439,6 +441,28 @@
     (ac-authorize sys nil) => falsey
     (ac-can? sys nil) => falsey))
 
+(defaction ident-get-modelname get-modelname)
+(defaction ident-get-actionkey get-actionkey)
+(defaction ac-get-modelname (get-modelname input))
+(defaction ac-get-actionkey (get-actionkey input))
+
+(let [sys {:dispatcher (->Dispatcher (atom {}))}]
+  (facts "get-modelname api"
+    ((ident-get-modelname sys nil) "cog-add") =not=> (throws)
+    ((ident-get-actionkey sys nil) "cog-add") =not=> (throws))
+  (facts "get-modelname api works"
+    (ac-get-modelname sys {:_action "cog-add"}) => "Cog"
+    (ac-get-actionkey sys {:_action "cog-add"}) => :add))
+
+(defaction ident-get-model get-model)
+(defaction ac-get-model (get-model "Cog"))
+
+(let [sys {:modelstore (->ModelStore 'cludje.core-test)}]
+  (facts "modelstore api"
+    ((ident-get-model sys nil) "Foo") =not=> (throws))
+  (facts "modelstore api works"
+    (ac-get-model sys nil) => Cog))
+
 (defaction ac-?? (?? :a))
 
 (facts "??"
@@ -481,7 +505,17 @@
   (ab-cog :add Cog nil {:amt 1}) => true
   (ab-cog :add Cog nil {:amt 2}) => false
   (ab-cog :remove Cog nil {:amt 1}) => false
-  (ab-cog :add Cog nil {}) => false)
+  (ab-cog :add Cog nil {}) => false
+  (ab-cog "add" Cog nil {:amt 1}) => true
+  (ab-cog "add" Cog nil {:amt 2}) => false)
+
+(future-facts "defability should work with strs in do-action"
+  (ab-cog :add "Cog" nil {:amt 1}) => true
+  (ab-cog :add "Cog" nil {:amt 2}) => false
+  (ab-cog :add "cog" nil {:amt 1}) => true
+  (ab-cog :add "cog" nil {:amt 2}) => false
+  (ab-cog "add" "cog" nil {:amt 1}) => true
+  (ab-cog "add" "cog" nil {:amt 2}) => false)
   
 (defability ab-all-cog
   :add Cog true)
@@ -533,6 +567,36 @@
     (can? auth logn :add Cog {:amt 1}) => true
     (can? auth logn :add Cog {:amt 2}) => falsey
     (can? auth logn :delete Cog {:amt 1}) => falsey))
+
+(defaction cog-add {:_id 1})
+(defaction cog-forbidden {:secret "foo"})
+
+(fact "do-action"
+  (let [sys (make-system {:login (make-MockLogin true)
+                          :dispatcher (->Dispatcher (atom {:cog-add cog-add
+                                                           :cog-forbidden
+                                                           cog-forbidden}))
+                          :modelstore (->ModelStore 'cludje.core-test)
+                          :auth (make-auth ab-ac-vector)})]
+    (do-action sys {:_action "cog-add"}) => {:_id 1}
+    (fact "Not found action"
+      (do-action sys {:_action "cog-foobarzums"}) => (throws)
+      (try (do-action sys {:action "cog-foobarzums"})
+        (catch clojure.lang.ExceptionInfo ex
+          (ex-data ex))) => (has-keys :__notfound))
+    (fact "Forbids access if no permissions"
+      (do-action sys {:_action "cog-forbidden"}) => (throws)
+      (try (do-action sys {:_action "cog-forbidden"})
+        (catch clojure.lang.ExceptionInfo ex
+          (ex-data ex))) => (has-keys :__unauthorized))
+    (fact "Not allowed if not logged in"
+      (logout (:login sys)) => anything
+      (do-action sys {:action "cog-add"}) => (throws)
+      (try (do-action sys {:action "cog-add"})
+        (catch clojure.lang.ExceptionInfo ex
+          (ex-data ex))) => (has-keys :__notloggedin))))
+
+
 
   
 

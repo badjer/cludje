@@ -43,7 +43,7 @@
 ; some of this stuff - the server is doing too much
 (def template-regex #"/([^/]+)/([^/.]+)")
 
-(defn get-modelname [request]
+(defn server-get-modelname [request]
   (when-let [uri (:uri request)]
     (when-let [n (second (re-find template-regex uri))]
       (s/capitalize n))))
@@ -56,14 +56,8 @@
 (defn get-template-instance-name [request]
   (when-let [uri (:uri request)]
     (when-let [n (last (re-find template-regex uri))]
-      (str (s/lower-case (get-modelname request)) "-" n))))
+      (str (s/lower-case (server-get-modelname request)) "-" n))))
 
-
-(defn find-in-ns [nas thing]
-  (when (and nas thing)
-    (if (symbol? thing)
-      (ns-resolve nas thing)
-      (ns-resolve nas (symbol thing)))))
 
 (defn html-response [body]
   {:status 200
@@ -74,7 +68,7 @@
   "Generates a fn that returns template for the model, provided that model
   exists and that template-model exists"
   (fn [request]
-    (let [modelname (get-modelname request)
+    (let [modelname (server-get-modelname request)
           templatename (get-templatename request)
           model (find-in-ns model-ns modelname)
           template (find-in-ns template-ns templatename)]
