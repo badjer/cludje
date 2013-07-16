@@ -39,6 +39,8 @@
 (defn jetty [port]
   (->JettyServer port (atom nil) (atom nil)))
 
+; TODO: Cleanup this mess - we need some abstraction around 
+; some of this stuff - the server is doing too much
 (def template-regex #"/([^/]+)/([^/.]+)")
 
 (defn get-modelname [request]
