@@ -219,7 +219,7 @@
   ;want to generate this dynamically pretty soon
   "angular.module('mainapp', ['ui.bootstrap'], 
       function($routeProvider, $locationProvider){
-    });
+      });
 
   function MainCntl($scope, $http){ 
     // Figure out what the current action is, based on the url
@@ -237,28 +237,62 @@
       return null;
     };
 
-    // Run the action that this page was loaded with
-    var reload = function(){
-      if(actname()){
-        $scope.action(actname());
+    var getParameterByName = function(name) {
+      name = name.replace(/[\\[]/, \"\\\\\\[\").replace(/[\\]]/, \"\\\\\\]\");
+      var regex = new RegExp(\"[\\\\?&]\" + name + \"=([^&#]*)\"),
+          results = regex.exec(location.search);
+      return results == null ? \"\" : decodeURIComponent(results[1].replace(/\\+/g, \" \"));
+    }
+
+
+    var check_for_back = function(){
+      var ret = getParameterByName('_return');
+      if(ret != undefined && ret != null && ret != ''){
+        window.location = ret;
       }
     };
+
+    var succeeded = function(opts){
+      if(opts.should_reload === true)
+        reload();
+      check_for_back();
+    }
+
+    var is_successful = function(data){
+      return data.__problems === undefined || data.__problemns === null;
+    }
+
+    $scope.cancel = function(){
+      check_for_back();
+    };
+
 
     // Initialize our data
     $scope.data = {};
 
+    // Run the action that this page was loaded with
+    var reload = function(){
+      if(actname()){
+        $scope.action(actname(), {suppress_success: true});
+      }
+    };
+
     // Define our action - an action for calling actions... named action
     // That might be confusing
-    $scope.action = function(actname, paras, should_reload){
+    $scope.action = function(actname, opts){
       // Set the server-side action we want to call
       $scope.data._action = actname;
-      var payload = (paras === undefined || paras === nil)? $scope.data : paras;
+      if(opts === undefined || opts === null){
+        opts = {};
+      }
+      var payload = (opts.paras === undefined || opts.paras === nil)? $scope.data : opts.paras;
       $http.post('/api', payload)
         .success(function(data){
           // Set the result of the server action to our scope
           $scope.data = data;
-          if(should_reload === true){
-            reload();
+          var suppress = opts.suppress_success === true;
+          if(is_successful(data) && !suppress){
+            succeeded(opts);
           }
         });
     };
@@ -275,6 +309,7 @@
     // loaded)
     reload();
   };")
+
 
 
 (defn template-edit [model]
