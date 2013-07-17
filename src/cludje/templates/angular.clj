@@ -96,16 +96,6 @@
                     (dissoc passed-opts :action))]
     [:input opts]))
 
-(defn alert
-  "klasses can be nil, :error, :success, :info, :block"
-  ([condition text & klasses]
-   (let [klass-strs (into ["alert"] (map #(str "alert-" (name %)) klasses))
-         klass-str (s/join " " klass-strs)]
-     [:div {:class klass-str :ng-show condition}
-      [:button.close {:type "button" :data-dismiss "alert"} "&times;"]
-      text])))
-
-
 (defn alerts []
   [:alert {:ng-repeat "alert in data.__alerts"
            :type "alert.type" :close "closeAlert($index)"}
@@ -121,8 +111,6 @@
         visible-fields (apply dissoc fields invisible)]
     (form 
       (when title [:h3 title])
-      (alerts)
-      ;(alert (ng-path "data." :_id) "Saved" :success)
       (for [field invisible]
         (ng-field Hidden field))
       (for [[field typ] visible-fields]
@@ -204,6 +192,7 @@
               ]
              ]
             [:div.container-fluid 
+             (alerts)
              body]
             [:footer]
             ] 
@@ -288,12 +277,12 @@
       var payload = (opts.paras === undefined || opts.paras === nil)? $scope.data : opts.paras;
       $http.post('/api', payload)
         .success(function(data){
-          // Set the result of the server action to our scope
-          $scope.data = data;
           var suppress = opts.suppress_success === true;
           if(is_successful(data) && !suppress){
             succeeded(opts);
           }
+          // Set the result of the server action to our scope
+          $scope.data = data;
         });
     };
 
