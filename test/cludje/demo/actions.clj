@@ -4,6 +4,7 @@
         cludje.crud
         cludje.demo.models))
 
+(def-system-actions)
 (def-crud-actions Cog)
 (def-crud-actions Shift)
 

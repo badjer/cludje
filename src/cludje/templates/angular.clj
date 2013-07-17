@@ -151,12 +151,12 @@
 
 (defn common-layout [body]
   (html (html5 
-          [:html {:lang "en" :ng-app "mainapp"}
+          [:html {:lang "en" :ng-app "mainapp" :ng-controller "MainCntl"}
            [:head 
             [:meta {:charset "utf-8"}]
             [:meta {:http-equiv "X-UA-Compatible" :content "IE Edge,chrome 1"}]
             [:meta {:name "viewport" :content "width device-width, initial-scale 1.0"}]
-            [:title (ng-data "title")]
+            [:title (ng-data "system.title")]
             [:meta {:http-equiv "Content-Type" :content "text/html; charset utf-8"}]
 
             "<!--[if lt IE 9] 
@@ -171,7 +171,7 @@
 
             [:link {:href "/img/favicon.ico" :rel "shortcut icon"}]
             ]
-           [:body {:style "padding-top: 0px;" :ng-controller "MainCntl"}
+           [:body {:style "padding-top: 0px;"}; :ng-controller "MainCntl"}
             [:div.navbar.navbar-static-top
              [:div.navbar-inner
               [:div.container
@@ -180,17 +180,17 @@
                 [:span.icon-bar]
                 [:span.icon-bar]
                 ]
-               [:a.brand {:href "/"} [:strong (ng-data "title")]]
+               [:a.brand {:href "/"} [:strong (ng-data "system.title")]]
                [:div.nav-collapse.collapse
                 [:ul.nav
-                 [:li {:ng-repeat "item in menu"}
-                  [:a {:href (ng-data "item.text")} (ng-data "item.link")]]
+                 [:li {:ng-repeat "item in system.menu"}
+                  [:a {:href (ng-data "item.link")} (ng-data "item.text")]]
                  ]
                 [:ul.nav.pull-right
-                 [:li {:ng-show "user.username"} "Logged in as " 
-                  (ng-data "user.username")]
-                 [:li {:ng-hide "user.username"}
-                  [:a {:href "/login?_return=/"} "Login"]]]
+                 [:li {:ng-show "system.user.username"} 
+                  [:a {:href "#"} "Logged in as " (ng-data "system.user.username")]]
+                 [:li {:ng-hide "system.user.username"}
+                  [:a {:href (ng-data "system.login_url")} "Login"]]]
                 ]
                ]
               ]
@@ -273,12 +273,13 @@
     // Define our action - an action for calling actions... named action
     // That might be confusing
     $scope.action = function(actname, opts){
-      // Set the server-side action we want to call
-      $scope.data._action = actname;
       if(opts === undefined || opts === null){
         opts = {};
       }
       var payload = (opts.paras === undefined || opts.paras === nil)? $scope.data : opts.paras;
+
+      // Set the server-side action we want to call
+      payload._action = actname;
       $http.post('/api', payload)
         .success(function(data){
           var suppress = opts.suppress_success === true;
@@ -286,7 +287,11 @@
             succeeded(opts);
           }
           // Set the result of the server action to our scope
-          $scope.data = data;
+          if(opts.system === true){
+            $scope.system = data;
+          }else{
+            $scope.data = data;
+          }
         });
     };
 
@@ -295,12 +300,12 @@
       $scope.data.__alerts.splice(index,1);
     };
 
-    // Ok, the only other thing we want to do is initialize
-    // with our first-time data. To do this, we'll pull the 
-    // action name and params off the url hash
-    // This code should only get run once (when the page is first
-    // loaded)
-    reload();
+    // We also want to load the system data - this will get us
+    // menus, titles, etc
+    // We also want to load the page-specific data when we're done,
+    // so we'll tell the handler to reload afterwards
+    // This code should only get run on page-load
+    $scope.action('-system-data', {should_reload: true, system: true});
   };")
 
 

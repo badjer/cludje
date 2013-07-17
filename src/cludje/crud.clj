@@ -4,6 +4,14 @@
 
 (def crud-actions [:new :add :show :edit :alter :delete :list])
 
+(defmacro def-system-actions []
+  `(do
+     (defaction ~'-system-data
+       {:user ~'user 
+        :menu [{:text "A" :link "/a"} {:text "B" :link "/b"}] 
+        :login_url "/login?_return=/"
+        :title "Cludje"})))
+
 (defmacro def-crud-actions [model-sym]
   (let [model @(resolve model-sym)
         modelname (table-name model)
