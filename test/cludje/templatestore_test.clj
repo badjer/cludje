@@ -19,6 +19,8 @@
     (get-template- gts "cog" :edit) => "Hello"
     (get-template- gts "cog" "edit") => "Hello"
     (get-template- gts nil :edit) => nil
+    (get-template- gts nil nil) => nil
+    (get-template- gts "" "") => nil
     (get-template- gts "Cog" :foo) => nil
     (get-template- gts Cog :foo) => nil))
 
@@ -32,6 +34,8 @@
     (get-template- ts "Cog" :show) => "Show"
     (get-template- ts "Cog" "show") => "Show"
     (get-template- ts nil :show) => nil
+    (get-template- ts nil nil) => nil
+    (get-template- ts "" "") => nil
     (get-template- ts "Cog" :foo) => nil
     (get-template- ts Cog :foo) => nil)
   (facts "TemplateStore should still serve, even if the model isn't found,

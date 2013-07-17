@@ -156,7 +156,7 @@
             [:meta {:charset "utf-8"}]
             [:meta {:http-equiv "X-UA-Compatible" :content "IE Edge,chrome 1"}]
             [:meta {:name "viewport" :content "width device-width, initial-scale 1.0"}]
-            [:title "Cludje"]
+            [:title (ng-data "title")]
             [:meta {:http-equiv "Content-Type" :content "text/html; charset utf-8"}]
 
             "<!--[if lt IE 9] 
@@ -180,13 +180,17 @@
                 [:span.icon-bar]
                 [:span.icon-bar]
                 ]
-               [:a.brand {:href "/"} [:strong "Cludje"]]
+               [:a.brand {:href "/"} [:strong (ng-data "title")]]
                [:div.nav-collapse.collapse
                 [:ul.nav
-                 [:li [:a {:href "/a"} "A"]]
-                 [:li [:a {:href "/b"} "B"]]
+                 [:li {:ng-repeat "item in menu"}
+                  [:a {:href (ng-data "item.text")} (ng-data "item.link")]]
                  ]
-                [:ul.nav.pull-right]
+                [:ul.nav.pull-right
+                 [:li {:ng-show "user.username"} "Logged in as " 
+                  (ng-data "user.username")]
+                 [:li {:ng-hide "user.username"}
+                  [:a {:href "/login?_return=/"} "Login"]]]
                 ]
                ]
               ]
