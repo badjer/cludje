@@ -9,6 +9,7 @@
         cludje.modelstore
         cludje.parser
         cludje.login
+        cludje.templatestore
         cludje.auth
         cludje.server))
 
@@ -55,7 +56,7 @@
     (stop- serv)))
 
 (defmodel Cog {:amt Int})
-(defn template-edit [model] "<p>Hello</p>")
+(defn -template-edit [model] "<p>Hello</p>")
 (defn cog-foo [] "Instance")
 
 (facts "find-in-ns"
@@ -66,40 +67,38 @@
 
 (def template-request {:url "http://localhost:8099/cog/edit.tpl.html"})
 
-(def template-req-no-ext {:url "http://localhost:8099/cog/edit"})
+(def template-req-no-ext {:url "http://localhost:8099/Cog/edit"})
 
 (def template-instance-req {:url "http://localhost:8099/cog/foo.tpl.html"})
 
-(def template-inst-req-no-ext {:url "http://localhost:8099/cog/foo"})
+(def template-inst-req-no-ext {:url "http://localhost:8099/Cog/foo"})
+
 
 (let [serv (->JettyServer 8099 (atom nil) (atom nil))
-      sys (make-system {:default-action ac-echo})]
+      sys (make-system {:default-action ac-echo 
+                        :model-ns 'cludje.server-test
+                        :template-ns 'cludje.server-test})
+      templatestore (make-templatestore sys)
+      fullsys (assoc sys :templatestore templatestore)]
   (facts "JettyServer serves static files"
-    (set-handler- serv (ring-handler (action-handler sys))) => anything
+    (set-handler- serv (ring-handler (action-handler fullsys))) => anything
     (start- serv) => anything
     (:body (do-request res-request)) => "hello world\n"
     (stop- serv) => anything)
   (facts "JettyServer serves templates"
-    (set-handler- serv (ring-handler 
-                         (template-handler 'cludje.server-test 
-                                           'cludje.server-test))) => anything
+    (set-handler- serv (ring-handler (template-handler fullsys))) => anything
     (start- serv) => anything
     (:body (do-request template-request)) => "<p>Hello</p>"
     (fact "...and without a .tpl.html extension"
       (:body (do-request template-req-no-ext)) => "<p>Hello</p>")
     (stop- serv) => anything)
   (facts "JettyServer serves template instances"
-    (set-handler- 
-      serv (ring-handler 
-             (template-instance-handler 
-               'cludje.server-test 
-               'cludje.server-test))) => anything
+    (set-handler- serv (ring-handler (template-handler fullsys))) => anything
     (start- serv) => anything
     (:body (do-request template-instance-req)) => "Instance"
     (fact "...and without a .tpl.html extension"
       (:body (do-request template-inst-req-no-ext)) => "Instance")
     (stop- serv)))
-
 
 (future-facts "JettyServer serves static template files without a .tpl.html extension")
 

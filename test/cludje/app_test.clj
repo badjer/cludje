@@ -64,7 +64,7 @@
 
 (defmodel Cog {:amt Int})
 ; This is a generic template, it provides the edit template for any model
-(defn template-edit [model] "Template")
+(defn -template-edit [model] "Template")
 ; This is an instance template - it provides the foo template for cog
 (defn cog-foo [] "Instance")
 

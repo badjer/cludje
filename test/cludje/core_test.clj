@@ -545,13 +545,14 @@
 
 (fact "do-action"
   (let [sys (make-system {:login (make-MockLogin {:logged-in? true})
+                          :default-action nil
                           :action-ns 'cludje.core-test
                           :model-ns 'cludje.core-test
                           :auth (make-auth ab-ac-vector)})]
     (do-action sys {:_action "cog-add"}) => {:_id 1}
     (fact "Not found action"
       (do-action sys {:_action "cog-foobarzums"}) => (throws)
-      (try (do-action sys {:action "cog-foobarzums"})
+      (try (do-action sys {:_action "cog-foobarzums"})
         (catch clojure.lang.ExceptionInfo ex
           (ex-data ex))) => (has-keys :__notfound))
     (fact "Forbids access if no permissions"
@@ -561,8 +562,8 @@
           (ex-data ex))) => (has-keys :__unauthorized))
     (fact "Not allowed if not logged in"
       (logout (:login sys)) => anything
-      (do-action sys {:action "cog-add"}) => (throws)
-      (try (do-action sys {:action "cog-add"})
+      (do-action sys {:_action "cog-add"}) => (throws)
+      (try (do-action sys {:_action "cog-add"})
         (catch clojure.lang.ExceptionInfo ex
           (ex-data ex))) => (has-keys :__notloggedin))
     ))

@@ -60,9 +60,18 @@
 
 
 (defn table-name [model]
-  (if (keyword? model)
-    model
-    (? (meta model) :table)))
+  (cond
+    (keyword? model) model
+    (nil? model) nil
+    (= java.lang.String (type model)) (s/lower-case model)
+    :else (? (meta model) :table)))
+
+(defn model-name [s]
+  (cond
+    (keyword? s) (s/capitalize (name s))
+    (nil? s) nil
+    (= java.lang.String (type s)) (s/capitalize s)
+    :else (s/capitalize (? (meta s) :table))))
 
 (defn key-name [model] :_id)
 

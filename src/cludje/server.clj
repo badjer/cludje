@@ -1,5 +1,6 @@
 (ns cludje.server
-  (:use cludje.core)
+  (:use cludje.core
+        cludje.templatestore)
   (:require [clojure.string :as s]
             [ring.adapter.jetty :as jetty]
             [ring.middleware.json :as json]
@@ -36,7 +37,7 @@
 ;(init-state [self state]))
 
 
-(defn jetty [port]
+(defn jetty [{:keys [port]}]
   (->JettyServer port (atom nil) (atom nil)))
 
 ; TODO: Cleanup this mess - we need some abstraction around 
@@ -48,42 +49,26 @@
     (when-let [n (second (re-find template-regex uri))]
       (s/capitalize n))))
 
-(defn get-templatename [request]
+(defn server-get-action-key [request]
   (when-let [uri (:uri request)]
     (when-let [n (last (re-find template-regex uri))]
-      (str "template-" n))))
-
-(defn get-template-instance-name [request]
-  (when-let [uri (:uri request)]
-    (when-let [n (last (re-find template-regex uri))]
-      (str (s/lower-case (server-get-modelname request)) "-" n))))
-
+      n)))
 
 (defn html-response [body]
   {:status 200
    :headers {"Content-Type" "text/html"}
    :body (str body)})
 
-(defn template-handler [model-ns template-ns]
-  "Generates a fn that returns template for the model, provided that model
-  exists and that template-model exists"
-  (fn [request]
-    (let [modelname (server-get-modelname request)
-          templatename (get-templatename request)
-          model (find-in-ns model-ns modelname)
-          template (find-in-ns template-ns templatename)]
-      (when (and template model)
-        (html-response (template @model))))))
 
-(defn template-instance-handler [model-ns template-ns]
-  "Generates a fn that returns specific templates for a model.
-  ie, if the app defined a get-project template, then calls to
-  /templates/Project/get.tpl.html would get routed to it"
-  (fn [request]
-    (let [templatename (get-template-instance-name request)
-          template (find-in-ns template-ns templatename)]
-      (when template
-        (html-response (template))))))
+(defn template-handler
+  "Generates a fn that serves templates"
+  ([{:keys [templatestore] :as system}]
+   (fn [request]
+     (let [modelname (server-get-modelname request)
+           action-key (server-get-action-key request)
+           res (get-template- templatestore modelname action-key)]
+       (when res
+         (html-response res))))))
 
 
 (defn action-handler 
@@ -102,7 +87,6 @@
         (kw/wrap-keyword-params) 
         (json/wrap-json-params)
         (params/wrap-params))))
-
 
 
 (defrecord MockServer []
