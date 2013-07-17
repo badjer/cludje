@@ -4,9 +4,6 @@
 
 (def crud-actions [:new :add :show :edit :alter :delete :list])
 
-(defn with-alert [m text typ]
-  (update-in m [:__alerts] conj {:text text :type typ}))
-
 (defmacro def-crud-actions [model-sym]
   (let [model @(resolve model-sym)
         modelname (table-name model)

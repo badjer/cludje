@@ -25,6 +25,10 @@
 (defn throw-not-logged-in []
   (throw (ex-info "Not logged in" {:__notloggedin "Not logged in"})))
 
+(defn with-alert [m text typ]
+  (update-in m [:__alerts] conj {:text text :type typ}))
+
+
 (defn friendly-name 
   ([model field]
    (if-let [names (:fieldnames (meta model))]
@@ -402,7 +406,9 @@
            ~@forms
            (catch clojure.lang.ExceptionInfo ex#
              (if-let [problems# (:__problems (ex-data ex#))]
-               (assoc ~'input :__problems problems#)
+               (->
+                 (assoc ~'input :__problems problems#)
+                 (with-alert "There were problems" :error))
                (throw ex#))))))
      (alter-meta! (var ~nam) assoc :_action true)))
 
