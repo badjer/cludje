@@ -222,8 +222,8 @@
   (try
     (throw-problems {:a 1})
     (catch Exception ex
-      (ex-data ex) => (has-keys :problems)
-      (:problems (ex-data ex)) => {:a 1})))
+      (ex-data ex) => (has-keys :__problems)
+      (:__problems (ex-data ex)) => {:a 1})))
 
 (fact "save knows when to update"
   (let [db (->MemDb (atom {}))

@@ -59,6 +59,12 @@
    :headers {"Content-Type" "text/html"}
    :body (str body)})
 
+(defn http-401 []
+  {:status 401})
+
+(defn http-403 []
+  {:status 403})
+
 
 (defn template-handler
   "Generates a fn that serves templates"
@@ -76,12 +82,22 @@
   ([{:keys [renderer parser] :as system}]
    (fn [request]
      (when-let [input (parse-input- parser request)]
-       (render- renderer request (do-action system input))))))
+       (try
+         (render- renderer request (do-action system input))
+         (catch clojure.lang.ExceptionInfo ex
+           (let [exd (ex-data ex)]
+             (cond
+               ; If the exception is not found, just return null
+               (:__notfound exd) nil
+               (:__notloggedin exd) (http-401)
+               (:__unauthorized exd) (http-403)
+               :else (throw ex)))))))))
 
 (defn ring-handler [& handlers]
   (let [handlers (filter identity handlers)]
     (-> (fn [request]
-          (first (filter identity (map #(% request) handlers))))
+          (let [res (first (filter identity (map #(% request) handlers)))]
+            res))
         (resource/wrap-resource "public")
         (file-info/wrap-file-info) 
         (kw/wrap-keyword-params) 

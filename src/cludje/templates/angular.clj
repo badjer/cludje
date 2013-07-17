@@ -251,7 +251,7 @@
     // That might be confusing
     $scope.action = function(actname, paras, should_reload){
       // Set the server-side action we want to call
-      $scope.data.action = actname;
+      $scope.data._action = actname;
       var payload = (paras === undefined || paras === nil)? $scope.data : paras;
       $http.post('/api', payload)
         .success(function(data){
@@ -314,11 +314,11 @@
        (cludje.templates.angular/common-layout ~'body))
      (defn ~'js-app []
        (cludje.templates.angular/js-app))
-     (defn ~'template-edit [~'model]
+     (defn ~'-template-edit [~'model]
        (cludje.templates.angular/template-edit ~'model))
-     (defn ~'template-new [~'model]
+     (defn ~'-template-new [~'model]
        (cludje.templates.angular/template-new ~'model))
-     (defn ~'template-list [~'model]
+     (defn ~'-template-list [~'model]
        (cludje.templates.angular/template-list ~'model))
-     (defn ~'template-show [~'model]
+     (defn ~'-template-show [~'model]
        (cludje.templates.angular/template-show ~'model))))

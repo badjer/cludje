@@ -1,5 +1,6 @@
 (ns user
   (:use cludje.core
+        cludje.login
         cludje.app)
   (:require [clojure.java.io :as io]
             [clojure.string :as s]
@@ -15,6 +16,8 @@
   []
   (alter-var-root #'system
     (constantly (make-system {:port 8123 
+                              :default-action nil
+                              :login (make-TestLogin mockuser)
                               :template-ns 'cludje.demo.templates
                               :model-ns 'cludje.demo.models
                               :action-ns 'cludje.demo.actions}))))

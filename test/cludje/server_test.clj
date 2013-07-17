@@ -64,15 +64,10 @@
   (find-in-ns 'cludje.server-test "FSDasdf") => nil)
 
 (def res-request {:url "http://localhost:8099/css/test.css"})
-
 (def template-request {:url "http://localhost:8099/cog/edit.tpl.html"})
-
 (def template-req-no-ext {:url "http://localhost:8099/Cog/edit"})
-
 (def template-instance-req {:url "http://localhost:8099/cog/foo.tpl.html"})
-
 (def template-inst-req-no-ext {:url "http://localhost:8099/Cog/foo"})
-
 
 (let [serv (->JettyServer 8099 (atom nil) (atom nil))
       sys (make-system {:default-action ac-echo 
@@ -81,7 +76,7 @@
       templatestore (make-templatestore sys)
       fullsys (assoc sys :templatestore templatestore)]
   (facts "JettyServer serves static files"
-    (set-handler- serv (ring-handler (action-handler fullsys))) => anything
+    (set-handler- serv (ring-handler (template-handler fullsys))) => anything
     (start- serv) => anything
     (:body (do-request res-request)) => "hello world\n"
     (stop- serv) => anything)

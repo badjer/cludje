@@ -14,7 +14,7 @@
   ([]
    (throw-problems {}))
   ([problems]
-   (throw (ex-info "Problems" {:problems problems}))))
+   (throw (ex-info "Problems" {:__problems problems}))))
 
 (defn throw-unauthorized []
   (throw (ex-info "Unauthorized" {:__unauthorized "Unauthorized"})))
@@ -401,7 +401,7 @@
          (try
            ~@forms
            (catch clojure.lang.ExceptionInfo ex#
-             (if-let [problems# (:problems (ex-data ex#))]
+             (if-let [problems# (:__problems (ex-data ex#))]
                (assoc ~'input :__problems problems#)
                (throw ex#))))))
      (alter-meta! (var ~nam) assoc :_action true)))
