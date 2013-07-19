@@ -90,11 +90,20 @@
   (let [passed-opts (apply hash-map args)
         click (when-let [a (:action passed-opts)]
                 {:ng-click (str "action('" (name a) "')")})
-        opts (merge {:type :button :class "btn btn-primary"
-                     :value txt} 
+        opts (merge {:type :button :class "btn btn-primary"}
                     click
                     (dissoc passed-opts :action))]
-    [:input opts]))
+    [:button opts txt]))
+
+(defn link [txt & args]
+  (let [passed-args (apply hash-map args)
+        return (when (:return passed-args)
+                 {:ng-href (str (:href passed-args) "?_return={{location.pathname}}")})
+        opts (merge {:href "#" :class "btn btn-primary"}
+                    return
+                    (dissoc passed-args :return))]
+    [:a opts txt]))
+
 
 (defn alerts []
   [:alert {:ng-repeat "alert in data.__alerts"
@@ -137,8 +146,10 @@
 
 (defn _list-template [item-template model]
   (let [tablename (table-name model)]
-    [:ul.thumbnails {:ng-repeat (str tablename " in data." tablename "s")}
-     (item-template model)]))
+    [:div.row-fluid 
+     (link "New" :href (str "/" tablename "/new") :return true)
+     [:ul.thumbnails {:ng-repeat (str tablename " in data." tablename "s")}
+       (item-template model)]]))
 
 
 
@@ -180,7 +191,7 @@
                 [:span.icon-bar]
                 [:span.icon-bar]
                 ]
-               [:a.brand {:href "/"} [:strong (ng-data "system.title")]]
+               [:span.brand [:a {:href "/"} (ng-data "system.title")]]
                [:div.nav-collapse.collapse
                 [:ul.nav
                  [:li {:ng-repeat "item in system.menu"}
@@ -215,12 +226,22 @@
       });
 
   function MainCntl($scope, $http){ 
+
+    var getParameterByName = function(name) {
+      name = name.replace(/[\\[]/, \"\\\\\\[\").replace(/[\\]]/, \"\\\\\\]\");
+      var regex = new RegExp(\"[\\\\?&]\" + name + \"=([^&#]*)\"),
+          results = regex.exec(location.search);
+      return results == null ? \"\" : decodeURIComponent(results[1].replace(/\\+/g, \" \"));
+    }
+
     // Figure out what the current action is, based on the url
-    var actname = function(){
-      if(window.location.hash){
-        return window.location.hash.substring(1);
+    var get_default_action = function(){
+      // If there's _action in the querystring, use that
+      var qsaction = getParameterByName('_action');
+      if(qsaction != ''){
+        return qsaction;
       }else{
-        // If there's no hash, call an action that is the
+        // If there's no explicit action, call an action that is the
         // same as the name of the template
         var re = /^\\/([^/]+)\\/([^.]+).*$/;
         if(re.test(window.location.pathname)){
@@ -230,69 +251,56 @@
       return null;
     };
 
-    var getParameterByName = function(name) {
-      name = name.replace(/[\\[]/, \"\\\\\\[\").replace(/[\\]]/, \"\\\\\\]\");
-      var regex = new RegExp(\"[\\\\?&]\" + name + \"=([^&#]*)\"),
-          results = regex.exec(location.search);
-      return results == null ? \"\" : decodeURIComponent(results[1].replace(/\\+/g, \" \"));
-    }
 
-
-    var check_for_back = function(){
+    var go_back = function(){
       var ret = getParameterByName('_return');
       if(ret != undefined && ret != null && ret != ''){
         window.location = ret;
       }
     };
 
-    var succeeded = function(opts){
-      if(opts.should_reload === true)
-        reload();
-      check_for_back();
-    }
 
+    var reload = function(opts){
+      do_action(get_default_action(), $scope.data, {reload: false, allow_return:false});
+    } 
+
+    var bind_data = function(opts, data){
+      if(opts.is_system === true)
+        $scope.system = data;
+      else
+        $scope.data = data;
+    };
+      
     var is_successful = function(data){
       return data.__problems === undefined || data.__problemns === null;
     }
 
-    $scope.cancel = function(){
-      check_for_back();
+    var do_action = function(action, payload, opts){
+      payload._action = action;
+      var res = $http.post('/api', payload);
+      res.then(function(response){
+        bind_data(opts, response.data);
+        if(is_successful(response.data)){
+          if(opts.allow_return === true)
+            go_back(opts);
+          
+          if(opts.reload === true)
+            reload(opts);
+        }
+      });
     };
-
-
+      
+      
     // Initialize our data
     $scope.data = {};
+    $scope.location = {};
+    $scope.location.pathname = location.pathname;
 
-    // Run the action that this page was loaded with
-    var reload = function(){
-      if(actname()){
-        $scope.action(actname(), {suppress_success: true});
-      }
-    };
-
-    // Define our action - an action for calling actions... named action
-    // That might be confusing
-    $scope.action = function(actname, opts){
-      if(opts === undefined || opts === null){
-        opts = {};
-      }
-      var payload = (opts.paras === undefined || opts.paras === nil)? $scope.data : opts.paras;
-
-      // Set the server-side action we want to call
-      payload._action = actname;
-      $http.post('/api', payload)
-        .success(function(data){
-          var suppress = opts.suppress_success === true;
-          if(is_successful(data) && !suppress){
-            succeeded(opts);
-          }
-          // Set the result of the server action to our scope
-          if(opts.system === true){
-            $scope.system = data;
-          }else{
-            $scope.data = data;
-          }
-        });
+    // Seup actions
+    
+    // A cancel button just goes back to the _return url (if there is one)
+    $scope.cancel = function(){
+      go_back();
     };
 
     // We need an action to dismiss alerts
@@ -300,12 +308,25 @@
       $scope.data.__alerts.splice(index,1);
     };
 
-    // We also want to load the system data - this will get us
+
+    $scope.action = function(action, opts){
+      if(opts === undefined || opts === null){
+        opts = {allow_return: true};
+      }
+      var payload = (opts.paras === undefined || opts.paras === nil) ? 
+                      $scope.data : 
+                      opts.paras;
+
+      do_action(action, payload, opts);
+    };
+
+    // We want to load the system data - this will get us
     // menus, titles, etc
     // We also want to load the page-specific data when we're done,
     // so we'll tell the handler to reload afterwards
     // This code should only get run on page-load
-    $scope.action('-system-data', {should_reload: true, system: true});
+    do_action('-system-data', {}, {allow_return: false, reload: false});
+    do_action(get_default_action(), {}, {allow_return: false, reload: false});
   };")
 
 
