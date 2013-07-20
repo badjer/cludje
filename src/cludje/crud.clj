@@ -33,5 +33,6 @@
          (~'? ~keename)
          (~'save ~model-sym ~'input))
        (defaction ~(symbol (str modelname "-delete"))
-         (~'delete ~model-sym (~'? ~keename))))))
+         (~'delete ~model-sym (~'? ~keename))
+         nil))))
 

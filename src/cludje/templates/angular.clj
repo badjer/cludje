@@ -86,13 +86,37 @@
       (when field (problem field))
       ]]))
 
-(defn button [txt & args]
-  (let [passed-opts (apply hash-map args)
-        click (when-let [a (:action passed-opts)]
-                {:ng-click (str "action('" (name a) "')")})
+(declare ->js)
+
+(defn map->js [m]
+  (str "{" 
+       (s/join ", " (for [[k v] m] (str (name k) ": " (->js v))))
+       "}"))
+
+(defn ->js [m]
+  (cond 
+    (nil? m) "null"
+    (map? m) (map->js m)
+    :else m))
+
+
+(defn button [txt & in-opts]
+  (let [passed-opts (apply hash-map in-opts)
+        args (merge 
+               (when-let [a (:args passed-opts)] {:args a})
+               (when-let [r (:return passed-opts)] {:allow_return r})
+               (when-let [r (:reload passed-opts)] {:reload r})
+               (when-let [c (:confirm passed-opts)] {:confirm (str "'" c "'")}))
+        arg-str (->js args)
+        click (when-let [action (:action passed-opts)]
+                {:ng-click (str "action('" action "', " arg-str ")")})
+
+        click-tmpl (if-let [conf (:confirm passed-opts)]
+                     (str "confirm_action('" conf "', '@', #)")
+                     "action('@', #)")
         opts (merge {:type :button :class "btn btn-primary"}
-                    click
-                    (dissoc passed-opts :action))]
+                    click 
+                    (dissoc passed-opts :action :args :confirm :reload :return))]
     [:button opts txt]))
 
 (defn link [txt & args]
@@ -138,6 +162,11 @@
 (defn _summarize-template [model]
   (let [tablename (table-name model)]
     [:div
+     (button "X" :confirm "Are you sure you want to delete?"
+             :action (str tablename "-delete")
+             :args (str "{_id: " tablename "._id}")
+             :reload true
+             :class "btn btn-danger btn-tiny pull-right")
      [:h4 (ng-data tablename "." (model-title-field model))]]))
 
 (defn _item-template [summarize-template model] 
@@ -145,11 +174,9 @@
    (summarize-template model)])
 
 (defn _list-template [item-template model]
-  (let [tablename (table-name model)]
-    [:div.row-fluid 
-     (link "New" :href (str "/" tablename "/new") :return true)
-     [:ul.thumbnails {:ng-repeat (str tablename " in data." tablename "s")}
-       (item-template model)]]))
+  (let [tablename (table-name model)] 
+    [:ul.thumbnails {:ng-repeat (str tablename " in data." tablename "s")} 
+     (item-template model)]))
 
 
 
@@ -265,6 +292,8 @@
     } 
 
     var bind_data = function(opts, data){
+      if(data == null || data == 'null') // Wierd hack for returning null bug
+        return;
       if(opts.is_system === true)
         $scope.system = data;
       else
@@ -281,7 +310,7 @@
       res.then(function(response){
         bind_data(opts, response.data);
         if(is_successful(response.data)){
-          if(opts.allow_return === true)
+          if(opts.allow_return != false)
             go_back(opts);
           
           if(opts.reload === true)
@@ -311,13 +340,24 @@
 
     $scope.action = function(action, opts){
       if(opts === undefined || opts === null){
-        opts = {allow_return: true};
+        opts = {};
       }
-      var payload = (opts.paras === undefined || opts.paras === nil) ? 
+      var payload = (opts.args === undefined || opts.args === null) ? 
                       $scope.data : 
-                      opts.paras;
+                      opts.args;
 
-      do_action(action, payload, opts);
+      var should = true;
+      if(opts.confirm != undefined)
+        should = confirm(opts.confirm);
+
+      if(should)
+        do_action(action, payload, opts);
+    };
+
+    $scope.confirm_action = function(message, action, opts){
+      var should = confirm(message);
+      if(should)
+        $scope.action(action, opts);
     };
 
     // We want to load the system data - this will get us
@@ -325,7 +365,8 @@
     // We also want to load the page-specific data when we're done,
     // so we'll tell the handler to reload afterwards
     // This code should only get run on page-load
-    do_action('-system-data', {}, {allow_return: false, reload: false});
+    do_action('-system-data', {}, {is_system: true, allow_return: false, 
+                                   reload: false});
     do_action(get_default_action(), {}, {allow_return: false, reload: false});
   };")
 
@@ -342,6 +383,9 @@
 (defn template-list [model]
   (common-layout
     [:div 
+     [:div.pull-right.btn-toolbar
+      [:div.btn-group
+       (link "New" :href (str "/" (table-name model) "/new") :return true)]]
      [:h3 "List of " (table-name model)]
      (_list-template 
        (partial _item-template _summarize-template)
