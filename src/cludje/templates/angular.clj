@@ -164,7 +164,7 @@
     [:div
      (button "X" :confirm "Are you sure you want to delete?"
              :action (str tablename "-delete")
-             :args (str "{_id: " tablename "._id}")
+             :args {:_id (ng-path tablename "._id")}
              :reload true
              :class "btn btn-danger btn-tiny pull-right")
      [:h4 (ng-data tablename "." (model-title-field model))]]))
