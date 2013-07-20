@@ -209,7 +209,7 @@
 
             [:link {:href "/img/favicon.ico" :rel "shortcut icon"}]
             ]
-           [:body {:style "padding-top: 0px;"}; :ng-controller "MainCntl"}
+           [:body {:style "padding-top: 0px;"}
             [:div.navbar.navbar-static-top
              [:div.navbar-inner
               [:div.container
