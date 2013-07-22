@@ -353,11 +353,25 @@
 ;p (.getParameterTypes m)]
 ;(alength p)))
 
+;(declare action-allowed?)
+;(defn- action-allowed-seq? [auth-action action]
+  ;(for [a auth-action]
+    ;(action-allowed auth-action action))
+
+
+(defn action-allowed? [auth-action action]
+  (or 
+    (= "*" (name auth-action))
+    (= (name auth-action) (name action))))
+
 
 (defn- match-ability? [auth-action auth-model expr]
-  `(let [~(symbol (s/lower-case (name auth-model))) (make ~auth-model ~'input)]
-     (and (= (name ~'action) (name ~auth-action))
-          (= ~'model ~auth-model) 
+  `(let [~(symbol (s/lower-case (name auth-model))) 
+         (if (= (type ~auth-model) java.lang.String)
+           nil
+           (make ~auth-model ~'input))]
+     (and (action-allowed? ~auth-action ~'action)
+          (= ~'model ~auth-model)
           ~expr)))
 
 (defn- parse-action-forms [forms]
@@ -416,10 +430,11 @@
   (let [action (->> (get-action-name- (:actionparser system) input)
                    (get-action- (:actionstore system)))
         action-key (get-action-key- (:actionparser system) input)
-        model (->> (get-model-name- (:actionparser system) input)
-                  (get-model- (:modelstore system)))]
+        model-name (get-model-name- (:actionparser system) input)
+        model (get-model- (:modelstore system) model-name)]
     (cond 
       (nil? user) (throw-not-logged-in)
       (nil? action) (throw-not-found)
-      (not (authorize action-key model user input)) (throw-unauthorized)
+      (not (authorize action-key (or model model-name) user input)) 
+        (throw-unauthorized)
       :else (action system input))))

@@ -488,6 +488,14 @@
   (ab-cog :add "cog" nil {:amt 2}) => false
   (ab-cog "add" "cog" nil {:amt 1}) => true
   (ab-cog "add" "cog" nil {:amt 2}) => false)
+
+(defability ab-str-model
+  :add "Foosum" true)
+
+(facts "defability works with strs in ability"
+  (ab-str-model :add "Foosum" nil nil) => true
+  (ab-str-model :list "Foosum" nil nil) => false
+  (ab-str-model :add "Foobar" nil nil) => false)
   
 (defability ab-all-cog
   :add Cog true)
@@ -496,6 +504,14 @@
   (ab-all-cog :add Cog nil {:amt 1}) => true
   (ab-all-cog :add Cog nil nil) => true
   (ab-all-cog :remove Cog nil {:amt 1}) => false)
+
+(defability ab-star-cog
+  :* Cog true)
+
+(facts "defability with *"
+  (ab-star-cog :add Cog nil nil) => true
+  (ab-star-cog :foo Cog nil nil) => true
+  (ab-star-cog :add Person nil nil) => false)
 
 (defn is-amt-1 [x] (= 1 (:amt x)))
 

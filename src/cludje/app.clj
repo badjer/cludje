@@ -25,7 +25,9 @@
       :mailer (->MemMailer (atom []))
       :logger (->MemLogger (atom []))
       :login (make-MockLogin false)
-      :auth (make-auth mock-auth-fn)
+      :auth (if-let [an (:action-ns opts)] 
+              (make-auth-from-ns opts) 
+              (make-auth mock-auth-fn))
       :actionparser (map->ActionParser opts)
       :actionstore (map->ActionStore opts)
       :modelstore (map->ModelStore opts)

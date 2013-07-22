@@ -8,6 +8,9 @@
 (def-crud-actions Cog)
 (def-crud-actions Shift)
 
+(defability ab-cog
+  :delete Cog false
+  :* Cog true)
 
 (defaction shift-new
   {:date_options (date-range (now) -15 15)

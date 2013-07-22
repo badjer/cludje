@@ -6,6 +6,8 @@
 
 (defmacro def-system-actions []
   `(do
+     (defability ~'-system-data-ability
+       :data "-system" true)
      (defaction ~'-system-data
        {:user ~'user 
         :menu [{:text "A" :link "/a"} {:text "B" :link "/b"}] 

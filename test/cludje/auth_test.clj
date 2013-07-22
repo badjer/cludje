@@ -23,3 +23,7 @@
       (authfn :remove Foo nil 1) => truthy)
     (authfn :alter Foo nil 1) => falsey
     (authfn :add Bar nil 1) => falsey))
+
+(fact "find-abilities in dir with 3 components"
+  (let [abs (find-abilities 'cludje.demo.actions)]
+    (count abs) => 2))
