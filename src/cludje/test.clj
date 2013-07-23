@@ -4,6 +4,7 @@
             [cheshire.core :as cheshire]
             [cludje.server :as server]
             [cludje.login :as login]
+            [cludje.logger :as logger]
             [cludje.app :as app]))
 
 (defn test-system 
@@ -11,6 +12,7 @@
   ([cur-user]
    (let [lgin (login/make-TestLogin cur-user)]
      (app/make-system {:server (server/->MockServer)
+                       :logger (logger/->MemLogger (atom []))
                        :login lgin}))))
 
 

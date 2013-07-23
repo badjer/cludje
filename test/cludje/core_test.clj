@@ -569,6 +569,7 @@
 
 (fact "do-action"
   (let [sys (make-system {:login (make-MockLogin {:logged-in? true})
+                          :logger (->MemLogger (atom []))
                           :default-action nil
                           :action-ns 'cludje.core-test
                           :model-ns 'cludje.core-test
