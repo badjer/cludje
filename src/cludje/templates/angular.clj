@@ -170,12 +170,14 @@
      [:h4 (ng-data tablename "." (model-title-field model))]]))
 
 (defn _item-template [summarize-template model] 
-  [:li.span4.thumbnail.well
-   (summarize-template model)])
+  (let [tablename (table-name model)]
+    [:li.span4.thumbnail.well
+     {:ng-repeat (str tablename " in data." tablename "s")}
+     (summarize-template model)]))
 
 (defn _list-template [item-template model]
   (let [tablename (table-name model)] 
-    [:ul.thumbnails {:ng-repeat (str tablename " in data." tablename "s")} 
+    [:ul.thumbnails  
      (item-template model)]))
 
 
