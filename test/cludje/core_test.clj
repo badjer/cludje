@@ -591,3 +591,20 @@
         (catch clojure.lang.ExceptionInfo ex
           (ex-data ex))) => (has-keys :__notloggedin))
     ))
+
+(fact "do-action writes errors to log"
+  (let [log (atom [])
+        sys (make-system {:logger (->MemLogger log)
+                          :login (make-MockLogin {:logged-in? true})
+                          :default-action nil
+                          :action-ns 'cludje.core-test
+                          :model-ns 'cludje.core-test
+                          :auth (make-auth ab-ac-vector)})]
+    (do-action sys {:_action "cog-forbidden"}) => (throws)
+    (count @log) => 1
+    (last @log) => #"^Unauthorized"
+    (do-action sys {:_action "cog-foobarzums"}) => (throws)
+    (last @log) => #"^Not found"
+    (logout (:login sys)) => anything
+    (do-action sys {:_action "cog-add"}) => (throws)
+    (last @log) => #"Not logged in"))

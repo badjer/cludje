@@ -16,14 +16,23 @@
   ([problems]
    (throw (ex-info "Problems" {:__problems problems}))))
 
-(defn throw-unauthorized []
-  (throw (ex-info "Unauthorized" {:__unauthorized "Unauthorized"})))
+(defn throw-unauthorized 
+  ([] (throw-unauthorized {}))
+  ([details]
+    (throw (ex-info "Unauthorized" 
+                    (merge {:__unauthorized "Unauthorized"} details)))))
 
-(defn throw-not-found []
-  (throw (ex-info "Not found" {:__notfound "Not found"})))
+(defn throw-not-found 
+  ([] (throw-not-found {}))
+  ([details]
+    (throw (ex-info "Not found" 
+                    (merge {:__notfound "Not found"} details)))))
 
-(defn throw-not-logged-in []
-  (throw (ex-info "Not logged in" {:__notloggedin "Not logged in"})))
+(defn throw-not-logged-in 
+  ([] (throw-not-logged-in {}))
+  ([details]
+    (throw (ex-info "Not logged in" 
+                    (merge {:__notloggedin "Not logged in"} details)))))
 
 (defn with-alert [m text typ]
   (update-in m [:__alerts] conj {:text text :type typ}))
@@ -426,6 +435,19 @@
                (throw ex#))))))
      (alter-meta! (var ~nam) assoc :_action true)))
 
+(defn error-unauthorized [{:keys [logger] :as system} details]
+  (log logger (str "Unauthorized: " details))
+  (throw-unauthorized details))
+
+(defn error-not-found [{:keys [logger] :as system} details]
+  (log logger (str "Not found: " details))
+  (throw-not-found details))
+
+(defn error-not-logged-in [{:keys [logger] :as system} details]
+  (log logger (str "Not logged in: " details))
+  (throw-not-logged-in details))
+
+
 (defaction do-action
   (let [action (->> (get-action-name- (:actionparser system) input)
                    (get-action- (:actionstore system)))
@@ -433,8 +455,8 @@
         model-name (get-model-name- (:actionparser system) input)
         model (get-model- (:modelstore system) model-name)]
     (cond 
-      (nil? user) (throw-not-logged-in)
-      (nil? action) (throw-not-found)
+      (nil? user) (error-not-logged-in system {})
+      (nil? action) (error-not-found system {:model model-name :action action-key})
       (not (authorize action-key (or model model-name) user input)) 
-        (throw-unauthorized)
+        (error-unauthorized system {:model model-name :action action-key})
       :else (action system input))))
