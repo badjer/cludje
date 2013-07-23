@@ -12,6 +12,15 @@
         cludje.app
         cludje.core))
 
+(defn myfun [] 1)
+(defmodel User {:name Str :email Email :pwd Password})
+
+(fact "find-in-ns"
+  (find-in-ns 'cludje.core-test "myfun" nil) => fn?
+  (find-in-ns 'cludje.core-test "asdfwefvasdf" nil) => nil
+  (find-in-ns 'cludje.core-test "System" :cludje-model) => nil
+  (find-in-ns 'cludje.core-test "User" :cludje-model) => User)
+
 (fact "needs should return an entry for each missing field"
   (needs {} :a) => (has-keys :a)
   (needs {} :a :b) => (has-keys :a :b)
@@ -42,7 +51,6 @@
   (no-bad Email {:a "a"} :a) => (has-keys :a)
   (no-bad Email {:a "a@b.cd"} :a) => falsey)
 
-(defmodel User {:name Str :email Email :pwd Password})
 (defmodel Cog {:price Money :amt Int})
 (defmodel Person {:name Str :age Int :_id Str} 
   :fieldnames {:age "How Old"}

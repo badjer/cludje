@@ -365,8 +365,8 @@
     // We also want to load the page-specific data when we're done,
     // so we'll tell the handler to reload afterwards
     // This code should only get run on page-load
-    do_action('-system-data', {}, {is_system: true, allow_return: false, 
-                                   reload: false});
+    do_action('global-data', {}, {is_system: true, allow_return: false, 
+                                  reload: false});
     do_action(get_default_action(), {}, {allow_return: false, reload: false});
   };")
 

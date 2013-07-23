@@ -9,7 +9,7 @@
 
 (defn is-ability? [vr]
   (let [m (meta vr)]
-    (get m :ability)))
+    (get m :cludje-ability)))
 
 (defn find-abilities [root-ns]
   ; Find all the defabilities under the specified namespace
@@ -19,9 +19,8 @@
     (let [ns-str (-> (name root-ns) 
                      (s/replace #"^[^\.]+\." "")
                      (s/replace #"\." "/"))]
-      ;(load ns-str)
-      (into [] (for [f (vals (ns-publics root-ns)) :when (is-ability? f)]
-                 f)))))
+      (into [] (for [f (vals (ns-publics root-ns)) :when (is-ability? @f)]
+                 @f)))))
 
 (defrecord Auth [action-ns authfn]
   IAuth

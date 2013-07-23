@@ -27,3 +27,4 @@
 (fact "find-abilities in dir with 3 components"
   (let [abs (find-abilities 'cludje.demo.actions)]
     (count abs) => 2))
+

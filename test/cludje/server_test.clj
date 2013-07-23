@@ -59,10 +59,6 @@
 (defn -template-edit [model] "<p>Hello</p>")
 (defn cog-foo [] "Instance")
 
-(facts "find-in-ns"
-  (find-in-ns 'cludje.server-test "Cog") => #'Cog
-  (find-in-ns 'cludje.server-test "FSDasdf") => nil)
-
 (def res-request {:url "http://localhost:8099/css/test.css"})
 (def template-request {:url "http://localhost:8099/cog/edit.tpl.html"})
 (def template-req-no-ext {:url "http://localhost:8099/Cog/edit"})

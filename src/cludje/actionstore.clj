@@ -4,6 +4,6 @@
 (defrecord ActionStore [action-ns default-action]
   IActionStore
   (get-action- [self action-name]
-    (if-let [vr (find-in-ns action-ns action-name)]
-      @vr
+    (if-let [act (find-in-ns action-ns action-name :cludje-action)]
+      act
       default-action)))

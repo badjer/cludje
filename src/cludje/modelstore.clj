@@ -4,6 +4,6 @@
 (defrecord ModelStore [model-ns]
   IModelStore
   (get-model- [self modelname]
-    (when-let [vr (find-in-ns model-ns modelname)]
-      @vr)))
+    (when-let [model (find-in-ns model-ns modelname :cludje-model)]
+      model)))
 

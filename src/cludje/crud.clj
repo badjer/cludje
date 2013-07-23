@@ -7,8 +7,8 @@
 (defmacro def-system-actions []
   `(do
      (defability ~'-system-data-ability
-       :data "-system" true)
-     (defaction ~'-system-data
+       :data "Global" true)
+     (defaction ~'global-data
        {:user ~'user 
         :menu [{:text "A" :link "/a"} {:text "B" :link "/b"}] 
         :login_url "/login?_return=/"

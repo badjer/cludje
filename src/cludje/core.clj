@@ -2,13 +2,24 @@
   (:use cludje.types)
   (:require [clojure.string :as s]))
 
-(defn find-in-ns [nas thing]
+(defn- find-ns-var [nas thing]
   (when (and nas thing)
     (cond 
       (symbol? thing) (ns-resolve nas thing)
       (keyword? thing) (ns-resolve nas (symbol (name thing)))
       (= "" thing) nil
       :else (ns-resolve nas (symbol thing)))))
+
+(defn find-in-ns 
+  "Find the var thing in the namespace nas that has metadata-filter.
+  If metadata-filter is nil, return anything with that name"
+  ([nas thing] (find-in-ns nas thing nil))
+  ([nas thing metadata-filter]
+    (when-let [vr (find-ns-var nas thing)]
+      (when (var? vr)
+        (when (or (nil? metadata-filter) (metadata-filter (meta @vr)))
+          @vr)))))
+
 
 (defn throw-problems 
   ([]
@@ -195,6 +206,7 @@
                      (get optmap :fieldnames {}))
         invisible (conj (get optmap :invisible []) :_id)
         modelopts (merge {:require reqfields
+                          :cludje-model true
                           :fields allfields
                           :fieldnames fieldnames
                           :table table
@@ -394,9 +406,10 @@
   "Creates a function that can be used to authorize access to a model"
   (let [calls (parse-action-forms forms)]
     `(do
-       (defn ~nam [~'action ~'model ~'user ~'input]
+       (def ~nam (with-meta (fn [~'action ~'model ~'user ~'input]
          (first (keep identity [~@calls])))
-       (alter-meta! (var ~nam) assoc :ability true))))
+                       {:cludje-ability true})))))
+       ;(alter-meta! (var ~nam) assoc :ability true))))
 
 
 (defn can? [auth logn action model m]
@@ -407,7 +420,7 @@
 
 (defmacro defaction [nam & forms]
   `(do
-     (defn ~nam [~'system ~'input]
+     (def ~nam (with-meta (fn [~'system ~'input]
        (let [~'save (partial save (:db ~'system))
              ~'insert (partial insert (:db ~'system))
              ~'fetch (partial fetch (:db ~'system))
@@ -433,7 +446,8 @@
                  (assoc ~'input :__problems problems#)
                  (with-alert "There were problems" :error))
                (throw ex#))))))
-     (alter-meta! (var ~nam) assoc :_action true)))
+                          {:cludje-action true}))))
+     ;(alter-meta! (var ~nam) assoc :_action true)))
 
 (defn error-unauthorized [{:keys [logger] :as system} details]
   (log logger (str "Unauthorized: " details))
