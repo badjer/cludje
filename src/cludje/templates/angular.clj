@@ -186,7 +186,8 @@
 
 (defn common-layout [body]
   (html (html5 
-          [:html {:lang "en" :ng-app "mainapp" :ng-controller "MainCntl"}
+          [:html {:lang "en" :ng-app "mainapp" :ng-controller "MainCntl" 
+                  :ng-cloak "ng-cloak"}
            [:head 
             [:meta {:charset "utf-8"}]
             [:meta {:http-equiv "X-UA-Compatible" :content "IE Edge,chrome 1"}]
