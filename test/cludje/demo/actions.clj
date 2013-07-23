@@ -10,10 +10,12 @@
 
 (defability ab-cog
   :delete Cog false
+  :* Shift true
   :* Cog true)
 
 (defaction shift-new
-  {:date_options (date-range (now) -15 15)
+  {:_title "NEW STUFF GOES HERE!"
+   :date_options (date-range (now) -15 15)
    :ilikecats true
    :start_options (time-range (hours 8) (hours 17) (minutes 15))
    :breaks_options (timespan-range (hours 2) (minutes 15))})

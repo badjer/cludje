@@ -101,18 +101,28 @@
     :else m))
 
 
-(defn button [txt & in-opts]
-  (let [passed-opts (apply hash-map in-opts)
-        args (select-keys passed-opts [:args :allow_return :reload :confirm])
-        arg-str (->js args)
-        click (when-let [action (:action passed-opts)]
-                {:ng-click (str "action('" action "', " arg-str ")")})
+(defn button 
+  ([txt k v & in-opts] (button txt (apply hash-map k v in-opts)))
+  ([txt passed-opts]
+    (let [args (select-keys passed-opts 
+                            [:args :allow_return :reload :confirm])
+          arg-str (->js args)
+          click (when-let [action (:action passed-opts)]
+                  {:ng-click (str "action('" action "', " arg-str ")")})
+          cancel (when (:cancel passed-opts)
+                   {:ng-click "cancel()"})
+          opts (merge {:type :button :class "btn btn-primary"}
+                      cancel
+                      click 
+                      (dissoc passed-opts :action :cancel :args :confirm 
+                              :reload :allow_return))]
+      [:button opts txt])))
 
-        opts (merge {:type :button :class "btn btn-primary"}
-                    click 
-                    (dissoc passed-opts :action :args :confirm 
-                            :reload :allow_return))]
-    [:button opts txt]))
+(defn cancel-button [txt & in-opts]
+  (let [passed-opts (apply hash-map in-opts)
+        opts (merge {:class "btn" :cancel true}
+                    passed-opts)]
+    (button txt opts)))
 
 (defn link [txt & args]
   (let [passed-args (apply hash-map args)
@@ -138,7 +148,8 @@
         invisible (? (meta model) :invisible)
         visible-fields (apply dissoc fields invisible)]
     (form 
-      (when title [:h3 title])
+      (when title [:h3 {:ng-hide "data._title"} title])
+      [:h3 {:ng-show "data._title"} (ng-data "data." :_title)]
       (for [field invisible]
         (ng-field Hidden field))
       (for [[field typ] visible-fields]
@@ -146,7 +157,9 @@
                    field 
                    (friendly-name model field)))
       (when action
-        (form-line (button "Save" :action ac-name))))))
+        (form-line [:div.button-group 
+                    (button "Save" :action ac-name) 
+                    (cancel-button "Cancel")])))))
 
 (defn model-title-field [model]
   (let [fts (field-types model)]
@@ -384,7 +397,8 @@
      [:div.pull-right.btn-toolbar
       [:div.btn-group
        (link "New" :href (str "/" (table-name model) "/new") :return true)]]
-     [:h3 "List of " (table-name model)]
+     [:h3 {:ng-hide "data._title"} "List of " (table-name model)]
+     [:h3 {:ng-show "data._title"} (ng-data "data._title")]
      (_list-template 
        (partial _item-template _summarize-template)
        model)]))
@@ -395,7 +409,8 @@
         visible-fields (apply dissoc fields invisible)]
     (common-layout
       [:div 
-       [:h3 "Printout of one " (table-name model)]
+       [:h3 {:ng-hide "data._title"} (table-name model)]
+       [:h3 {:ng-show "data._title"} (ng-data "data." :_title)]
        (for [field invisible]
          (ng-field Hidden field))
        (for [[field typ] visible-fields] 
