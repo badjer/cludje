@@ -23,7 +23,7 @@
          opts (merge defaults config)]
      {:db (->MemDb (atom {}))
       :mailer (->MemMailer (atom []))
-      :logger (->MemLogger (atom []))
+      :logger (->ConsoleLogger)
       :login (make-MockLogin false)
       :auth (if-let [an (:action-ns opts)] 
               (make-auth-from-ns opts) 
