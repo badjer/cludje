@@ -12,6 +12,7 @@
        {:user ~'user 
         :menu [{:text "A" :link "/a"} {:text "B" :link "/b"}] 
         :login_url "/login?_return=/"
+        :footer "© 2013 Cludje"
         :title "Cludje"})))
 
 (defmacro def-crud-actions [model-sym]

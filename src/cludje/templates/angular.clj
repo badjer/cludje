@@ -196,7 +196,7 @@
             [:meta {:charset "utf-8"}]
             [:meta {:http-equiv "X-UA-Compatible" :content "IE Edge,chrome 1"}]
             [:meta {:name "viewport" :content "width device-width, initial-scale 1.0"}]
-            [:title (ng-data "system.title")]
+            [:title (ng-data "global.title")]
             [:meta {:http-equiv "Content-Type" :content "text/html; charset utf-8"}]
 
             "<!--[if lt IE 9] 
@@ -220,17 +220,17 @@
                 [:span.icon-bar]
                 [:span.icon-bar]
                 ]
-               [:span.brand [:a {:href "/"} (ng-data "system.title")]]
+               [:span.brand [:a {:href "/"} (ng-data "global.title")]]
                [:div.nav-collapse.collapse
                 [:ul.nav
-                 [:li {:ng-repeat "item in system.menu"}
+                 [:li {:ng-repeat "item in global.menu"}
                   [:a {:href (ng-data "item.link")} (ng-data "item.text")]]
                  ]
                 [:ul.nav.pull-right
-                 [:li {:ng-show "system.user.username"} 
-                  [:a {:href "#"} "Logged in as " (ng-data "system.user.username")]]
-                 [:li {:ng-hide "system.user.username"}
-                  [:a {:href (ng-data "system.login_url")} "Login"]]]
+                 [:li {:ng-show "global.user.username"} 
+                  [:a {:href "#"} "Logged in as " (ng-data "global.user.username")]]
+                 [:li {:ng-hide "global.user.username"}
+                  [:a {:href (ng-data "global.login_url")} "Login"]]]
                 ]
                ]
               ]
@@ -238,7 +238,7 @@
             [:div.container-fluid 
              (alerts)
              body]
-            [:footer]
+            [:footer (ng-data "global.footer")]
             ] 
            [:script {:src "//ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"}]
            ; Only if we need angular-ui-bootstrap - it's mostly just animations etc
@@ -296,8 +296,8 @@
     var bind_data = function(opts, data){
       if(data == null || data == 'null') // Wierd hack for returning null bug
         return;
-      if(opts.is_system === true)
-        $scope.system = data;
+      if(opts.is_global === true)
+        $scope.global = data;
       else
         $scope.data = data;
     };
@@ -362,12 +362,12 @@
         $scope.action(action, opts);
     };
 
-    // We want to load the system data - this will get us
+    // We want to load the global data - this will get us
     // menus, titles, etc
     // We also want to load the page-specific data when we're done,
     // so we'll tell the handler to reload afterwards
     // This code should only get run on page-load
-    do_action('global-data', {}, {is_system: true, allow_return: false, 
+    do_action('global-data', {}, {is_global: true, allow_return: false, 
                                   reload: false});
     do_action(get_default_action(), {}, {allow_return: false, reload: false});
   };")
