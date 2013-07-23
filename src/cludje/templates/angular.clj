@@ -142,7 +142,7 @@
 (defn action-name [model action]
   (str (table-name model) "-" (name action)))
 
-(defn _form-template [model title action]
+(defn model-form [model title action]
   (let [ac-name (action-name model action)
         fields (field-types model)
         invisible (? (meta model) :invisible)
@@ -167,7 +167,7 @@
       :name
       (first (keys fts)))))
 
-(defn _summarize-template [model]
+(defn model-summarize [model]
   (let [tablename (table-name model)]
     [:div
      (button "X" :confirm "Are you sure you want to delete?"
@@ -177,16 +177,20 @@
              :class "btn btn-danger btn-mini pull-right")
      [:h4 (ng-data tablename "." (model-title-field model))]]))
 
-(defn _item-template [summarize-template model] 
-  (let [tablename (table-name model)]
-    [:li.span4.thumbnail.well
-     {:ng-repeat (str tablename " in data." tablename "s")}
-     (summarize-template model)]))
+(defn model-list-item 
+  ([model] (model-list-item model model-summarize))
+  ([model summarize-fn] 
+    (let [tablename (table-name model)]
+      [:li.span4.thumbnail.well
+       {:ng-repeat (str tablename " in data." tablename "s")}
+       (summarize-fn model)])))
 
-(defn _list-template [item-template model]
-  (let [tablename (table-name model)] 
-    [:ul.thumbnails  
-     (item-template model)]))
+(defn model-list 
+  ([model] (model-list model model-list-item))
+  ([model list-item-fn]
+    (let [tablename (table-name model)] 
+      [:ul.thumbnails  
+       (list-item-fn model)])))
 
 
 
@@ -385,11 +389,11 @@
 
 (defn template-edit [model]
   (common-layout
-    (_form-template model (str "Edit " (table-name model)) :alter)))
+    (model-form model (str "Edit " (table-name model)) :alter)))
 
 (defn template-new [model]
   (common-layout
-    (_form-template model (str "New " (table-name model)) :add)))
+    (model-form model (str "New " (table-name model)) :add)))
 
 (defn template-list [model]
   (common-layout
@@ -399,9 +403,7 @@
        (link "New" :href (str "/" (table-name model) "/new") :return true)]]
      [:h3 {:ng-hide "data._title"} "List of " (table-name model)]
      [:h3 {:ng-show "data._title"} (ng-data "data._title")]
-     (_list-template 
-       (partial _item-template _summarize-template)
-       model)]))
+     (model-list model)]))
 
 (defn template-show [model]
   (let [fields (field-types model)
