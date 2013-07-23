@@ -21,11 +21,11 @@
   (->MockLogin (atom logged-in?)))
 
 
-(defrecord TestLogin [u]
+(defrecord TestLogin [current]
   ILogin
-  (current-user- [self] @u)
-  (login- [self user] (reset! u user))
-  (logout- [self] (reset! u nil))
+  (current-user- [self] @current)
+  (login- [self user] (reset! current user))
+  (logout- [self] (reset! current nil))
   (encrypt- [self txt] txt)
   (check-hash- [self txt cypher] (= (encrypt self txt) cypher)))
 
