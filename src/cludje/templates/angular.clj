@@ -161,7 +161,7 @@
              :action (str tablename "-delete")
              :args {:_id (ng-path tablename "._id")}
              :reload true
-             :class "btn btn-danger btn-tiny pull-right")
+             :class "btn btn-danger btn-mini pull-right")
      [:h4 (ng-data tablename "." (model-title-field model))]]))
 
 (defn _item-template [summarize-template model] 
