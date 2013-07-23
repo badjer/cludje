@@ -476,7 +476,7 @@
 (facts "defability"
   (ab-cog :add Cog nil {:amt 1}) => true
   (ab-cog :add Cog nil {:amt 2}) => false
-  (ab-cog :remove Cog nil {:amt 1}) => false
+  (ab-cog :remove Cog nil {:amt 1}) => falsey
   (ab-cog :add Cog nil {}) => false
   (ab-cog "add" Cog nil {:amt 1}) => true
   (ab-cog "add" Cog nil {:amt 2}) => false)
@@ -494,8 +494,8 @@
 
 (facts "defability works with strs in ability"
   (ab-str-model :add "Foosum" nil nil) => true
-  (ab-str-model :list "Foosum" nil nil) => false
-  (ab-str-model :add "Foobar" nil nil) => false)
+  (ab-str-model :list "Foosum" nil nil) => falsey
+  (ab-str-model :add "Foobar" nil nil) => falsey)
   
 (defability ab-all-cog
   :add Cog true)
@@ -503,7 +503,7 @@
 (facts "defability with no filter"
   (ab-all-cog :add Cog nil {:amt 1}) => true
   (ab-all-cog :add Cog nil nil) => true
-  (ab-all-cog :remove Cog nil {:amt 1}) => false)
+  (ab-all-cog :remove Cog nil {:amt 1}) => falsey)
 
 (defability ab-star-cog
   :* Cog true)
@@ -511,7 +511,15 @@
 (facts "defability with *"
   (ab-star-cog :add Cog nil nil) => true
   (ab-star-cog :foo Cog nil nil) => true
-  (ab-star-cog :add Person nil nil) => false)
+  (ab-star-cog :add Person nil nil) => falsey)
+
+(defability ab-star-override-cog
+  :delete Cog false
+  :* Cog true)
+
+(facts "defability earlier entry overrides later one"
+  (ab-star-override-cog :add Cog nil nil) => true
+  (ab-star-override-cog :delete Cog nil nil) => falsey)
 
 (defn is-amt-1 [x] (= 1 (:amt x)))
 
@@ -520,12 +528,12 @@
 
 (facts "ability with var"
   (ab-cog-var :add Cog nil {:amt 1 :price 1}) => true
-  (ab-cog-var :add Cog nil {:amt 2 :price 1}) => false
-  (ab-cog-var :remove Cog nil {:amt 1 :price 1}) => false
+  (ab-cog-var :add Cog nil {:amt 2 :price 1}) => falsey
+  (ab-cog-var :remove Cog nil {:amt 1 :price 1}) => falsey
   (facts "ability with var doesn't need the entire object supplied"
     ;That will be the responsibility of validation
     (ab-cog-var :add Cog nil {:amt 1}) => true
-    (ab-cog-var :add Cog nil {:amt 2}) => false))
+    (ab-cog-var :add Cog nil {:amt 2}) => falsey))
 
 (defability ab-cog-person
   :add Cog (is-amt-1 cog)
@@ -533,12 +541,12 @@
 
 (facts "defability with multiple permissions"
   (ab-cog-person :add Cog nil {:amt 1}) => true
-  (ab-cog-person :add Cog nil {:amt 2}) => false
-  (ab-cog-person :remove Cog nil {:amt 1}) => false
+  (ab-cog-person :add Cog nil {:amt 2}) => falsey
+  (ab-cog-person :remove Cog nil {:amt 1}) => falsey
   (ab-cog-person :add Person {:username "a"} {:name "a"}) => true
-  (ab-cog-person :add Person {:username "a"} {:name "b"}) => false
-  (ab-cog-person :remove Person {:username "a"} {:name "a"}) => false
-  (ab-cog-person :add Person {:username "b"} {:name "a"}) => false)
+  (ab-cog-person :add Person {:username "a"} {:name "b"}) => falsey
+  (ab-cog-person :remove Person {:username "a"} {:name "a"}) => falsey
+  (ab-cog-person :add Person {:username "b"} {:name "a"}) => falsey)
 
 (defability ab-ac-vector
   [:add :delete] Cog true)
@@ -546,8 +554,8 @@
 (facts "defability with a vector of actions"
   (ab-ac-vector :add Cog nil cog) => true
   (ab-ac-vector :delete Cog nil cog) => true
-  (ab-ac-vector :list Cog nil cog) => false
-  (ab-ac-vector :add Person nil person) => false)
+  (ab-ac-vector :list Cog nil cog) => falsey
+  (ab-ac-vector :add Person nil person) => falsey)
 
 (facts "auth works with defability"
   (let [auth (make-auth ab-cog)

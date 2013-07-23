@@ -359,7 +359,7 @@
     ;(action-allowed auth-action action))
 
 
-(defn action-allowed? [auth-action action]
+(defn action-matches? [auth-action action]
   (or 
     (= "*" (name auth-action))
     (= (name auth-action) (name action))))
@@ -370,8 +370,8 @@
          (if (= (type ~auth-model) java.lang.String)
            nil
            (make ~auth-model ~'input))]
-     (and (action-allowed? ~auth-action ~'action)
-          (= ~'model ~auth-model)
+     (when (and (action-matches? ~auth-action ~'action) 
+                (= ~'model ~auth-model))
           ~expr)))
 
 (defn- parse-action-forms [forms]
@@ -386,7 +386,7 @@
   (let [calls (parse-action-forms forms)]
     `(do
        (defn ~nam [~'action ~'model ~'user ~'input]
-         (or ~@calls))
+         (first (keep identity [~@calls])))
        (alter-meta! (var ~nam) assoc :ability true))))
 
 
