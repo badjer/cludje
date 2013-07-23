@@ -96,27 +96,22 @@
 (defn ->js [m]
   (cond 
     (nil? m) "null"
+    (= java.lang.String (type m)) (str "'" m "'")
     (map? m) (map->js m)
     :else m))
 
 
 (defn button [txt & in-opts]
   (let [passed-opts (apply hash-map in-opts)
-        args (merge 
-               (when-let [a (:args passed-opts)] {:args a})
-               (when-let [r (:return passed-opts)] {:allow_return r})
-               (when-let [r (:reload passed-opts)] {:reload r})
-               (when-let [c (:confirm passed-opts)] {:confirm (str "'" c "'")}))
+        args (select-keys passed-opts [:args :allow_return :reload :confirm])
         arg-str (->js args)
         click (when-let [action (:action passed-opts)]
                 {:ng-click (str "action('" action "', " arg-str ")")})
 
-        click-tmpl (if-let [conf (:confirm passed-opts)]
-                     (str "confirm_action('" conf "', '@', #)")
-                     "action('@', #)")
         opts (merge {:type :button :class "btn btn-primary"}
                     click 
-                    (dissoc passed-opts :action :args :confirm :reload :return))]
+                    (dissoc passed-opts :action :args :confirm 
+                            :reload :allow_return))]
     [:button opts txt]))
 
 (defn link [txt & args]
