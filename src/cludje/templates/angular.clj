@@ -97,6 +97,7 @@
   (cond 
     (nil? m) "null"
     (= java.lang.String (type m)) (str "'" m "'")
+    (keyword? m) (str "'" (name m) "'")
     (map? m) (map->js m)
     :else m))
 
@@ -108,7 +109,8 @@
                             [:args :allow_return :reload :confirm])
           arg-str (->js args)
           click (when-let [action (:action passed-opts)]
-                  {:ng-click (str "action('" action "', " arg-str ")")})
+                  {:ng-click 
+                   (str "action('" (name action) "', " arg-str ")")})
           cancel (when (:cancel passed-opts)
                    {:ng-click "cancel()"})
           opts (merge {:type :button :class "btn btn-primary"}
@@ -333,7 +335,7 @@
 
       }else {
         var login_url = $scope.global.login_url; 
-        login_url += '?_return=' + window.location; 
+        login_url += '?_return=' + $scope.location.pathname; 
         window.location = login_url;
       }
     };
@@ -419,10 +421,20 @@
 
 
 (defn global-login []
-  (common-layout (model-form LoginUser)))
+  (common-layout 
+    (form
+      [:h3 {:ng-hide "data._title"} "Login"]
+      [:h3 {:ng-show "data._title"} (ng-data "data." :_title)]
+      (form-line (ng-field Email :username)
+                 :username
+                 "Email")
+      (form-line (ng-field Password :pwd)
+                 :pwd
+                 "Password")
+      (form-line (button "Login" :action :global-dologin)))))
 
 (defn global-logout []
-  [:p "You have been logged out"])
+  (common-layout [:p "You have been logged out"]))
    
 
 

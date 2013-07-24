@@ -6,6 +6,7 @@
         cludje.auth))
 
 (defmodel Bar {:foo Str})
+(def mockuser {:username "a@b.cd" :pwd "123"})
 
 (fact "auth"
   (let [auth (make-auth mock-auth-fn)]
@@ -17,14 +18,13 @@
         authfn (apply make-auth-fn abs)]
     (count abs) => 2
     authfn => fn?
-    ((first abs) :add Foo nil 1) => truthy
-    (authfn :add Foo nil 1) => truthy
+    ((first abs) :add Foo mockuser 1) => truthy
+    (authfn :add Foo mockuser 1) => truthy
     (fact "second ability in controller also works"
-      (authfn :remove Foo nil 1) => truthy)
-    (authfn :alter Foo nil 1) => falsey
-    (authfn :add Bar nil 1) => falsey))
+      (authfn :remove Foo mockuser 1) => truthy)
+    (authfn :alter Foo mockuser 1) => falsey
+    (authfn :add Bar mockuser 1) => falsey))
 
 (fact "find-abilities in dir with 3 components"
   (let [abs (find-abilities 'cludje.demo.actions)]
     (count abs) => 2))
-

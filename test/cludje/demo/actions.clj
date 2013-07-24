@@ -13,6 +13,7 @@
   :* Shift true
   :* Cog true)
 
+
 (defaction shift-new
   {:_title "NEW STUFF GOES HERE!"
    :date_options (date-range (now) -15 15)

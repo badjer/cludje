@@ -23,4 +23,5 @@
 (fact "FriendLogin"
   (let [user {:username "a@b.cd" :pwd "a"}
         lgin (->FriendLogin)]
+    1 => 2
 ))

@@ -7,15 +7,17 @@
 (defmacro def-system-actions []
   `(do
      (defability ~'-system-data-ability
-       :* "Global" true)
-     (defaction ~'global-login
+       :* "Global" :anon)
+     (defaction ~'global-dologin
        (~'login ~'input))
+     (defaction ~'global-login
+       {})
      (defaction ~'global-logout
        (~'logout))
      (defaction ~'global-data
        {:user ~'user 
         :menu [{:text "A" :link "/a"} {:text "B" :link "/b"}] 
-        :login_url "/login?_return=/"
+        :login_url "/global/login"
         :footer "© 2013 Cludje"
         :title "Cludje"})))
 
