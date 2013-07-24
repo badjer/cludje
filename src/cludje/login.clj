@@ -33,13 +33,34 @@
   ([] (->TestLogin (atom nil)))
   ([user] (->TestLogin (atom user))))
 
-(defrecord TokenLogin []
+(defn- token->user [token db user-table]
+  (first (query db user-table {:username token})))
+
+(defn- validate-user [{:keys [username pwd]} db user-table check-hash-fn]
+  ; TODO: Assumes that the username is the PK
+  (when-let [user (first (query db user-table {:username username}))]
+    (when (check-hash-fn pwd (:hashed-pwd user))
+      user)))
+
+(defn- make-token [user] (:username user))
+
+(defn- expire-token [input] (dissoc input :_authtoken))
+
+
+(defrecord TokenLogin [secret db user-table]
   ILogin
-  (current-user- [self input])
-  (login- [self input])
-  (logout- [self input])
-  (encrypt- [self txt])
-  (check-hash- [self txt cypher]))
+  (current-user- [self input ]
+    (when-let [token (:_authtoken input)]
+      (token->user token db user-table)))
+  (login- [self input]
+    (if-let [user (validate-user 
+                    input db user-table (partial check-hash- self))]
+      (assoc input :_authtoken (make-token user))
+      (throw-problems {:username "Invalid username/password"
+                       :pwd "Invalid username/password"})))
+  (logout- [self input] (expire-token input))
+  (encrypt- [self txt] txt)
+  (check-hash- [self txt cypher] (= txt cypher)))
 
 
 

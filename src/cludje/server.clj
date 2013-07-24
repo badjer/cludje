@@ -7,6 +7,7 @@
             [ring.middleware.resource :as resource]
             [ring.middleware.file-info :as file-info]
             [ring.middleware.params :as params]
+            [ring.middleware.cookies :as cookies]
             [ring.middleware.keyword-params :as kw]))
 
 
@@ -100,6 +101,7 @@
             res))
         (resource/wrap-resource "public")
         (file-info/wrap-file-info) 
+        (cookies/wrap-cookies)
         (kw/wrap-keyword-params) 
         (json/wrap-json-params)
         (params/wrap-params))))
