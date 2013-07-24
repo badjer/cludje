@@ -44,7 +44,7 @@
 
 (defn- make-token [user] (:username user))
 
-(defn- expire-token [input] (dissoc input :_authtoken))
+(defn- expire-token [input] (assoc input :_authtoken ""))
 
 
 (defrecord TokenLogin [secret db user-table]

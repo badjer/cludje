@@ -448,7 +448,11 @@
       (form-line (button "Login" :action :global-dologin)))))
 
 (defn global-logout []
-  (common-layout [:p "You have been logged out"]))
+  (common-layout 
+    [:div 
+     [:p "You are being logged out..."]
+     (link "Click to continue" :href "/global/login" 
+           :class "btn btn-primary btn-large")]))
    
 
 
