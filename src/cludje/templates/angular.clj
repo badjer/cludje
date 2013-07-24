@@ -331,18 +331,9 @@
 
 
     var go_login = function(){
-      if($scope.global === undefined ||
-          $scope.global === null ||
-          $scope.global.login_url === undefined || 
-          $scope.global.login_url === null){
-        
-        push_alert('error', 'No login url was defined');
-
-      }else {
-        var login_url = $scope.global.login_url; 
-        login_url += '?_return=' + $scope.location.pathname; 
-        window.location = login_url;
-      }
+      var login_url = '/global/login';
+      login_url += '?_return=' + $scope.location.pathname; 
+      window.location = login_url;
     };
       
     var is_successful = function(data){

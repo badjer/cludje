@@ -13,11 +13,10 @@
      (defaction ~'global-login
        {})
      (defaction ~'global-logout
-       (~'logout))
+       (~'logout ~'input))
      (defaction ~'global-data
        {:user ~'user 
         :menu [{:text "A" :link "/a"} {:text "B" :link "/b"}] 
-        :login_url "/global/login"
         :footer "© 2013 Cludje"
         :title "Cludje"})))
 

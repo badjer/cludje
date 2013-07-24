@@ -18,7 +18,7 @@
 
 (defn- assoc-auth-token [input request]
   "Read the authtoken out of the cookie and set it into the input"
-  (if-let [authtoken (get-in request [:cookies :cludjeauthtoken])]
+  (if-let [authtoken (get-in request [:cookies "cludjeauthtoken" :value])]
     (assoc input :_authtoken authtoken)
     input))
 

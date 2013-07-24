@@ -19,5 +19,4 @@
 (fact "JsonRenderer sets auth cookie"
   (let [renderer (->JsonRenderer)]
     (render- renderer nil {:a 1 :_authtoken "abc"}) => 
-      (contains {:cookies {:cludjeauthtoken "abc"}})))
-
+      (contains {:cookies {"cludjeauthtoken" {:value "abc"}}})))

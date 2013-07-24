@@ -9,7 +9,7 @@
     (current-user- lgin user) => nil
     (let [li-input (login- lgin user)] 
       li-input => anything
-      (current-user- lgin li-input) => (contains user)
+      (current-user- lgin li-input) => (contains (dissoc user :hashed-pwd))
       (let [lo-input (logout- lgin li-input)] 
         lo-input => anything 
         (current-user- lgin lo-input) => nil))))
@@ -26,10 +26,10 @@
   (->MemDb (atom {:user [(assoc mockuser :hashed-pwd "123")]})))
 
 (fact "TokenLogin"
-  (let [lgin (->TokenLogin (atom "abc123") (mockuser-db) :user)]
+  (let [lgin (->TokenLogin "abc123" (mockuser-db) :user)]
     (test-login lgin mockuser)))
 
-(let [lgin (->TokenLogin (atom "abc123") (mockuser-db) :user)]
+(let [lgin (->TokenLogin "abc123" (mockuser-db) :user)]
   (fact "TokenLogin sets auth token"
     (login- lgin mockuser) => (contains {:_authtoken anything})))
 

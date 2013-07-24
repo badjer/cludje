@@ -10,7 +10,7 @@
 
 (defn- make-cookies [output]
   (if-let [token (:_authtoken output)]
-    {:cludjeauthtoken token}
+    {"cludjeauthtoken" {:value token}}
     {}))
 
 (defn- filter-output [output]

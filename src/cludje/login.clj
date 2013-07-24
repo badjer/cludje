@@ -1,7 +1,7 @@
 (ns cludje.login
   (:use cludje.core))
 
-(def mockuser {:username "a@b.cd" :pwd "123"})
+(def mockuser {:username "a@b.cd" :pwd "123" :hashed-pwd "123"})
 
 ; TODO: Replace this with TestLogin everywhere and delete this?
 (defrecord MockLogin [logged-in?]
@@ -49,7 +49,7 @@
 
 (defrecord TokenLogin [secret db user-table]
   ILogin
-  (current-user- [self input ]
+  (current-user- [self input]
     (when-let [token (:_authtoken input)]
       (token->user token db user-table)))
   (login- [self input]

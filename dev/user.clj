@@ -1,6 +1,7 @@
 (ns user
   (:use cludje.core
         cludje.login
+        cludje.database
         cludje.app)
   (:require [clojure.java.io :as io]
             [clojure.string :as s]
@@ -15,13 +16,14 @@
   "Constructs the current development system."
   []
   (alter-var-root #'system
-    (constantly (make-system {:port 8123 
-                              :default-action nil
-                              :login (make-TestLogin nil)
-                              ;:login (->FriendLogin)
-                              :template-ns 'cludje.demo.templates
-                              :model-ns 'cludje.demo.models
-                              :action-ns 'cludje.demo.actions}))))
+    (constantly (let [sys (make-system {:port 8123 
+                                        :db (->MemDb (atom {:user [mockuser]}))
+                                        :default-action nil 
+                                        :template-ns 'cludje.demo.templates 
+                                        :model-ns 'cludje.demo.models 
+                                        :action-ns 'cludje.demo.actions})]
+                  (assoc sys :login (->TokenLogin "abc" (:db sys) :user))))))
+                              ;:login (make-TestLogin nil)
 
 
 (defn start
