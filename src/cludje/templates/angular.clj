@@ -195,6 +195,9 @@
 
 
 
+
+
+
 ; Basic templates
 ; NOTE: These are NOT the same as the actions you can take on 
 ; a model - these are purely screens. We're intentionally making
@@ -314,10 +317,34 @@
       else
         $scope.data = data;
     };
+
+    var go_login = function(){
+      if($scope.global === undefined ||
+          $scope.global === null ||
+          $scope.global.login_url === undefined || 
+          $scope.global.login_url === null){
+
+        if($scope.data.__alerts === undefined || 
+            $scope.data.__alerts === null)
+          $scope.data.__alerts = [];
+
+        $scope.data.__alerts.push(
+          {type: 'error', text: 'No login url was defined'});
+
+      }else {
+        var login_url = $scope.global.login_url; 
+        login_url += '?_return=' + window.location; 
+        window.location = login_url;
+      }
+    };
       
     var is_successful = function(data){
       return data.__problems === undefined || data.__problemns === null;
-    }
+    };
+
+    var needs_login = function(response){
+      return response.status === 401;
+    };
 
     var do_action = function(action, payload, opts){
       payload._action = action;
@@ -330,6 +357,11 @@
           
           if(opts.reload === true)
             reload(opts);
+        }
+      },
+      function(error_response){
+        if(needs_login(error_response)){
+          go_login();
         }
       });
     };
@@ -386,6 +418,13 @@
   };")
 
 
+(defn global-login []
+  (common-layout (model-form LoginUser)))
+
+(defn global-logout []
+  [:p "You have been logged out"])
+   
+
 
 (defn template-edit [model]
   (common-layout
@@ -427,6 +466,10 @@
        (cludje.templates.angular/common-layout ~'body))
      (defn ~'js-app []
        (cludje.templates.angular/js-app))
+     (defn ~'global-login []
+       (cludje.templates.angular/global-login))
+     (defn ~'global-logout []
+       (cludje.templates.angular/global-logout))
      (defn ~'-template-edit [~'model]
        (cludje.templates.angular/template-edit ~'model))
      (defn ~'-template-new [~'model]

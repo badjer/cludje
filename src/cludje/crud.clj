@@ -7,7 +7,11 @@
 (defmacro def-system-actions []
   `(do
      (defability ~'-system-data-ability
-       :data "Global" true)
+       :* "Global" true)
+     (defaction ~'global-login
+       (~'login ~'input))
+     (defaction ~'global-logout
+       (~'logout))
      (defaction ~'global-data
        {:user ~'user 
         :menu [{:text "A" :link "/a"} {:text "B" :link "/b"}] 

@@ -20,3 +20,7 @@
         lgin (make-TestLogin)]
     (test-login lgin user)))
 
+(fact "FriendLogin"
+  (let [user {:username "a@b.cd" :pwd "a"}
+        lgin (->FriendLogin)]
+))

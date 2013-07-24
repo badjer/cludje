@@ -33,3 +33,13 @@
   ([] (->TestLogin (atom nil)))
   ([user] (->TestLogin (atom user))))
 
+(defrecord FriendLogin []
+  ILogin
+  (current-user- [self])
+  (login- [self user])
+  (logout- [self])
+  (encrypt- [self txt])
+  (check-hash- [self txt cypher]))
+
+
+
