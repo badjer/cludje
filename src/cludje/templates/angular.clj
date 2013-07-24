@@ -320,18 +320,23 @@
         $scope.data = data;
     };
 
+    var push_alert = function(typ, text){
+      if($scope.data.__alerts === undefined || 
+          $scope.data.__alerts === null){
+        $scope.data.__alerts = [];
+      }
+      $scope.data.__alerts.push(
+        {type: typ, text: text});
+    };
+
+
     var go_login = function(){
       if($scope.global === undefined ||
           $scope.global === null ||
           $scope.global.login_url === undefined || 
           $scope.global.login_url === null){
-
-        if($scope.data.__alerts === undefined || 
-            $scope.data.__alerts === null)
-          $scope.data.__alerts = [];
-
-        $scope.data.__alerts.push(
-          {type: 'error', text: 'No login url was defined'});
+        
+        push_alert('error', 'No login url was defined');
 
       }else {
         var login_url = $scope.global.login_url; 
@@ -346,6 +351,14 @@
 
     var needs_login = function(response){
       return response.status === 401;
+    };
+
+    var is_forbidden = function(response){
+      return response.status === 403;
+    };
+
+    var is_not_found = function(response){
+      return response.status === 404;
     };
 
     var do_action = function(action, payload, opts){
@@ -364,6 +377,16 @@
       function(error_response){
         if(needs_login(error_response)){
           go_login();
+        }
+        else if(is_forbidden(error_response)){
+          push_alert('error', 
+            'You are not authorized to perform that action');
+        }else if(is_not_found(error_response)){
+          push_alert('error',
+            'That action could not be found');
+        }else{
+          push_alert('error',
+            'An unknown error has occurred');
         }
       });
     };
