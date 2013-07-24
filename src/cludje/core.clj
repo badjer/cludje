@@ -393,7 +393,14 @@
            (make ~auth-model ~'input))]
      (when (and (action-matches? ~auth-action ~'action) 
                 (= ~'model ~auth-model))
-          ~expr)))
+       (and (or (not (nil? ~'user))
+                (= :anon ~expr))
+            ~expr))))
+                ; We either need to be logged in, or have
+                ; anonymous access granted
+                ;(or (not (nil? ~'user))
+                    ;(= :anon ~expr)))
+          ;~expr)))
 
 (defn- parse-action-forms [forms]
   (apply concat
@@ -409,7 +416,6 @@
        (def ~nam (with-meta (fn [~'action ~'model ~'user ~'input]
          (first (keep identity [~@calls])))
                        {:cludje-ability true})))))
-       ;(alter-meta! (var ~nam) assoc :ability true))))
 
 
 (defn can? [auth logn action model m]
@@ -447,7 +453,6 @@
                  (with-alert "There were problems" :error))
                (throw ex#))))))
                           {:cludje-action true}))))
-     ;(alter-meta! (var ~nam) assoc :_action true)))
 
 (defn error-unauthorized [{:keys [logger] :as system} details]
   (log logger (str "Unauthorized: " details))
@@ -469,8 +474,10 @@
         model-name (get-model-name- (:actionparser system) input)
         model (get-model- (:modelstore system) model-name)]
     (cond 
-      (nil? user) (error-not-logged-in system {})
-      (nil? action) (error-not-found system {:model model-name :action action-key})
+      (nil? action) 
+        (error-not-found system {:model model-name :action action-key})
       (not (authorize action-key (or model model-name) user input)) 
-        (error-unauthorized system {:model model-name :action action-key})
+        (if (nil? user) 
+          (error-not-logged-in system {})
+          (error-unauthorized system {:model model-name :action action-key}))
       :else (action system input))))
