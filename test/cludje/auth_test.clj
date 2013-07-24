@@ -1,4 +1,5 @@
 (ns cludje.auth-test
+  (:require [cludje.demo.actions])
   (:use midje.sweet
         cludje.types
         cludje.testcontrollers

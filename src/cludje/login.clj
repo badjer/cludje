@@ -6,12 +6,12 @@
 ; TODO: Replace this with TestLogin everywhere and delete this?
 (defrecord MockLogin [logged-in?]
   ILogin
-  (current-user- [self] (when @logged-in? mockuser))
-  (login- [self user] 
-    (when (= mockuser (select-keys user (keys mockuser))) 
+  (current-user- [self input] (when @logged-in? mockuser))
+  (login- [self input] 
+    (when (= mockuser (select-keys input (keys mockuser))) 
       (reset! logged-in? true) 
       true))
-  (logout- [self] 
+  (logout- [self input] 
     (reset! logged-in? false)
     true)
   (encrypt- [self txt] txt)
@@ -23,9 +23,9 @@
 
 (defrecord TestLogin [current]
   ILogin
-  (current-user- [self] @current)
-  (login- [self user] (reset! current user))
-  (logout- [self] (reset! current nil))
+  (current-user- [self input] @current)
+  (login- [self input] (reset! current (select-keys input [:username :pwd])))
+  (logout- [self input] (reset! current nil))
   (encrypt- [self txt] txt)
   (check-hash- [self txt cypher] (= (encrypt self txt) cypher)))
 
@@ -33,11 +33,11 @@
   ([] (->TestLogin (atom nil)))
   ([user] (->TestLogin (atom user))))
 
-(defrecord FriendLogin []
+(defrecord TokenLogin []
   ILogin
-  (current-user- [self])
-  (login- [self user])
-  (logout- [self])
+  (current-user- [self input])
+  (login- [self input])
+  (logout- [self input])
   (encrypt- [self txt])
   (check-hash- [self txt cypher]))
 

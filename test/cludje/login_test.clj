@@ -5,11 +5,12 @@
 
 (defn test-login [lgin user]
   (fact "works"
-    (current-user- lgin) => nil
+    (current-user- lgin user) => nil
     (login- lgin user) => anything
-    (current-user- lgin) => user
-    (logout- lgin) => anything
-    (current-user- lgin) => nil))
+    (current-user- lgin user) => user
+    (logout- lgin user) => anything
+    (current-user- lgin user) => nil))
+
 
 (fact "MockLogin"
   (let [lgin (make-MockLogin false)]
@@ -20,8 +21,8 @@
         lgin (make-TestLogin)]
     (test-login lgin user)))
 
-(fact "FriendLogin"
+(fact "TokenLogin"
   (let [user {:username "a@b.cd" :pwd "a"}
-        lgin (->FriendLogin)]
+        lgin (->TokenLogin)]
     1 => 2
 ))

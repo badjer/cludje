@@ -10,3 +10,9 @@
       (parse-input- p {:uri "/foobar" :params {:a 1}}) => nil)
     (fact "Strips off any fields in input that start with __"
       (parse-input- p {:uri "/api" :params {:__alerts ["a"] :a 1}}) => {:a 1})))
+
+(fact "WebInputParser reads authtoken from cookie"
+  (let [p (->WebInputParser true)]
+    (parse-input- p {:uri "/api" :params {:a 1} 
+                     :cookies {:cludjeauthtoken "b"}}) => 
+    (contains {:_authtoken "b"})))

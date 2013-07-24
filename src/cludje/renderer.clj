@@ -8,14 +8,26 @@
   (render- [self request output]
     output))
 
+(defn- make-cookies [output]
+  (if-let [token (:_authtoken output)]
+    {:cludjeauthtoken token}
+    {}))
+
+(defn- filter-output [output]
+  (cond
+    (map? output) (dissoc output :_authtoken)
+    (nil? output) nil
+    :else (throw 
+            (ex-info "We tried to render something that wasn't a map!  
+                     Probably, your action didn't return a map.  
+                     Always return a map from actions" {:output output}))))
+
 (defrecord JsonRenderer []
   IRenderer
   (render- [self request output]
-    (when-not (or (map? output) (nil? output))
-      (throw (ex-info "We tried to render something that wasn't a map!
-                      Generally, this means that your action didn't return a map.
-                      Always return a map from actions" {:output output})))
-    (-> {:body (cheshire/generate-string output)}
+    (-> (merge
+          {:body (cheshire/generate-string (filter-output output))}
+          {:cookies (make-cookies output)})
         (response/content-type "application/json")
         (response/charset "UTF-8"))))
 

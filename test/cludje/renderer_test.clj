@@ -16,3 +16,8 @@
     ; Just make sure it works at least a little bit
     (:body (render- renderer nil {:a 1 :b 2})) => "{\"a\":1,\"b\":2}"))
 
+(fact "JsonRenderer sets auth cookie"
+  (let [renderer (->JsonRenderer)]
+    (render- renderer nil {:a 1 :_authtoken "abc"}) => 
+      (contains {:cookies {:cludjeauthtoken "abc"}})))
+

@@ -377,16 +377,16 @@
       (first @logatom) => "hi")))
 
 (fact "current-user works with nil as :auth"
-  (current-user nil) => nil)
+  (current-user nil nil) => nil)
 
 (facts "login"
   (let [logn (make-MockLogin {:logged-in? false})]
     (fact "login works with extra fields"
-      (current-user logn) => nil
+      (current-user logn nil) => nil
       (login logn (assoc mockuser :fluff 1)) => anything
-      (current-user logn) => mockuser)
+      (current-user logn nil) => mockuser)
     (fact "login throws exception if missing fields"
-      (logout logn) => anything
+      (logout logn nil) => anything
       (login logn (dissoc mockuser :pwd)) => (throws)
       (login logn (dissoc mockuser :username)) => (throws))))
 
@@ -399,9 +399,9 @@
 (facts "defaction login api"
   (let [logn (make-MockLogin {:logged-in? false})
         sys {:login logn}]
-    ((ident-current-user sys nil)) =not=> (throws)
+    ((ident-current-user sys nil) nil) =not=> (throws)
     ((ident-login sys nil) mockuser) =not=> (throws)
-    ((ident-logout sys nil)) =not=> (throws)
+    ((ident-logout sys nil) nil) =not=> (throws)
     ((ident-encrypt sys nil) "a") =not=> (throws)
     (ident-user sys nil) =not=> (throws)))
 
@@ -417,9 +417,9 @@
 (defaction ac-authorize (authorize :action Cog user input))
 (defaction ac-can? (can? :action Cog input))
 
-(defaction ac-current-user (current-user))
+(defaction ac-current-user (current-user input))
 (defaction ac-login (login input))
-(defaction ac-logout (logout))
+(defaction ac-logout (logout input))
 (defaction ac-encrypt (encrypt input))
 (defaction ac-user user)
 
@@ -575,7 +575,7 @@
 (facts "auth works with defability"
   (let [auth (make-auth ab-cog)
         logn (make-MockLogin {:logged-in? true})]
-    (current-user logn) =not=> nil?
+    (current-user logn nil) =not=> nil?
     (can? auth logn :add Cog {:amt 1}) => true
     (can? auth logn :add Cog {:amt 2}) => falsey
     (can? auth logn :delete Cog {:amt 1}) => falsey))
@@ -602,7 +602,7 @@
         (catch clojure.lang.ExceptionInfo ex
           (ex-data ex))) => (has-keys :__unauthorized))
     (fact "Not allowed if not logged in"
-      (logout (:login sys)) => anything
+      (logout (:login sys) nil) => anything
       (do-action sys {:_action "cog-add"}) => (throws)
       (try (do-action sys {:_action "cog-add"})
         (catch clojure.lang.ExceptionInfo ex
@@ -622,7 +622,7 @@
     (last @log) => #"^Unauthorized"
     (do-action sys {:_action "cog-foobarzums"}) => (throws)
     (last @log) => #"^Not found"
-    (logout (:login sys)) => anything
+    (logout (:login sys) nil) => anything
     (do-action sys {:_action "cog-add"}) => (throws)
     (last @log) => #"Not logged in"))
 

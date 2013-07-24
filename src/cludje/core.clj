@@ -241,9 +241,9 @@
 
 (defprotocol ILogin
   "Contols login"
-  (current-user- [self] "Returns the currently logged-in user.")
-  (login- [self user])
-  (logout- [self])
+  (current-user- [self input] "Returns the currently logged-in user.")
+  (login- [self input])
+  (logout- [self input])
   (encrypt- [self txt] "Encrypt a string")
   (check-hash- [self txt cypher] "Test if the encrypted txt matches cypher")
   )
@@ -354,14 +354,15 @@
 ; Auth api
 (defmodel LoginUser {:username Str :pwd Password} :no-key true)
 
-(defn current-user [auth]
+(defn current-user [auth input]
   (when auth
-    (current-user- auth)))
-(defn login [auth user]
-  (let [parsed (parse-model LoginUser user)]
-    (login- auth parsed)))
-(defn logout [auth]
-  (logout- auth))
+    (current-user- auth input)))
+(defn login [auth input]
+  ; Do parsing so that we validate that we have the right fields
+  (parse-model LoginUser input)
+  (login- auth input))
+(defn logout [auth input]
+  (logout- auth input))
 (defn encrypt [auth txt]
   (encrypt- auth txt))
 
@@ -418,9 +419,9 @@
                        {:cludje-ability true})))))
 
 
-(defn can? [auth logn action model m]
-  (let [user (current-user logn)]
-    (authorize auth action model user m)))
+(defn can? [auth logn action model input]
+  (let [user (current-user logn input)]
+    (authorize auth action model user input)))
 
 
 
@@ -441,7 +442,7 @@
              ~'encrypt (partial encrypt (:login ~'system))
              ~'authorize (partial authorize (:auth ~'system))
              ~'can? (partial can? (:auth ~'system) (:login ~'system))
-             ~'user (~'current-user)
+             ~'user (~'current-user ~'input)
              ~'? (partial ? ~'input)
              ~'?? (partial ?? ~'input)]
          (try
