@@ -448,7 +448,8 @@
           ~'can? (partial can? ~system)
           ~'user (~'current-user ~input)
           ~'? (partial ? ~input)
-          ~'?? (partial ?? ~input)]
+          ~'?? (partial ?? ~input)
+          ~'&? (partial &? ~input)]
       ~@forms))
 
 (defmacro defaction [nam & forms]

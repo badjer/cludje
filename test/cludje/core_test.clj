@@ -520,6 +520,13 @@
   (ac-?-validator nil nil) => (has-problems :a)
   (ac-?-validator nil {}) => (has-problems :a))
 
+(defaction ac-&?
+  (&? :a :b))
+
+(facts "&? in action dsl"
+  (ac-&? nil {:a 1}) => 1
+  (ac-&? nil {:b 2}) => 2
+  (ac-&? nil {:c 3}) => (has-problems :a :b))
 
 
 (defability ab-cog
