@@ -82,6 +82,16 @@
   ([input kee default]
    (get input kee default)))
 
+(defn &? [input & kees]
+  "Returns the value of the first of kees found in input.
+  If none are found, an excption will be thrown, like ?"
+  (cond
+    (empty? kees) (throw-problems {nil "Called &? with no kees"})
+    (not-any? #(contains? input %) kees) 
+      (throw-problems (zipmap kees (repeat "At least one was expected")))
+    :else (get input (first (filter #(contains? input %) kees)))))
+
+
 
 (defn table-name [model]
   (cond

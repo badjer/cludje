@@ -12,6 +12,20 @@
         cludje.app
         cludje.core))
 
+(facts "?"
+  (? {:a 1} :a) => 1
+  (? {:a 1} :b) => (throws))
+
+(facts "??"
+  (?? {:a 1} :a) => 1
+  (?? {:a 1} :b) => nil)
+
+(facts "&?"
+  (&? {:a 1} :a) => 1
+  (&? {:a 1} :b :a) => 1
+  (&? {:a 1}) => (throws)
+  (&? {:a 1} :b) => (throws))
+
 (defn myfun [] 1)
 (defmodel User {:name Str :email Email :pwd Password})
 
