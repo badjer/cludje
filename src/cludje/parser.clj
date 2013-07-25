@@ -3,12 +3,12 @@
   (:use cludje.core
         cludje.types))
 
-(defn- is-api-call? [allow-get? request]
+(defn is-api-call? [allow-get? request]
   (let [postcheck (or allow-get? (= (:request-method request) :post))
         uri-check (= "/api" (:uri request))]
     (and postcheck uri-check)))
 
-(defn- is-transient-field [field]
+(defn is-transient-field [field]
   (re-find #"^__" (name field)))
 
 (defn- strip-transient-fields [input]
@@ -16,16 +16,20 @@
   (let [victims (filter is-transient-field (keys input))]
     (apply dissoc input victims)))
 
-(defn- assoc-auth-token [input request]
-  "Read the authtoken out of the cookie and set it into the input"
-  (if-let [authtoken (get-in request [:cookies "cludjeauthtoken" :value])]
-    (assoc input :_authtoken authtoken)
-    input))
+(defn is-persistent-field [field]
+  (re-find #"^_p_" (name field)))
+
+(defn- assoc-cookies [input request]
+  "Read the persistent fields out of the cookie and set them to the input"
+  (let [fields (filter is-persistent-field (keys (:cookies request)))]
+    (apply merge input
+           (for [f fields]
+             {(keyword f) (get-in request [:cookies f :value])}))))
 
 (defn- cleanup-input [input request]
   (-> input
       (strip-transient-fields)
-      (assoc-auth-token request)))
+      (assoc-cookies request)))
 
 (defrecord WebInputParser [allow-api-get?]
   IInputParser

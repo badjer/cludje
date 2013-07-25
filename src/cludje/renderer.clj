@@ -1,5 +1,6 @@
 (ns cludje.renderer
-  (:use cludje.core)
+  (:use cludje.core
+        [cludje.parser :only [is-persistent-field]])
   (:require [cheshire.core :as cheshire]
             [ring.util.response :as response]))
 
@@ -9,13 +10,18 @@
     output))
 
 (defn- make-cookies [output]
-  (if-let [token (:_authtoken output)]
-    {"cludjeauthtoken" {:value token}}
-    {}))
+  (let [fields (filter is-persistent-field (keys output))]
+    (apply merge
+           (for [f fields]
+             {(name f) {:value (f output)}}))))
+
+(defn- remove-persistent-fields [output]
+  (let [victims (filter is-persistent-field (keys output))]
+    (apply dissoc output victims)))
 
 (defn- filter-output [output]
   (cond
-    (map? output) (dissoc output :_authtoken)
+    (map? output) (remove-persistent-fields output)
     (nil? output) nil
     :else (throw 
             (ex-info "We tried to render something that wasn't a map!  

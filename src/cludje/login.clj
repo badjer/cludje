@@ -44,18 +44,18 @@
 
 (defn- make-token [user] (:username user))
 
-(defn- expire-token [input] (assoc input :_authtoken ""))
+(defn- expire-token [input] (assoc input :_p_cludjeauthtoken ""))
 
 
 (defrecord TokenLogin [secret db user-table]
   ILogin
   (current-user- [self input]
-    (when-let [token (:_authtoken input)]
+    (when-let [token (:_p_cludjeauthtoken input)]
       (token->user token db user-table)))
   (login- [self input]
     (if-let [user (validate-user 
                     input db user-table (partial check-hash- self))]
-      (assoc input :_authtoken (make-token user))
+      (assoc input :_p_cludjeauthtoken (make-token user))
       (throw-problems {:username "Invalid username/password"
                        :pwd "Invalid username/password"})))
   (logout- [self input] (expire-token input))

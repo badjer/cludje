@@ -14,6 +14,6 @@
 (fact "WebInputParser reads authtoken from cookie"
   (let [p (->WebInputParser true)]
     (parse-input- p {:uri "/api" :params {:a 1} 
-                     :cookies {"cludjeauthtoken" {:value "b"}}}) => 
-    (contains {:_authtoken "b"})))
+                     :cookies {"_p_cludjeauthtoken" {:value "b"}}}) => 
+    (contains {:_p_cludjeauthtoken "b"})))
 
