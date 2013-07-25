@@ -33,4 +33,8 @@
   (fact "TokenLogin sets auth token"
     (login- lgin mockuser) => (contains {:_authtoken anything})))
 
+(future-facts "TokenLogin - repeated calls to current-user- don't hit the db repeatedly")
+; Cache the current user in meta-data on the input, and then just re-read it
+; in subsequent calls to current-user-?
+
 (future-facts "TokenLogin does encryption and has security")

@@ -298,20 +298,20 @@
 ; ####
 
 ; DB API
-(defn fetch [db model kee]
+(defn fetch [{:keys [db]} model kee]
   (when model
     (let [tbl (table-name model)]
       (fetch- db tbl kee))))
 
-(defn query [db model params]
+(defn query [{:keys [db]} model params]
   (let [tbl (table-name model)]
     (query- db tbl params)))
 
-(defn write [db model kee data]
+(defn write [{:keys [db]} model kee data]
   (let [tbl (table-name model)] 
     (write- db tbl kee data)))
 
-(defn delete [db model kee]
+(defn delete [{:keys [db]} model kee]
   (when kee
     (let [tbl (table-name model)]
       (delete- db tbl kee)
@@ -326,18 +326,18 @@
     (throw-problems probs)
     (make model m)))
 
-(defn save [db model m]
+(defn save [sys model m]
   (let [parsed (parse-model model m)
         kee (get-key model parsed)
-        id (write db model kee parsed)]
+        id (write sys model kee parsed)]
     {:_id id}))
 
-(defn insert [db model m]
-  (save db model (dissoc m (key-name model))))
+(defn insert [sys model m]
+  (save sys model (dissoc m (key-name model))))
 
 
 ; Logger api
-(defn log [logger s]
+(defn log [{:keys [logger]} s]
   (log- logger s))
 
 
@@ -346,7 +346,7 @@
   {:to Email :from Email :subject Str :body Str :text Str}
   :no-key true)
 
-(defn send-mail [mailer mes]
+(defn send-mail [{:keys [mailer]} mes]
   (let [parsed (parse-model MailMessage mes)]
     (send-mail- mailer parsed)))
 
@@ -354,19 +354,19 @@
 ; Auth api
 (defmodel LoginUser {:username Str :pwd Password} :no-key true)
 
-(defn current-user [auth input]
-  (when auth
-    (current-user- auth input)))
-(defn login [auth input]
+(defn current-user [{:keys [login]} input]
+  (when login
+    (current-user- login input)))
+(defn login [{:keys [login]} input]
   ; Do parsing so that we validate that we have the right fields
   (parse-model LoginUser input)
-  (login- auth input))
-(defn logout [auth input]
-  (logout- auth input))
-(defn encrypt [auth txt]
-  (encrypt- auth txt))
+  (login- login input))
+(defn logout [{:keys [login]} input]
+  (logout- login input))
+(defn encrypt [{:keys [login]} txt]
+  (encrypt- login txt))
 
-(defn authorize [auth action model user input]
+(defn authorize [{:keys [auth]} action model user input]
   (authorize- auth action model user input))
 
 
@@ -374,11 +374,6 @@
 ;(let [m (first (.getDeclaredMethods (class f)))
 ;p (.getParameterTypes m)]
 ;(alength p)))
-
-;(declare action-allowed?)
-;(defn- action-allowed-seq? [auth-action action]
-  ;(for [a auth-action]
-    ;(action-allowed auth-action action))
 
 
 (defn action-matches? [auth-action action]
@@ -397,11 +392,6 @@
        (and (or (not (nil? ~'user))
                 (= :anon ~expr))
             ~expr))))
-                ; We either need to be logged in, or have
-                ; anonymous access granted
-                ;(or (not (nil? ~'user))
-                    ;(= :anon ~expr)))
-          ;~expr)))
 
 (defn- parse-action-forms [forms]
   (apply concat
@@ -419,52 +409,57 @@
                        {:cludje-ability true})))))
 
 
-(defn can? [auth logn action model input]
-  (let [user (current-user logn input)]
-    (authorize auth action model user input)))
+(defn can? [system action model input]
+  (let [user (current-user system input)]
+    (authorize system action model user input)))
 
 
+(defmacro with-action-dsl [system input & forms]
+   `(let [~'save (partial save  ~'system)
+          ~'insert (partial insert ~'system)
+          ~'fetch (partial fetch ~'system)
+          ~'query (partial query ~'system)
+          ~'write (partial write ~'system)
+          ~'delete (partial delete ~'system)
+          ~'send-mail (partial send-mail ~'system)
+          ~'log (partial log ~'system)
+          ~'current-user (partial current-user ~'system)
+          ~'login (partial login ~'system)
+          ~'logout (partial logout ~'system)
+          ~'encrypt (partial encrypt ~'system)
+          ~'authorize (partial authorize ~'system)
+          ~'can? (partial can? ~'system)
+          ~'user (~'current-user ~'input)
+          ~'? (partial ? ~'input)
+          ~'?? (partial ?? ~'input)]
+      ~@forms))
 
 (defmacro defaction [nam & forms]
   `(do
-     (def ~nam (with-meta (fn [~'system ~'input]
-       (let [~'save (partial save (:db ~'system))
-             ~'insert (partial insert (:db ~'system))
-             ~'fetch (partial fetch (:db ~'system))
-             ~'query (partial query (:db ~'system))
-             ~'write (partial write (:db ~'system))
-             ~'delete (partial delete (:db ~'system))
-             ~'send-mail (partial send-mail (:mailer ~'system))
-             ~'log (partial log (:logger ~'system))
-             ~'current-user (partial current-user (:login ~'system))
-             ~'login (partial login (:login ~'system))
-             ~'logout (partial logout (:login ~'system))
-             ~'encrypt (partial encrypt (:login ~'system))
-             ~'authorize (partial authorize (:auth ~'system))
-             ~'can? (partial can? (:auth ~'system) (:login ~'system))
-             ~'user (~'current-user ~'input)
-             ~'? (partial ? ~'input)
-             ~'?? (partial ?? ~'input)]
-         (try
-           ~@forms
-           (catch clojure.lang.ExceptionInfo ex#
-             (if-let [problems# (:__problems (ex-data ex#))]
-               (->
-                 (assoc ~'input :__problems problems#)
-                 (with-alert "There were problems" :error))
-               (throw ex#))))))
-                          {:cludje-action true}))))
+     (def ~nam 
+       (with-meta 
+         (fn [~'system ~'input]
+           (with-action-dsl ~'system ~'input
+             (try
+               ~@forms
+               (catch clojure.lang.ExceptionInfo ex#
+                 (if-let [problems# (:__problems (ex-data ex#))]
+                   (->
+                     (assoc ~'input :__problems problems#)
+                     (with-alert "There were problems" :error))
+                   (throw ex#)))))) 
+         {:cludje-action true}))))
 
-(defn error-unauthorized [{:keys [logger] :as system} details]
-  (log logger (str "Unauthorized: " details))
+(defn error-unauthorized [system details]
+  (log system (str "Unauthorized: " details))
   (throw-unauthorized details))
 
-(defn error-not-found [{:keys [logger] :as system} details]
-  (log logger (str "Not found: " details))
+(defn error-not-found [system details]
+  (log system (str "Not found: " details))
   (throw-not-found details))
 
-(defn error-not-logged-in [{:keys [logger] :as system} details]
-  (log logger (str "Not logged in: " details))
+(defn error-not-logged-in [system details]
+  (log system (str "Not logged in: " details))
   (throw-not-logged-in details))
 
 

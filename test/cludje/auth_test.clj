@@ -11,8 +11,8 @@
 
 (fact "auth"
   (let [auth (make-auth mock-auth-fn)]
-    (authorize auth :add :model {} {}) => truthy
-    (authorize auth :add :model nil {}) => falsey))
+    (authorize {:auth auth} :add :model {} {}) => truthy
+    (authorize {:auth auth} :add :model nil {}) => falsey))
 
 (fact "find-abilities"
   (let [abs (find-abilities 'cludje.testcontrollers)

@@ -111,114 +111,128 @@
 
 (fact "write"
   (let [dba (atom {})
-        db (->MemDb dba)]
-    (write db Cog nil cog) => anything
+        db (->MemDb dba)
+        sys {:db db}]
+    (write sys Cog nil cog) => anything
     @dba => (just-keys :cog)
     (count (get @dba :cog)) => 1))
 
 (fact "write will update"
   (let [db (->MemDb (atom {}))
-        id (write db Cog nil cog)]
-    (write db Cog id cog2) => id
-    (count (query db Cog nil)) => 1))
+        sys {:db db}
+        id (write sys Cog nil cog)]
+    (write sys Cog id cog2) => id
+    (count (query sys Cog nil)) => 1))
 
 (fact "fetch"
   (let [db (->MemDb (atom {}))
-        id (write db Cog nil cog)]
-    (fetch db Cog id) => (contains cog)
-    (fetch db Cog nil) => nil
-    (fetch db nil nil) => nil
-    (fetch db nil id) => nil))
+        sys {:db db}
+        id (write sys Cog nil cog)]
+    (fetch sys Cog id) => (contains cog)
+    (fetch sys Cog nil) => nil
+    (fetch sys nil nil) => nil
+    (fetch sys nil id) => nil))
 
 (fact "fetch with multiple rows"
   (let [db (->MemDb (atom {}))
-        id (write db Cog nil cog)
-        idb (write db Cog nil cogb)]
-    (fetch db Cog id) => (contains cog)
-    (fetch db Cog idb) => (contains cogb)))
+        sys {:db db}
+        id (write sys Cog nil cog)
+        idb (write sys Cog nil cogb)]
+    (fetch sys Cog id) => (contains cog)
+    (fetch sys Cog idb) => (contains cogb)))
 
 
 (fact "save"
-  (let [db (->MemDb (atom {}))]
+  (let [db (->MemDb (atom {}))
+        sys {:db db}]
     (fact "save exceptions"
-      (save db Cog {}) => (throws Exception)
-      (save db Cog {:price 123}) => (throws Exception)
-      (save db Cog {:price 123 :amt 1}) => anything
-      (save db Cog {:price "abc" :amt 1}) => (throws Exception)
-      (save db Cog {:price 123 :amt "a"}) => (throws Exception))
+      (save sys Cog {}) => (throws Exception)
+      (save sys Cog {:price 123}) => (throws Exception)
+      (save sys Cog {:price 123 :amt 1}) => anything
+      (save sys Cog {:price "abc" :amt 1}) => (throws Exception)
+      (save sys Cog {:price 123 :amt "a"}) => (throws Exception))
     (fact "save with extra fields is fine"
-      (save db Cog {:price 123 :amt 1 :x 1}) => anything)
+      (save sys Cog {:price 123 :amt 1 :x 1}) => anything)
     (fact "save returns something key-like"
-      (save db Cog cog) =not=> empty?)))
+      (save sys Cog cog) =not=> empty?)))
 
 (fact "save will set the key field"
   (let [dba (atom {})
         db (->MemDb dba)
-        kee (save db Cog cog)]
+        sys {:db db}
+        kee (save sys Cog cog)]
     (count (:cog @dba)) => 1
     (first (:cog @dba)) => (contains kee)
-    (fetch db Cog (:_id kee)) => (contains kee)))
+    (fetch sys Cog (:_id kee)) => (contains kee)))
 
 (fact "save knows when to insert"
   (let [db (->MemDb (atom {}))
-        id (write db Cog nil cog)]
-    (save db Cog cog) =not=> id
-    (count (query db Cog nil)) => 2))
+        sys {:db db}
+        id (write sys Cog nil cog)]
+    (save sys Cog cog) =not=> id
+    (count (query sys Cog nil)) => 2))
 
 (fact "save knows when to update"
   (let [db (->MemDb (atom {}))
-        kee (save db Cog cog)]
-    (count (query db Cog nil)) => 1
-    (save db Cog (merge cog kee)) => anything
-    (count (query db Cog nil)) => 1))
+        sys {:db db}
+        kee (save sys Cog cog)]
+    (count (query sys Cog nil)) => 1
+    (save sys Cog (merge cog kee)) => anything
+    (count (query sys Cog nil)) => 1))
 
 (fact "insert"
-  (let [db (->MemDb (atom {}))]
+  (let [db (->MemDb (atom {}))
+        sys {:db db}]
     (fact "insert exceptions"
-      (insert db Cog {}) => (throws Exception)
-      (insert db Cog {:price 123}) => (throws Exception)
-      (insert db Cog {:price 123 :amt 1}) => anything
-      (insert db Cog {:price "abc" :amt 1}) => (throws Exception)
-      (insert db Cog {:price 123 :amt "a"}) => (throws Exception))
+      (insert sys Cog {}) => (throws Exception)
+      (insert sys Cog {:price 123}) => (throws Exception)
+      (insert sys Cog {:price 123 :amt 1}) => anything
+      (insert sys Cog {:price "abc" :amt 1}) => (throws Exception)
+      (insert sys Cog {:price 123 :amt "a"}) => (throws Exception))
     (fact "insert with extra fields is fine"
-      (insert db Cog {:price 123 :amt 1 :x 1}) => anything)
+      (insert sys Cog {:price 123 :amt 1 :x 1}) => anything)
     (fact "insert returns something key-like"
-      (insert db Cog cog) =not=> empty?)))
+      (insert sys Cog cog) =not=> empty?)))
 
 (fact "insert will set the key field"
   (let [dba (atom {})
         db (->MemDb dba)
-        kee (insert db Cog cog)]
+        sys {:db db}
+        kee (insert sys Cog cog)]
     (count (:cog @dba)) => 1
     (first (:cog @dba)) => (contains kee)
-    (fetch db Cog (:_id kee)) => (contains kee)))
+    (fetch sys Cog (:_id kee)) => (contains kee)))
 
 (fact "insert knows when to insert"
   (let [db (->MemDb (atom {}))
-        id (write db Cog nil cog)]
-    (insert db Cog cog) =not=> id
-    (count (query db Cog nil)) => 2))
+        sys {:db db}
+        id (write sys Cog nil cog)]
+    (insert sys Cog cog) =not=> id
+    (count (query sys Cog nil)) => 2))
 
 (fact "insert knows when to update"
   (let [db (->MemDb (atom {}))
-        id (insert db Cog cog)]
-    (count (query db Cog nil)) => 1
-    (insert db Cog cog) => anything
-    (count (query db Cog nil)) => 2))
+        sys {:db db}
+        id (insert sys Cog cog)]
+    (count (query sys Cog nil)) => 1
+    (insert sys Cog cog) => anything
+    (count (query sys Cog nil)) => 2))
 
 (facts "db operations work with keyword table names"
   (let [db (->MemDb (atom {}))
-        id (write db :cog nil cog)]
-    (count (query db :cog nil)) => 1
-    (fetch db :cog id) => (contains cog)
-    (delete db :cog id) => anything
-    (query db :cog nil) => nil))
+        sys {:db db}
+        id (write sys :cog nil cog)]
+    (count (query sys :cog nil)) => 1
+    (fetch sys :cog id) => (contains cog)
+    (delete sys :cog id) => anything
+    (query sys :cog nil) => nil))
 
 (facts "save and insert return a map"
   (let [dba (atom {})
-        db (->MemDb dba)]
-    (insert db Cog cog) => map?
-    (save db Cog cog) => map?))
+        db (->MemDb dba)
+        sys {:db db}]
+    (insert sys Cog cog) => map?
+    (save sys Cog cog) => map?))
 
 
 (fact "get-key"
@@ -235,26 +249,28 @@
 
 (fact "save knows when to update"
   (let [db (->MemDb (atom {}))
-        id (write db Cog nil cog)
+        sys {:db db}
+        id (write sys Cog nil cog)
         with-kee (assoc cog :_id id)]
-    (save db Cog with-kee) => (contains {:_id id})
-    (count (query db Cog nil)) => 1))
+    (save sys Cog with-kee) => (contains {:_id id})
+    (count (query sys Cog nil)) => 1))
 
 (def mail {:to "a@b.cd" :from "b@b.cd" :subject "test"
            :body "hi" :text "hi"})
 
 (fact "send-mail"
   (let [mailatom (atom [])
-        mailer (->MemMailer mailatom)]
-    (send-mail mailer mail) =not=> (throws)
-    (send-mail mailer nil) => (throws)
-    (send-mail mailer (assoc mail :to nil)) => (throws)
-    (send-mail mailer (assoc mail :to "abcd")) => (throws)
-    (send-mail mailer (dissoc mail :to)) => (throws)
-    (send-mail mailer (dissoc mail :from)) => (throws)
-    (send-mail mailer (dissoc mail :subject)) => (throws)
-    (send-mail mailer (dissoc mail :text)) => (throws)
-    (send-mail mailer (dissoc mail :body)) => (throws)))
+        mailer (->MemMailer mailatom)
+        sys {:mailer mailer}]
+    (send-mail sys mail) =not=> (throws)
+    (send-mail sys nil) => (throws)
+    (send-mail sys (assoc mail :to nil)) => (throws)
+    (send-mail sys (assoc mail :to "abcd")) => (throws)
+    (send-mail sys (dissoc mail :to)) => (throws)
+    (send-mail sys (dissoc mail :from)) => (throws)
+    (send-mail sys (dissoc mail :subject)) => (throws)
+    (send-mail sys (dissoc mail :text)) => (throws)
+    (send-mail sys (dissoc mail :body)) => (throws)))
 
 
 (defaction ident input)
@@ -301,8 +317,8 @@
         sys {:db db}]
     (fact "defaction can save"
       (add-cog sys cog) =not=> has-problems?
-      (count (query db Cog nil)) => 1
-      (first (query db Cog nil)) => (contains cog))
+      (count (query sys Cog nil)) => 1
+      (first (query sys Cog nil)) => (contains cog))
     (fact "defaction returns problems if save fails"
       (add-cog sys {}) => has-problems?
       (add-cog sys {}) => (has-problems :price :amt))))
@@ -322,8 +338,8 @@
       (add-person sys {}) => (has-problems :name))
     (fact "multiple operations work"
       (add-person sys (merge person usr)) =not=> has-problems?
-      (count (query db User nil)) => 1
-      (count (query db Person nil)) => 1)))
+      (count (query sys User nil)) => 1
+      (count (query sys Person nil)) => 1)))
 
 (defaction add-2-persons
   (save Person input)
@@ -334,7 +350,7 @@
         db (->MemDb dba)
         sys {:db db}]
     (add-2-persons sys person) => anything
-    (count (query db Person nil)) => 2))
+    (count (query sys Person nil)) => 2))
 
 
 (defaction ident-send-mail send-mail)
@@ -380,15 +396,16 @@
   (current-user nil nil) => nil)
 
 (facts "login"
-  (let [logn (make-MockLogin {:logged-in? false})]
+  (let [logn (make-MockLogin {:logged-in? false})
+        sys {:login logn}]
     (fact "login works with extra fields"
-      (current-user logn nil) => nil
-      (login logn (assoc mockuser :fluff 1)) => anything
-      (current-user logn nil) => mockuser)
+      (current-user sys nil) => nil
+      (login sys (assoc mockuser :fluff 1)) => anything
+      (current-user sys nil) => mockuser)
     (fact "login throws exception if missing fields"
-      (logout logn nil) => anything
-      (login logn (dissoc mockuser :pwd)) => (throws)
-      (login logn (dissoc mockuser :username)) => (throws))))
+      (logout sys nil) => anything
+      (login sys (dissoc mockuser :pwd)) => (throws)
+      (login sys (dissoc mockuser :username)) => (throws))))
 
 (defaction ident-current-user current-user)
 (defaction ident-login login)
@@ -574,11 +591,12 @@
 
 (facts "auth works with defability"
   (let [auth (make-auth ab-cog)
-        logn (make-MockLogin {:logged-in? true})]
-    (current-user logn nil) =not=> nil?
-    (can? auth logn :add Cog {:amt 1}) => true
-    (can? auth logn :add Cog {:amt 2}) => falsey
-    (can? auth logn :delete Cog {:amt 1}) => falsey))
+        logn (make-MockLogin {:logged-in? true})
+        sys {:auth auth :login logn}]
+    (current-user sys nil) =not=> nil?
+    (can? sys :add Cog {:amt 1}) => true
+    (can? sys :add Cog {:amt 2}) => falsey
+    (can? sys :delete Cog {:amt 1}) => falsey))
 
 (defaction cog-add {:_id 1})
 (defaction cog-forbidden {:secret "foo"})
@@ -602,7 +620,7 @@
         (catch clojure.lang.ExceptionInfo ex
           (ex-data ex))) => (has-keys :__unauthorized))
     (fact "Not allowed if not logged in"
-      (logout (:login sys) nil) => anything
+      (logout sys nil) => anything
       (do-action sys {:_action "cog-add"}) => (throws)
       (try (do-action sys {:_action "cog-add"})
         (catch clojure.lang.ExceptionInfo ex
@@ -622,7 +640,7 @@
     (last @log) => #"^Unauthorized"
     (do-action sys {:_action "cog-foobarzums"}) => (throws)
     (last @log) => #"^Not found"
-    (logout (:login sys) nil) => anything
+    (logout sys nil) => anything
     (do-action sys {:_action "cog-add"}) => (throws)
     (last @log) => #"Not logged in"))
 
@@ -644,6 +662,6 @@
     (try (do-action sys {:_action "nonanon-act"})
       (catch clojure.lang.ExceptionInfo ex
         (ex-data ex))) => (has-keys :__notloggedin)
-    (login (:login sys) mockuser) => anything
+    (login sys mockuser) => anything
     (do-action sys {:_action "anon-act"}) => {:a 1}
     (do-action sys {:_action "nonanon-act"}) => {:a 1}))

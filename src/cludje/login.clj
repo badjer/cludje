@@ -34,11 +34,11 @@
   ([user] (->TestLogin (atom user))))
 
 (defn- token->user [token db user-table]
-  (first (query db user-table {:username token})))
+  (first (query- db user-table {:username token})))
 
 (defn- validate-user [{:keys [username pwd]} db user-table check-hash-fn]
   ; TODO: Assumes that the username is the PK
-  (when-let [user (first (query db user-table {:username username}))]
+  (when-let [user (first (query- db user-table {:username username}))]
     (when (check-hash-fn pwd (:hashed-pwd user))
       user)))
 
