@@ -12,15 +12,19 @@
 
 (fact "Str"
   (show Str "a") => "a"
+  (show Str :a) => "a"
   (parse Str "a") => "a"
   (parse Str 123) => "123"
+  (parse Str :abc) => "abc"
   ; Empty values are valid
   (parse Str nil) => nil
   (parse Str "") => ""
   (validate Str "") => true
   (validate Str 123) => true
+  (validate Str :a) => true
   (validate Str nil) => true
   (validate Str "a") => true)
+
 
 (fact "Email"
   (let [em "a@bc.de"]

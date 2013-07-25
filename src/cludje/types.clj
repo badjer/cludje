@@ -26,9 +26,17 @@
 (def Str 
   (reify 
     IParseable 
-    (parse [self txt] (when txt (str txt)))
+    (parse [self txt] 
+      (cond
+        (nil? txt) nil
+        (string? txt) txt
+        (keyword? txt) (name txt)
+        :else (str txt)))
     IShowable
-    (show [self x] x) 
+    (show [self x] 
+      (cond
+        (keyword? x) (name x)
+        :else x))
     IValidateable
     ; Never any problems with str
     (problems? [self txt])))

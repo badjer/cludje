@@ -8,17 +8,22 @@
 (def row {:a 1})
 (def row2 {:a 2})
 (def rowb {:a 1 :b 1})
+(def row-with-kw {:a :kw})
 
 (defn test-db [db]
   (let [id (write- db tbl nil row)]
-    (fact "insert" 
-      id =not=> nil?)
+    (fact "write-" 
+      id =not=> nil?
+      (fact "rejects keyword data"
+        (write- db tbl nil row-with-kw) => (throws)))
     (fact "fetch-"
       (fetch- db tbl id) => (contains row)
       (fetch- db tbl -1) => nil
       (fetch- db tbl nil) => nil
       (fetch- db "asdf" -1) => nil
-      (fetch- db nil nil) => nil)
+      (fetch- db nil nil) => nil
+      (fact "rejects keyword data"
+        (fetch- db tbl row-with-kw) => (throws)))
     (fact "fetch- with keyword table"
       (fetch- db kw-tbl id) => (contains row)
       (fetch- db kw-tbl -1) => nil)
@@ -29,7 +34,9 @@
       (count (query- db tbl {})) => 1
       (first (query- db tbl {:a 1})) => (contains row)
       (count (query- db tbl nil)) => 1
-      (first (query- db tbl nil)) => (contains row))
+      (first (query- db tbl nil)) => (contains row)
+      (fact "rejects keyword data"
+        (query- db tbl row-with-kw) => (throws)))
     (fact "query- with keyword table"
       (count (query- db kw-tbl {:a 1})) => 1
       (first (query- db kw-tbl {:a 1})) => (contains row))
@@ -42,7 +49,9 @@
       (delete- db tbl nil) => anything
       (count (query- db tbl nil)) => 1
       (delete- db tbl id) => anything
-      (count (query- db tbl nil)) => 0)
+      (count (query- db tbl nil)) => 0
+      (fact "rejects keyword data"
+        (delete- db tbl row-with-kw) => (throws)))
     (fact "query- with empty table"
       (query- db tbl nil) => nil))
   (let [id (write- db tbl nil row)
