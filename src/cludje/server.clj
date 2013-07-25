@@ -80,11 +80,11 @@
 
 (defn action-handler 
   "Generates a fn that runs an action"
-  ([{:keys [renderer parser] :as system}]
+  ([{:keys [uiadapter] :as system}]
    (fn [request]
-     (when-let [input (parse-input- parser request)]
+     (when-let [input (parse-input- uiadapter request)]
        (try
-         (render- renderer request (do-action system input))
+         (render- uiadapter request (do-action system input))
          (catch clojure.lang.ExceptionInfo ex
            (let [exd (ex-data ex)]
              (cond

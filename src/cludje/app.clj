@@ -8,8 +8,7 @@
         cludje.modelstore
         cludje.actionparser
         cludje.actionstore
-        cludje.renderer
-        cludje.parser
+        cludje.uiadapter
         cludje.templatestore
         cludje.server))
 
@@ -31,8 +30,7 @@
       :actionparser (map->ActionParser opts)
       :actionstore (map->ActionStore opts)
       :modelstore (map->ModelStore opts)
-      :parser (make-webinputparser opts)
-      :renderer (map->JsonRenderer opts)
+      :uiadapter (make-WebUIAdapter opts)
       :server (jetty opts)})))
 
 (defn make-system 

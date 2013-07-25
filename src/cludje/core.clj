@@ -275,13 +275,18 @@
 ; #####
 ; UI protocols
 ; #####
-(defprotocol IRenderer
-  "Handle rendering output"
-  (render- [self request output] "Generate output for the user"))
+(defprotocol IUIAdapter
+  "Handles converting to and from standard format"
+  (render- [self request output] "Convert output to ui-specific format")
+  (parse-input- [self request] "Convert request to our normal input format"))
 
-(defprotocol IInputParser
-  "Handle converting input into our standard input format"
-  (parse-input- [self request]))
+;(defprotocol IRenderer
+  ;"Handle rendering output"
+  ;(render- [self request output] "Generate output for the user"))
+
+;(defprotocol IInputParser
+  ;"Handle converting input into our standard input format"
+  ;(parse-input- [self request]))
 
 
 

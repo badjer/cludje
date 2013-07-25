@@ -7,7 +7,7 @@
         cludje.mailer
         cludje.auth
         cludje.login
-        cludje.renderer
+        cludje.uiadapter
         cludje.modelstore
         cludje.app
         cludje.core))

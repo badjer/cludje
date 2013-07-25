@@ -4,13 +4,13 @@
         cludje.types
         cludje.core
         cludje.actionparser
-        cludje.renderer
+        cludje.uiadapter
         cludje.login
         cludje.app))
 
 (facts "make-system initializes subsystems"
   (make-system) => (has-keys :db :mailer :logger :auth 
-                             :renderer :server))
+                             :uiadapter :server))
 
 (facts "make-system allows overriding subsystems"
   (let [actionparser (->ActionParser)
@@ -34,9 +34,8 @@
 (defaction ac-a1 {:a 1})
 
 (fact "started app responds with json"
-  (let [renderer (->JsonRenderer)
-        login (make-MockLogin {:logged-in? true})
-        sysoverrides {:renderer renderer :login login :default-action ac-a1}
+  (let [login (make-MockLogin {:logged-in? true})
+        sysoverrides {:login login :default-action ac-a1}
         sys (make-system sysoverrides)]
     (start-system sys) => anything
     (do-request req) => {:a 1}
@@ -49,9 +48,9 @@
   {:body (str (count (query :items nil)))})
 
 (facts "app db survives restart"
-  (let [renderer (->LiteralRenderer)
+  (let [uiadapter (->TestUIAdapter (atom nil))
         login (make-MockLogin {:logged-in? true})
-        sysoverrides {:default-action ac-add1 :renderer renderer :login login}
+        sysoverrides {:default-action ac-add1 :uiadapter uiadapter :login login}
         sys (make-system sysoverrides)]
     (start-system sys) => anything
     (do-request req) => 1

@@ -5,9 +5,8 @@
         cludje.core
         cludje.app
         cludje.types
-        cludje.renderer
+        cludje.uiadapter
         cludje.modelstore
-        cludje.parser
         cludje.login
         cludje.templatestore
         cludje.auth
