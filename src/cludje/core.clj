@@ -300,8 +300,10 @@
 ; DB API
 (defn fetch [{:keys [db]} model kee]
   (when model
-    (let [tbl (table-name model)]
-      (fetch- db tbl kee))))
+    (let [tbl (table-name model)
+          kee-str (cond (map? kee) (:_id kee)
+                        :else kee)]
+      (fetch- db tbl kee-str))))
 
 (defn query [{:keys [db]} model params]
   (let [tbl (table-name model)]

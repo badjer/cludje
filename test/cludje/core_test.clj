@@ -131,7 +131,10 @@
     (fetch sys Cog id) => (contains cog)
     (fetch sys Cog nil) => nil
     (fetch sys nil nil) => nil
-    (fetch sys nil id) => nil))
+    (fetch sys nil id) => nil
+    (fact "works with a map as the key"
+      (fetch sys Cog {:_id id}) => (contains cog)
+      (fetch sys Cog {:_id nil}) => nil)))
 
 (fact "fetch with multiple rows"
   (let [db (->MemDb (atom {}))
@@ -233,6 +236,16 @@
         sys {:db db}]
     (insert sys Cog cog) => map?
     (save sys Cog cog) => map?))
+
+(facts "db-writing ops return maps"
+  (let [db (->MemDb (atom {}))
+        sys {:db db}]
+    (save sys Cog cog) => map?
+    (save sys Cog cog) => (has-keys :_id)
+    (:_id (save sys Cog cog)) => string?
+    (insert sys Cog cog) => map?
+    (insert sys Cog cog) => (has-keys :_id)
+    (:_id (insert sys Cog cog)) => string?))
 
 
 (fact "get-key"
