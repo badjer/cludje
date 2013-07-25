@@ -54,3 +54,17 @@
           newtable (remove victims oldtable)]
       (swap! dbatom assoc kwcoll newtable))))
 
+(import '(java.io File FileWriter))
+(defn spit-memdb [db filename]
+  (let [dba (:dbatom db)]
+    (println "Saving db to " filename)
+    (binding [*out* (FileWriter. filename)]
+      (prn @dba))))
+
+(defn slurp-memdb [filename]
+  (println "Reading db from " filename)
+  (when (.isFile (File. filename))
+    (println "File found...")
+    (when-let [dba (read-string (slurp filename))]
+      (println "Contents were " dba)
+      (->MemDb (atom dba)))))

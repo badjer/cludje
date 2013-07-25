@@ -12,12 +12,19 @@
 
 (def system nil)
 
+(defn get-db []
+  (or (slurp-memdb "db.txt") (->MemDb (atom {:user [mockuser]}))))
+
+(defn put-db []
+  (when-let [db (:db system)]
+    (spit-memdb db "db.txt")))
+
 (defn init
   "Constructs the current development system."
   []
   (alter-var-root #'system
     (constantly (let [sys (make-system {:port 8123 
-                                        :db (->MemDb (atom {:user [mockuser]}))
+                                        :db (get-db)
                                         :default-action nil 
                                         :template-ns 'cludje.demo.templates 
                                         :model-ns 'cludje.demo.models 
@@ -44,5 +51,6 @@
   (start))
 
 (defn reset []
+  (put-db)
   (stop)
   (refresh :after 'user/go))
