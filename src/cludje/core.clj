@@ -415,23 +415,23 @@
 
 
 (defmacro with-action-dsl [system input & forms]
-   `(let [~'save (partial save  ~'system)
-          ~'insert (partial insert ~'system)
-          ~'fetch (partial fetch ~'system)
-          ~'query (partial query ~'system)
-          ~'write (partial write ~'system)
-          ~'delete (partial delete ~'system)
-          ~'send-mail (partial send-mail ~'system)
-          ~'log (partial log ~'system)
-          ~'current-user (partial current-user ~'system)
-          ~'login (partial login ~'system)
-          ~'logout (partial logout ~'system)
-          ~'encrypt (partial encrypt ~'system)
-          ~'authorize (partial authorize ~'system)
-          ~'can? (partial can? ~'system)
-          ~'user (~'current-user ~'input)
-          ~'? (partial ? ~'input)
-          ~'?? (partial ?? ~'input)]
+   `(let [~'save (partial save  ~system)
+          ~'insert (partial insert ~system)
+          ~'fetch (partial fetch ~system)
+          ~'query (partial query ~system)
+          ~'write (partial write ~system)
+          ~'delete (partial delete ~system)
+          ~'send-mail (partial send-mail ~system)
+          ~'log (partial log ~system)
+          ~'current-user (partial current-user ~system)
+          ~'login (partial login ~system)
+          ~'logout (partial logout ~system)
+          ~'encrypt (partial encrypt ~system)
+          ~'authorize (partial authorize ~system)
+          ~'can? (partial can? ~system)
+          ~'user (~'current-user ~input)
+          ~'? (partial ? ~input)
+          ~'?? (partial ?? ~input)]
       ~@forms))
 
 (defmacro defaction [nam & forms]
