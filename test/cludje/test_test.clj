@@ -38,6 +38,23 @@
   {} =not=> (has-problems)
   nil =not=> (has-problems))
 
+(fact "exception checkers"
+  (fact "404"
+    (throw-not-found) => (throws-404)
+    (throw-unauthorized) =not=> (throws-404)
+    (throw-not-logged-in) =not=> (throws-404)
+    (+ 1 2) =not=> (throws-404))
+  (fact "403"
+    (throw-not-found) =not=> (throws-403)
+    (throw-unauthorized) => (throws-403)
+    (throw-not-logged-in) =not=> (throws-403)
+    (+ 1 2) =not=> (throws-403))
+  (fact "401"
+    (throw-not-found) =not=> (throws-401)
+    (throw-unauthorized) =not=> (throws-401)
+    (throw-not-logged-in) => (throws-401)
+    (+ 1 2) =not=> (throws-401)))
+
 (fact "->json"
   (->json {:a 1}) => "{\"a\":1}")
 

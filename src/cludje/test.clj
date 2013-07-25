@@ -39,6 +39,16 @@
     (and (contains? x :__problems)
          ((apply has-keys kees) (:__problems x)))))
 
+(defn throws-404 [] 
+  "Check that the fn throws a not found exception"
+  (throws clojure.lang.ExceptionInfo "Not found"))
+(defn throws-401 [] 
+  "Check that the fn throws a not logged in exception"
+  (throws clojure.lang.ExceptionInfo "Not logged in"))
+(defn throws-403 [] 
+  "Check that the fn throws a forbidden exception"
+  (throws clojure.lang.ExceptionInfo "Unauthorized"))
+
 (defn ->json [x]
   (cheshire/generate-string x))
 

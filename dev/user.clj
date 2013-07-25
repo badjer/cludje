@@ -13,7 +13,8 @@
 (def system nil)
 
 (defn get-db []
-  (or (slurp-memdb "db.txt") (->MemDb (atom {:user [mockuser]}))))
+  (or (slurp-memdb "db.txt") 
+      (->MemDb (atom {:user [mockuser]}))))
 
 (defn put-db []
   (when-let [db (:db system)]
