@@ -580,7 +580,7 @@
 (defability ab-cog-var
   :add Cog (is-amt-1 cog))
 
-(facts "ability with var"
+(facts "defability with var"
   (ab-cog-var :add Cog mockuser {:amt 1 :price 1}) => truthy
   (ab-cog-var :add Cog mockuser {:amt 2 :price 1}) => falsey
   (ab-cog-var :remove Cog mockuser {:amt 1 :price 1}) => falsey
@@ -588,6 +588,14 @@
     ;That will be the responsibility of validation
     (ab-cog-var :add Cog mockuser {:amt 1}) => truthy
     (ab-cog-var :add Cog mockuser {:amt 2}) => falsey))
+
+(defability ab-cog-bare-fn
+  :add Cog is-amt-1)
+
+(facts "defability with bare fn"
+  (ab-cog-bare-fn :add Cog mockuser {:amt 1}) => truthy
+  (ab-cog-bare-fn :add Cog mockuser {:amt 2}) => falsey
+  (ab-cog-bare-fn :remove Cog mockuser {:amt 1}) => falsey)
 
 (defability ab-cog-person
   :add Cog (is-amt-1 cog)

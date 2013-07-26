@@ -409,7 +409,10 @@
                 (= ~'model ~auth-model))
        (and (or (not (nil? ~'user))
                 (= :anon ~expr))
-            ~expr))))
+            (let [e# ~expr]
+              (if (fn? e#)
+                (e# ~'input)
+                e#))))))
 
 (defn- parse-action-forms [forms]
   (apply concat
