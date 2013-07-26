@@ -53,8 +53,8 @@
     (when-let [token (:_p_cludjeauthtoken input)]
       (token->user token db user-table)))
   (login- [self input]
-    (if-let [user (validate-user 
-                    input db user-table (partial check-hash- self))]
+    (if-let [user (validate-user input db user-table 
+                                 (partial check-hash- self))]
       (assoc input :_p_cludjeauthtoken (make-token user))
       (throw-problems {:username "Invalid username/password"
                        :pwd "Invalid username/password"})))

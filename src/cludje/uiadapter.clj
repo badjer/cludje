@@ -15,9 +15,10 @@
 (defn- is-persistent-field [field]
   (re-find #"^_p_" (name field)))
 
-(defn- ->session [output]
-  (let [victims (filter is-persistent-field (keys output))]
-    (select-keys output victims)))
+(defn- ->session [session output]
+  (let [victims (filter is-persistent-field (keys output))
+        new-vals (select-keys output victims)]
+    (merge session new-vals)))
 
 (defn- with-session [input session]
   (merge session input))
@@ -27,8 +28,9 @@
   (parse-input- [self request]
     (with-session request @session))
   (render- [self request output]
-    (reset! session (->session output))
-    output)
+    (let [new-session (->session @session output)]
+      (reset! session new-session) 
+      output))
   (is-action- [self request] true))
 
 

@@ -679,7 +679,10 @@
 (defaction nonanon-act {:a 1})
 (defability ab-anon
   :act "Anon" :anon
-  :act "Nonanon" true)
+  :act "Nonanon" true
+  :* "Global" :anon)
+
+(defaction global-login (login input))
 
 (fact "do-action with anonymous auth"
   (let [sys (make-system {:login (make-MockLogin {:logged-in? false})
@@ -690,10 +693,20 @@
                           :uiadapter (->TestUIAdapter (atom nil))
                           :auth (make-auth ab-anon)})]
     (do-action sys {:_action "anon-act"}) => {:a 1}
-    (do-action sys {:_action "nonanon-act"}) => (throws)
-    (try (do-action sys {:_action "nonanon-act"})
-      (catch clojure.lang.ExceptionInfo ex
-        (ex-data ex))) => (has-keys :__notloggedin)
+    (do-action sys {:_action "nonanon-act"}) => (throws-401)
     (login sys mockuser) => anything
     (do-action sys {:_action "anon-act"}) => {:a 1}
+    (do-action sys {:_action "nonanon-act"}) => {:a 1}))
+
+(fact "do-action with token login"
+  (let [sys-a (make-system {:logger (->MemLogger (atom []))
+                            :db (->MemDb (atom {:user [mockuser]}))
+                          :default-action nil
+                          :action-ns 'cludje.core-test
+                          :model-ns 'cludje.core-test
+                          :uiadapter (->TestUIAdapter (atom nil))
+                          :auth (make-auth ab-anon)})
+        sys (assoc sys-a :login (->TokenLogin "1" (:db sys-a) :user))]
+    (do-action sys {:_action "nonanon-act"}) => (throws-401)
+    (do-action sys (merge mockuser {:_action :global-login})) => ok?
     (do-action sys {:_action "nonanon-act"}) => {:a 1}))

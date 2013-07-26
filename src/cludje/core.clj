@@ -489,7 +489,7 @@
         action-key (get-action-key- (:actionparser system) parsed-input)
         model-name (get-model-name- (:actionparser system) parsed-input)
         model (get-model- (:modelstore system) model-name)
-        user (current-user)]
+        user (current-user- (:login system) parsed-input)]
     (cond 
       (not (is-action- ui input)) nil
       (nil? action) 

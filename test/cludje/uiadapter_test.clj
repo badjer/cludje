@@ -11,6 +11,8 @@
     (render- ui nil nil) => nil
     (fact "stores persistent fields"
       (render- ui nil {:_p_a 1 :a 2}) => anything
+      (parse-input- ui {}) => {:_p_a 1}
+      ; Calling a second time should still yield _p_a
       (parse-input- ui {}) => {:_p_a 1})))
 
 (fact "WebUIAdapter"
