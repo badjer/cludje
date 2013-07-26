@@ -15,25 +15,12 @@
 (defn- is-persistent-field [field]
   (re-find #"^_p_" (name field)))
 
-(defn- remove-persistent-fields [output]
-  (let [victims (filter is-persistent-field (keys output))]
-    (apply dissoc output victims)))
-
 (defn- ->session [output]
   (let [victims (filter is-persistent-field (keys output))]
     (select-keys output victims)))
 
 (defn- with-session [input session]
   (merge session input))
-
-(defn- filter-output [output]
-  (cond
-    (map? output) (remove-persistent-fields output)
-    (nil? output) nil
-    :else (throw 
-            (ex-info "We tried to render something that wasn't a map!  
-                     Probably, your action didn't return a map.  
-                     Always return a map from actions" {:output output}))))
 
 (defrecord TestUIAdapter [session]
   IUIAdapter
@@ -67,6 +54,19 @@
   (let [postcheck (or allow-get? (= (:request-method request) :post))
         uri-check (= "/api" (:uri request))]
     (and postcheck uri-check)))
+
+(defn- remove-persistent-fields [output]
+  (let [victims (filter is-persistent-field (keys output))]
+    (apply dissoc output victims)))
+
+(defn- filter-output [output]
+  (cond
+    (map? output) (remove-persistent-fields output)
+    (nil? output) nil
+    :else (throw 
+            (ex-info "We tried to render something that wasn't a map!  
+                     Probably, your action didn't return a map.  
+                     Always return a map from actions" {:output output}))))
 
 (defrecord WebUIAdapter [allow-api-get?]
   IUIAdapter
