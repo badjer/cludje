@@ -1,5 +1,7 @@
 (ns cludje.test
-  (:use midje.sweet)
+  (:use midje.sweet
+        cludje.core)
+  (:import [midje.util.exceptions ICapturedThrowable])
   (:require [clj-http.client :as http]
             [cheshire.core :as cheshire]
             [cludje.server :as server]
@@ -48,6 +50,14 @@
 (defn throws-403 [] 
   "Check that the fn throws a forbidden exception"
   (throws clojure.lang.ExceptionInfo "Unauthorized"))
+
+(defn ok? [x]
+  "A midje checker that makes sure there's no exception, and that
+  there are no problems"
+  (cond
+    (map? x) (not (contains? x :__problems))
+    (instance? ICapturedThrowable x) false
+    :else true))
 
 (defn ->json [x]
   (cheshire/generate-string x))

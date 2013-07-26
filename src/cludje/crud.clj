@@ -15,7 +15,7 @@
      (defaction ~'global-logout
        (~'logout ~'input))
      (defaction ~'global-data
-       {:user (~'current-user ~'input)
+       {:user (~'current-user)
         :menu [{:text "A" :link "/a"} {:text "B" :link "/b"}] 
         :footer "© 2013 Cludje"
         :title "Cludje"})))

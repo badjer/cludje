@@ -55,6 +55,17 @@
     (throw-not-logged-in) => (throws-401)
     (+ 1 2) =not=> (throws-401)))
 
+(fact "ok?"
+  {:a 1} => ok?
+  nil => ok?
+  {} => ok?
+  "" => ok?
+  true => ok?
+  (throw-not-found) =not=> ok?
+  (throw-unauthorized) =not=> ok?
+  (throw-not-logged-in) =not=> ok?
+  {:__problems {}} =not=> ok?)
+
 (fact "->json"
   (->json {:a 1}) => "{\"a\":1}")
 

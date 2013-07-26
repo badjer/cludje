@@ -343,7 +343,7 @@
   (let [db (->MemDb (atom {}))
         sys {:db db}]
     (fact "defaction can save"
-      (add-cog sys cog) =not=> has-problems?
+      (add-cog sys cog) => ok?
       (count (query sys Cog nil)) => 1
       (first (query sys Cog nil)) => (contains cog))
     (fact "defaction returns problems if save fails"
@@ -364,7 +364,7 @@
     (fact "exception in let returns problems"
       (add-person sys {}) => (has-problems :name))
     (fact "multiple operations work"
-      (add-person sys (merge person usr)) =not=> has-problems?
+      (add-person sys (merge person usr)) => ok?
       (count (query sys User nil)) => 1
       (count (query sys Person nil)) => 1)))
 
@@ -468,9 +468,9 @@
   (let [logn (make-MockLogin {:logged-in? false})
         auth (make-auth mock-auth-fn)
         sys {:login logn :auth auth}]
-    (ac-login sys mockuser) =not=> has-problems?
+    (ac-login sys mockuser) => ok?
     (ac-current-user sys nil) => mockuser
-    (ac-logout sys nil) =not=> has-problems?
+    (ac-logout sys nil) => ok?
     (ac-current-user sys nil) => nil
     (ac-encrypt sys "a") => "a"
     ; We require the user to be logged in for the rest of the tests
