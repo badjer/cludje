@@ -441,13 +441,12 @@
           ~'delete (partial delete ~system)
           ~'send-mail (partial send-mail ~system)
           ~'log (partial log ~system)
-          ~'current-user (partial current-user ~system)
+          ~'current-user (partial current-user ~system ~input)
           ~'login (partial login ~system)
           ~'logout (partial logout ~system)
           ~'encrypt (partial encrypt ~system)
           ~'authorize (partial authorize ~system)
           ~'can? (partial can? ~system)
-          ~'user (~'current-user ~input)
           ~'? (partial ? ~input)
           ~'?? (partial ?? ~input)
           ~'&? (partial &? ~input)]
@@ -489,7 +488,8 @@
                    (get-action- (:actionstore system)))
         action-key (get-action-key- (:actionparser system) parsed-input)
         model-name (get-model-name- (:actionparser system) parsed-input)
-        model (get-model- (:modelstore system) model-name)]
+        model (get-model- (:modelstore system) model-name)
+        user (current-user)]
     (cond 
       (not (is-action- ui input)) nil
       (nil? action) 

@@ -62,5 +62,3 @@
   (encrypt- [self txt] txt)
   (check-hash- [self txt cypher] (= txt cypher)))
 
-
-

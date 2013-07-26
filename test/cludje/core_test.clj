@@ -438,16 +438,14 @@
 (defaction ident-login login)
 (defaction ident-logout logout)
 (defaction ident-encrypt encrypt)
-(defaction ident-user user)
 
 (facts "defaction login api"
   (let [logn (make-MockLogin {:logged-in? false})
         sys {:login logn}]
-    ((ident-current-user sys nil) nil) =not=> (throws)
+    ((ident-current-user sys nil)) =not=> (throws)
     ((ident-login sys nil) mockuser) =not=> (throws)
     ((ident-logout sys nil) nil) =not=> (throws)
-    ((ident-encrypt sys nil) "a") =not=> (throws)
-    (ident-user sys nil) =not=> (throws)))
+    ((ident-encrypt sys nil) "a") =not=> (throws)))
 
 (defaction ident-authorize authorize)
 (defaction ident-can? can?)
@@ -458,14 +456,13 @@
     ((ident-authorize sys nil) :add :model mockuser :guest) =not=> (throws)
     ((ident-can? sys nil) :add :model {}) =not=> (throws)))
 
-(defaction ac-authorize (authorize :action Cog user input))
+(defaction ac-authorize (authorize :action Cog (current-user) input))
 (defaction ac-can? (can? :action Cog input))
 
-(defaction ac-current-user (current-user input))
+(defaction ac-current-user (current-user))
 (defaction ac-login (login input))
 (defaction ac-logout (logout input))
 (defaction ac-encrypt (encrypt input))
-(defaction ac-user user)
 
 (facts "defaction login and auth api works"
   (let [logn (make-MockLogin {:logged-in? false})
@@ -478,12 +475,10 @@
     (ac-encrypt sys "a") => "a"
     ; We require the user to be logged in for the rest of the tests
     (ac-login sys mockuser) => anything
-    (ac-user sys nil) => mockuser
     (ac-authorize sys {:b 1}) => true
     (ac-can? sys nil) => truthy
     ; We require the user to be not logged in for the rest of the tests
     (ac-logout sys nil) => anything
-    (ac-user sys nil) => nil
     (ac-authorize sys nil) => falsey
     (ac-can? sys nil) => falsey))
 

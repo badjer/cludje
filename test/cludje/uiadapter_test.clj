@@ -10,7 +10,7 @@
     (render- ui nil {:a 1}) => {:a 1}
     (render- ui nil nil) => nil
     (fact "stores persistent fields"
-      (render- ui nil {:_p_a 1}) => anything
+      (render- ui nil {:_p_a 1 :a 2}) => anything
       (parse-input- ui {}) => {:_p_a 1})))
 
 (fact "WebUIAdapter"
