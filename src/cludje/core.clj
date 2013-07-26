@@ -370,7 +370,7 @@
 
 
 ; Auth api
-(defmodel LoginUser {:username Str :pwd Password} :no-key true)
+(defmodel LoginUser {:username Str :pwd Password})
 
 (defn current-user [{:keys [login]} input]
   (when login
