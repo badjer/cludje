@@ -82,17 +82,16 @@
   "Generates a fn that runs an action"
   ([{:keys [uiadapter] :as system}]
    (fn [request]
-     (when-let [input (parse-input- uiadapter request)]
-       (try
-         (render- uiadapter request (do-action system input))
-         (catch clojure.lang.ExceptionInfo ex
-           (let [exd (ex-data ex)]
-             (cond
-               ; If the exception is not found, just return null
-               (:__notfound exd) nil
-               (:__notloggedin exd) (http-401)
-               (:__unauthorized exd) (http-403)
-               :else (throw ex)))))))))
+     (try
+       (do-action system request)
+       (catch clojure.lang.ExceptionInfo ex
+         (let [exd (ex-data ex)]
+           (cond
+             ; If the exception is not found, just return null
+             (:__notfound exd) nil
+             (:__notloggedin exd) (http-401)
+             (:__unauthorized exd) (http-403)
+             :else (throw ex))))))))
 
 (defn ring-handler [& handlers]
   (let [handlers (filter identity handlers)]

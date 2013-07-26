@@ -288,7 +288,8 @@
 (defprotocol IUIAdapter
   "Handles converting to and from standard format"
   (render- [self request output] "Convert output to ui-specific format")
-  (parse-input- [self request] "Convert request to our normal input format"))
+  (parse-input- [self request] "Convert request to our normal input format")
+  (is-action- [self request] "Determine if some input is an action call"))
 
 ;(defprotocol IRenderer
   ;"Handle rendering output"
@@ -482,16 +483,20 @@
 
 
 (defaction do-action
-  (let [action (->> (get-action-name- (:actionparser system) input)
+  (let [ui (:uiadapter system)
+        parsed-input (parse-input- ui input)
+        action (->> (get-action-name- (:actionparser system) parsed-input)
                    (get-action- (:actionstore system)))
-        action-key (get-action-key- (:actionparser system) input)
-        model-name (get-model-name- (:actionparser system) input)
+        action-key (get-action-key- (:actionparser system) parsed-input)
+        model-name (get-model-name- (:actionparser system) parsed-input)
         model (get-model- (:modelstore system) model-name)]
     (cond 
+      (not (is-action- ui input)) nil
       (nil? action) 
         (error-not-found system {:model model-name :action action-key})
-      (not (authorize action-key (or model model-name) user input)) 
+      (not (authorize action-key (or model model-name) user parsed-input)) 
         (if (nil? user) 
           (error-not-logged-in system {})
           (error-unauthorized system {:model model-name :action action-key}))
-      :else (action system input))))
+      :else (render- ui input (action system parsed-input)))))
+

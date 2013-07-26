@@ -641,6 +641,7 @@
                           :default-action nil
                           :action-ns 'cludje.core-test
                           :model-ns 'cludje.core-test
+                          :uiadapter (->TestUIAdapter (atom nil))
                           :auth (make-auth ab-ac-vector)})]
     (do-action sys {:_action "cog-add"}) => {:_id 1}
     (fact "Not found action"
@@ -668,6 +669,7 @@
                           :default-action nil
                           :action-ns 'cludje.core-test
                           :model-ns 'cludje.core-test
+                          :uiadapter (->TestUIAdapter (atom nil))
                           :auth (make-auth ab-ac-vector)})]
     (do-action sys {:_action "cog-forbidden"}) => (throws)
     (count @log) => 1
@@ -690,6 +692,7 @@
                           :default-action nil
                           :action-ns 'cludje.core-test
                           :model-ns 'cludje.core-test
+                          :uiadapter (->TestUIAdapter (atom nil))
                           :auth (make-auth ab-anon)})]
     (do-action sys {:_action "anon-act"}) => {:a 1}
     (do-action sys {:_action "nonanon-act"}) => (throws)

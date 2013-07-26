@@ -41,7 +41,8 @@
     (with-session request @session))
   (render- [self request output]
     (reset! session (->session output))
-    output))
+    output)
+  (is-action- [self request] true))
 
 
 (defn- assoc-cookies [input request]
@@ -78,7 +79,8 @@
           {:body (cheshire/generate-string (filter-output output))}
           {:cookies (make-cookies output)})
         (response/content-type "application/json")
-        (response/charset "UTF-8"))))
+        (response/charset "UTF-8")))
+  (is-action- [self request] (is-api-call? allow-api-get? request)))
 
 (defn make-WebUIAdapter [opts]
   (->WebUIAdapter (get opts :allow-api-get? false)))
