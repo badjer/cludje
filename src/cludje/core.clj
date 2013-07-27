@@ -492,22 +492,93 @@
   (throw-not-logged-in details))
 
 
-(defaction do-action
-  (let [ui (:uiadapter system)
-        parsed-input (parse-input- ui input)
-        action (->> (get-action-name- (:actionparser system) parsed-input)
-                   (get-action- (:actionstore system)))
-        action-key (get-action-key- (:actionparser system) parsed-input)
-        model-name (get-model-name- (:actionparser system) parsed-input)
-        model (get-model- (:modelstore system) model-name)
-        user (current-user- (:login system) parsed-input)]
-    (cond 
-      (not (is-action- ui input)) nil
-      (nil? action) 
-        (error-not-found system {:model model-name :action action-key})
-      (not (authorize action-key (or model model-name) user parsed-input)) 
-        (if (nil? user) 
-          (error-not-logged-in system {})
-          (error-unauthorized system {:model model-name :action action-key}))
-      :else (render- ui input (action system parsed-input)))))
+(defn resolve-action [{:keys [actionparser actionstore] :as system}
+                      parsed-input]
+  (let [action-key (get-action-key- actionparser parsed-input)
+        model-name (get-model-name- actionparser parsed-input) 
+        action (->> (get-action-name- actionparser parsed-input)
+                    (get-action- actionstore))] 
+    (if (nil? action) 
+      (error-not-found system {:model model-name :action action-key})
+      action)))
+
+(defn auth-action [{:keys [actionparser modelstore login] 
+                    :as system} 
+                   parsed-input]
+  (let [action-key (get-action-key- actionparser parsed-input)
+        model-name (get-model-name- actionparser parsed-input)
+        model (get-model- modelstore model-name)
+        user (current-user- login parsed-input)]
+    (if-not (authorize system action-key (or model model-name) 
+                       user parsed-input)
+      (if (nil? user)
+        (error-not-logged-in system {})
+        (error-unauthorized system {:model model-name :action action-key})))))
+
+(defn is-action-call? [{:keys [uiadapter]} request]
+  (is-action- uiadapter request))
+
+(defn parse-input [{:keys [uiadapter] :as system} request]
+  (parse-input- uiadapter request))
+
+(defn render-output [{:keys [uiadapter] :as system} request output]
+  (render- uiadapter request output))
+
+(defn exec-action- [system action request parsed]
+  (->> (action system parsed)
+       (render-output system request)))
+
+(defn run-action [system action request]
+  "Parse the input, then run the action supplied.
+  Do NOT authorize or resolve the action"
+  (let [parsed (parse-input system request)]
+    (exec-action system action request parsed)))
+
+(defn do-action [system request]
+  "Parse input, then find, authorize, and run the action identified by
+  _action in request"
+  (when (is-action-call? system request)
+    (let [parsed (parse-input system request)
+          action (resolve-action system parsed)] 
+      (auth-action system parsed)
+      (exec-action system action request parsed))))
+
+
+;(defn run-action [action {:keys [uiadapter] :as system} request]
+  ;(let [parsed-input (parse-input- uiadapter request)
+        ;resolved-action (or action (resolve-action system parsed-input))
+        ;output (resolved-action system parsed-input)]
+    ;(render- uiadapter request output)))
+
+;(defn run-action [system action request]
+;  (let [parsed-input (parse-input- uiadapter request)
+;        action-key (get-action-key- actionparser parsed-input)
+;        model-name (get-model-name- actionparser parsed-input)
+;        model (get-model- modelstore model-name)
+;        user (current-user- login parsed-input)]
+;    (cond 
+;      (not (is-action- uiadapter request)) nil
+;      (nil? action) 
+;        (error-not-found system {:model model-name :action action-key})
+;      (not (authorize system action-key 
+;                      (or model model-name) user parsed-input)) 
+;        (if (nil? user) 
+;          (error-not-logged-in system {})
+;          (error-unauthorized system {:model model-name :action action-key}))
+;      :else (render- uiadapter request (action system parsed-input)))))
+
+;(defn wrap-auth [action]
+  ;(fn [system input]
+    ;(auth-action system input)
+    ;(action system input)))
+;
+;(defn do-action [system request]
+  ;(when (is-action-call? system request)
+    ;;(let [authd-action (wrap-auth (partial run-action nil))]
+      ;(authd-action system request))))
+
+
+
+;(defaction do-action
+;  (run-action system (resolve-action system input) input))
 
