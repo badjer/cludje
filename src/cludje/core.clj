@@ -515,16 +515,16 @@
         (error-not-logged-in system {})
         (error-unauthorized system {:model model-name :action action-key})))))
 
-(defn is-action-call? [{:keys [uiadapter]} request]
+(defn- is-action-call? [{:keys [uiadapter]} request]
   (is-action- uiadapter request))
 
-(defn parse-input [{:keys [uiadapter] :as system} request]
+(defn- parse-input [{:keys [uiadapter] :as system} request]
   (parse-input- uiadapter request))
 
-(defn render-output [{:keys [uiadapter] :as system} request output]
+(defn- render-output [{:keys [uiadapter] :as system} request output]
   (render- uiadapter request output))
 
-(defn exec-action- [system action request parsed]
+(defn- exec-action [system action request parsed]
   (->> (action system parsed)
        (render-output system request)))
 
