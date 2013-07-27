@@ -389,10 +389,10 @@
   (authorize- auth system action model user input))
 
 
-;(defn arity [f]
-;(let [m (first (.getDeclaredMethods (class f)))
-;p (.getParameterTypes m)]
-;(alength p)))
+(defn arity [f] 
+  (let [m (first (.getDeclaredMethods (class f))) 
+        p (.getParameterTypes m)] 
+    (alength p)))
 
 
 
@@ -415,7 +415,9 @@
                 (= :anon ~expr))
             (let [e# ~expr]
               (if (fn? e#)
-                (e# ~'input)
+                (case (arity e#)
+                  1 (e# ~'input)
+                  2 (e# ~'system ~'input))
                 e#))))))
 
 (defn- parse-action-forms [forms]

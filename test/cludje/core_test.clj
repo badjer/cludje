@@ -592,10 +592,20 @@
 (defability ab-cog-bare-fn
   :add Cog is-amt-1)
 
-(facts "defability with bare fn"
+(defn sys-amt-fn [system input]
+  (and (contains? system :db) (= 1 (:amt input))))
+
+(defability ab-cog-bare-fn2
+  :add Cog sys-amt-fn)
+
+(facts "defability with bare fns"
   (ab-cog-bare-fn nil :add Cog mockuser {:amt 1}) => truthy
   (ab-cog-bare-fn nil :add Cog mockuser {:amt 2}) => falsey
-  (ab-cog-bare-fn nil :remove Cog mockuser {:amt 1}) => falsey)
+  (ab-cog-bare-fn nil :remove Cog mockuser {:amt 1}) => falsey
+  (ab-cog-bare-fn2 {:db nil} :add Cog mockuser {:amt 1}) => truthy
+  (ab-cog-bare-fn2 {} :add Cog mockuser {:amt 1}) => falsey
+  (ab-cog-bare-fn2 nil :add Cog mockuser {:amt 1}) => falsey
+  (ab-cog-bare-fn2 {:db nil} :add Cog mockuser {:amt 2}) => falsey)
 
 (defability ab-cog-person
   :add Cog (is-amt-1 cog)
