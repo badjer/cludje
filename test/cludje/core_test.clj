@@ -711,6 +711,7 @@
   :* "Global" :anon)
 
 (defaction global-login (login input))
+(defaction global-logout (logout input))
 
 (fact "do-action with anonymous auth"
   (let [sys (make-system {:login (make-MockLogin {:logged-in? false})
@@ -737,4 +738,9 @@
         sys (assoc sys-a :login (->TokenLogin "1" (:db sys-a) :user))]
     (do-action sys {:_action "nonanon-act"}) => (throws-401)
     (do-action sys (merge mockuser {:_action :global-login})) => ok?
-    (do-action sys {:_action "nonanon-act"}) => {:a 1}))
+    (do-action sys {:_action "nonanon-act"}) => {:a 1}
+    (fact "run-action works too"
+      (run-action sys nonanon-act {}) => {:a 1}
+      (fact "run-action doesn't need auth"
+        (do-action sys {:_action :global-logout}) => ok?
+        (run-action sys nonanon-act {}) => {:a 1}))))
