@@ -43,9 +43,11 @@
 
 (defn- make-cookies [output]
   (let [fields (filter is-persistent-field (keys output))]
-    (apply merge
-           (for [f fields]
-             {(name f) {:value (f output)}}))))
+    (or 
+      (apply merge
+             (for [f fields]
+               {(name f) {:value (f output)}}))
+      {})))
 
 (defn- cleanup-input [input request]
   (-> input
