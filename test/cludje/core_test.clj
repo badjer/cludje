@@ -528,52 +528,52 @@
   :add Cog (= (:amt input) 1))
 
 (facts "defability"
-  (ab-cog :add Cog mockuser {:amt 1}) => truthy
-  (ab-cog :add Cog mockuser {:amt 2}) => falsey
-  (ab-cog :remove Cog mockuser {:amt 1}) => falsey
-  (ab-cog :add Cog mockuser {}) => falsey
-  (ab-cog "add" Cog mockuser {:amt 1}) => truthy
-  (ab-cog "add" Cog mockuser {:amt 2}) => falsey)
+  (ab-cog nil :add Cog mockuser {:amt 1}) => truthy
+  (ab-cog nil :add Cog mockuser {:amt 2}) => falsey
+  (ab-cog nil :remove Cog mockuser {:amt 1}) => falsey
+  (ab-cog nil :add Cog mockuser {}) => falsey
+  (ab-cog nil "add" Cog mockuser {:amt 1}) => truthy
+  (ab-cog nil "add" Cog mockuser {:amt 2}) => falsey)
 
 (future-facts "defability should work with strs in do-action"
-  (ab-cog :add "Cog" mockuser {:amt 1}) => truthy
-  (ab-cog :add "Cog" mockuser {:amt 2}) => falsey
-  (ab-cog :add "cog" mockuser {:amt 1}) => truthy
-  (ab-cog :add "cog" mockuser {:amt 2}) => falsey
-  (ab-cog "add" "cog" mockuser {:amt 1}) => truthy
-  (ab-cog "add" "cog" mockuser {:amt 2}) => falsey)
+  (ab-cog nil :add "Cog" mockuser {:amt 1}) => truthy
+  (ab-cog nil :add "Cog" mockuser {:amt 2}) => falsey
+  (ab-cog nil :add "cog" mockuser {:amt 1}) => truthy
+  (ab-cog nil :add "cog" mockuser {:amt 2}) => falsey
+  (ab-cog nil "add" "cog" mockuser {:amt 1}) => truthy
+  (ab-cog nil "add" "cog" mockuser {:amt 2}) => falsey)
 
 (defability ab-str-model
   :add "Foosum" true)
 
 (facts "defability works with strs in ability"
-  (ab-str-model :add "Foosum" mockuser nil) => truthy
-  (ab-str-model :list "Foosum" mockuser nil) => falsey
-  (ab-str-model :add "Foobar" mockuser nil) => falsey)
+  (ab-str-model nil :add "Foosum" mockuser nil) => truthy
+  (ab-str-model nil :list "Foosum" mockuser nil) => falsey
+  (ab-str-model nil :add "Foobar" mockuser nil) => falsey)
   
 (defability ab-all-cog
   :add Cog true)
 
 (facts "defability with no filter"
-  (ab-all-cog :add Cog mockuser {:amt 1}) => truthy
-  (ab-all-cog :add Cog mockuser nil) => truthy
-  (ab-all-cog :remove Cog mockuser {:amt 1}) => falsey)
+  (ab-all-cog nil :add Cog mockuser {:amt 1}) => truthy
+  (ab-all-cog nil :add Cog mockuser nil) => truthy
+  (ab-all-cog nil :remove Cog mockuser {:amt 1}) => falsey)
 
 (defability ab-star-cog
   :* Cog true)
 
 (facts "defability with *"
-  (ab-star-cog :add Cog mockuser nil) => truthy
-  (ab-star-cog :foo Cog mockuser nil) => truthy
-  (ab-star-cog :add Person mockuser nil) => falsey)
+  (ab-star-cog nil :add Cog mockuser nil) => truthy
+  (ab-star-cog nil :foo Cog mockuser nil) => truthy
+  (ab-star-cog nil :add Person mockuser nil) => falsey)
 
 (defability ab-star-override-cog
   :delete Cog false
   :* Cog true)
 
 (facts "defability earlier entry overrides later one"
-  (ab-star-override-cog :add Cog mockuser nil) => truthy
-  (ab-star-override-cog :delete Cog mockuser nil) => falsey)
+  (ab-star-override-cog nil :add Cog mockuser nil) => truthy
+  (ab-star-override-cog nil :delete Cog mockuser nil) => falsey)
 
 (defn is-amt-1 [x] (= 1 (:amt x)))
 
@@ -581,50 +581,60 @@
   :add Cog (is-amt-1 cog))
 
 (facts "defability with var"
-  (ab-cog-var :add Cog mockuser {:amt 1 :price 1}) => truthy
-  (ab-cog-var :add Cog mockuser {:amt 2 :price 1}) => falsey
-  (ab-cog-var :remove Cog mockuser {:amt 1 :price 1}) => falsey
+  (ab-cog-var nil :add Cog mockuser {:amt 1 :price 1}) => truthy
+  (ab-cog-var nil :add Cog mockuser {:amt 2 :price 1}) => falsey
+  (ab-cog-var nil :remove Cog mockuser {:amt 1 :price 1}) => falsey
   (facts "ability with var doesn't need the entire object supplied"
     ;That will be the responsibility of validation
-    (ab-cog-var :add Cog mockuser {:amt 1}) => truthy
-    (ab-cog-var :add Cog mockuser {:amt 2}) => falsey))
+    (ab-cog-var nil :add Cog mockuser {:amt 1}) => truthy
+    (ab-cog-var nil :add Cog mockuser {:amt 2}) => falsey))
 
 (defability ab-cog-bare-fn
   :add Cog is-amt-1)
 
 (facts "defability with bare fn"
-  (ab-cog-bare-fn :add Cog mockuser {:amt 1}) => truthy
-  (ab-cog-bare-fn :add Cog mockuser {:amt 2}) => falsey
-  (ab-cog-bare-fn :remove Cog mockuser {:amt 1}) => falsey)
+  (ab-cog-bare-fn nil :add Cog mockuser {:amt 1}) => truthy
+  (ab-cog-bare-fn nil :add Cog mockuser {:amt 2}) => falsey
+  (ab-cog-bare-fn nil :remove Cog mockuser {:amt 1}) => falsey)
 
 (defability ab-cog-person
   :add Cog (is-amt-1 cog)
   :add Person (= (:name person) (:username user)))
 
 (facts "defability with multiple permissions"
-  (ab-cog-person :add Cog mockuser {:amt 1}) => truthy
-  (ab-cog-person :add Cog mockuser {:amt 2}) => falsey
-  (ab-cog-person :remove Cog mockuser {:amt 1}) => falsey
-  (ab-cog-person :add Person {:username "a"} {:name "a"}) => truthy
-  (ab-cog-person :add Person {:username "a"} {:name "b"}) => falsey
-  (ab-cog-person :remove Person {:username "a"} {:name "a"}) => falsey
-  (ab-cog-person :add Person {:username "b"} {:name "a"}) => falsey)
+  (ab-cog-person nil :add Cog mockuser {:amt 1}) => truthy
+  (ab-cog-person nil :add Cog mockuser {:amt 2}) => falsey
+  (ab-cog-person nil :remove Cog mockuser {:amt 1}) => falsey
+  (ab-cog-person nil :add Person {:username "a"} {:name "a"}) => truthy
+  (ab-cog-person nil :add Person {:username "a"} {:name "b"}) => falsey
+  (ab-cog-person nil :remove Person {:username "a"} {:name "a"}) => falsey
+  (ab-cog-person nil :add Person {:username "b"} {:name "a"}) => falsey)
 
 (defability ab-ac-vector
   [:add :delete] Cog true)
 
 (facts "defability with a vector of actions"
-  (ab-ac-vector :add Cog mockuser cog) => truthy
-  (ab-ac-vector :delete Cog mockuser cog) => truthy
-  (ab-ac-vector :list Cog mockuser cog) => falsey
-  (ab-ac-vector :add Person mockuser person) => falsey)
+  (ab-ac-vector nil :add Cog mockuser cog) => truthy
+  (ab-ac-vector nil :delete Cog mockuser cog) => truthy
+  (ab-ac-vector nil :list Cog mockuser cog) => falsey
+  (ab-ac-vector nil :add Person mockuser person) => falsey)
 
 (defability ab-cog-anon
   :add Cog :anon)
 
 (facts "defability only allows anonymous access for :anon"
-  (ab-cog-anon :add Cog mockuser cog) => truthy
-  (ab-all-cog :add Cog nil cog) => falsey)
+  (ab-cog-anon nil :add Cog mockuser cog) => truthy
+  (ab-all-cog nil :add Cog nil cog) => falsey)
+
+(defability ab-dsl
+  :add Cog (= 0 (count (query Cog {}))))
+
+(fact "defability can use action dsl functions"
+  (let [db (->MemDb (atom {}))
+        sys {:db db}]
+    (ab-dsl sys :add Cog mockuser nil) => truthy
+    (insert sys Cog cog) => anything
+    (ab-dsl sys :add Cog mockuser nil) => falsey))
 
 (facts "auth works with defability"
   (let [auth (make-auth ab-cog)

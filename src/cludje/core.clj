@@ -260,7 +260,8 @@
 
 (defprotocol IAuth
   "Controls permissions"
-  (authorize- [self action model user input] "Is the user allowed to do this?"))
+  (authorize- [self system action model user input] 
+              "Is the user allowed to do this?"))
 
 (defprotocol IActionParser
   (get-action-name- [self input] "Get the full name of the action from input")
@@ -384,14 +385,17 @@
 (defn encrypt [{:keys [login]} txt]
   (encrypt- login txt))
 
-(defn authorize [{:keys [auth]} action model user input]
-  (authorize- auth action model user input))
+(defn authorize [{:keys [auth] :as system} action model user input]
+  (authorize- auth system action model user input))
 
 
 ;(defn arity [f]
 ;(let [m (first (.getDeclaredMethods (class f)))
 ;p (.getParameterTypes m)]
 ;(alength p)))
+
+
+
 
 
 (defn action-matches? [auth-action action]
@@ -421,14 +425,6 @@
              (for [act action] (match-ability? act model expr))
              [(match-ability? action model expr)]))))
 
-(defmacro defability [nam & forms]
-  "Creates a function that can be used to authorize access to a model"
-  (let [calls (parse-action-forms forms)]
-    `(do
-       (def ~nam (with-meta (fn [~'action ~'model ~'user ~'input]
-         (first (keep identity [~@calls])))
-                       {:cludje-ability true})))))
-
 
 (defn can? [system action model input]
   (let [user (current-user system input)]
@@ -436,7 +432,7 @@
 
 
 (defmacro with-action-dsl [system input & forms]
-   `(let [~'save (partial save  ~system)
+   `(let [~'save (partial save ~system)
           ~'insert (partial insert ~system)
           ~'fetch (partial fetch ~system)
           ~'query (partial query ~system)
@@ -454,6 +450,16 @@
           ~'?? (partial ?? ~input)
           ~'&? (partial &? ~input)]
       ~@forms))
+
+(defmacro defability [nam & forms]
+  "Creates a function that can be used to authorize access to a model"
+  (let [calls (parse-action-forms forms)]
+     `(def ~nam 
+        (with-meta 
+          (fn [~'system ~'action ~'model ~'user ~'input] 
+            (with-action-dsl ~'system ~'input
+              (first (keep identity [~@calls]))) )
+          {:cludje-ability true}))))
 
 (defmacro defaction [nam & forms]
   `(do

@@ -3,8 +3,8 @@
   (:use cludje.core))
 
 (defn make-auth-fn [& authfns]
-  (fn [action model user input] 
-    (some identity (map #(% action model user input) authfns))))
+  (fn [system action model user input] 
+    (some identity (map #(% system action model user input) authfns))))
 
 
 (defn is-ability? [vr]
@@ -24,8 +24,8 @@
 
 (defrecord Auth [action-ns authfn]
   IAuth
-  (authorize- [self action model user input] 
-    (@authfn action model user input))
+  (authorize- [self system action model user input] 
+    (@authfn system action model user input))
   IStartable
   (start- [self]
     (when @action-ns
@@ -35,7 +35,7 @@
 (defn make-auth-from-ns [{:keys [action-ns]}]
   (->Auth (atom action-ns) (atom nil)))
 
-(defn mock-auth-fn [action model user input]
+(defn mock-auth-fn [system action model user input]
   (when user true))
 
 (defn make-auth [& authfns]

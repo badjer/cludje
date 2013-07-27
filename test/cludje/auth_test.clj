@@ -19,12 +19,12 @@
         authfn (apply make-auth-fn abs)]
     (count abs) => 2
     authfn => fn?
-    ((first abs) :add Foo mockuser 1) => truthy
-    (authfn :add Foo mockuser 1) => truthy
+    ((first abs) nil :add Foo mockuser 1) => truthy
+    (authfn nil :add Foo mockuser 1) => truthy
     (fact "second ability in controller also works"
-      (authfn :remove Foo mockuser 1) => truthy)
-    (authfn :alter Foo mockuser 1) => falsey
-    (authfn :add Bar mockuser 1) => falsey))
+      (authfn nil :remove Foo mockuser 1) => truthy)
+    (authfn nil :alter Foo mockuser 1) => falsey
+    (authfn nil :add Bar mockuser 1) => falsey))
 
 (fact "find-abilities in dir with 3 components"
   (let [abs (find-abilities 'cludje.demo.actions)]
