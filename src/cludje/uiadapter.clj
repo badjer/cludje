@@ -46,7 +46,7 @@
     (or 
       (apply merge
              (for [f fields]
-               {(name f) {:value (f output)}}))
+               {(name f) {:value (or (get output f nil) "")}}))
       {})))
 
 (defn- cleanup-input [input request]
