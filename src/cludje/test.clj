@@ -41,6 +41,23 @@
     (and (contains? x :__problems)
          ((apply has-keys kees) (:__problems x)))))
 
+(defn has-alerts? [x]
+  "A midje checker that returns true if the thing
+  being tested is a cludje response that has a alerts"
+  (contains? x :_alerts))
+
+(defn has-alert [typ re]
+  "A midje checker that returns true if the thing
+  being tested is a cludje response that has an alert
+  of typ with text that matches re"
+  (fn [x]
+    (let [x-msg (get-in x [:_alerts 0 :text])
+          x-typ (get-in x [:_alerts 0 :type])]
+      (and (contains? x :_alerts)
+           (= (name typ) (name x-typ))
+           (re-find re x-msg)))))
+         
+
 (defn throws-404 [] 
   "Check that the fn throws a not found exception"
   (throws clojure.lang.ExceptionInfo "Not found"))

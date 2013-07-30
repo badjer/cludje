@@ -38,6 +38,22 @@
   {} =not=> (has-problems)
   nil =not=> (has-problems))
 
+(fact "has-alerts?"
+  {} =not=> has-alerts?
+  {:_alerts []} => has-alerts?
+  nil =not=> has-alerts?
+  {:a 1} =not=> has-alerts?)
+
+(fact "has-alert"
+  {} =not=> (has-alert :success #"saved")
+  {:_alerts [{:type :success :text "saved"}]} => (has-alert :success #"saved")
+  {:_alerts [{:type :info :text "saved"}]} =not=> (has-alert :success #"saved")
+  {:_alerts [{:type :success :text ""}]} =not=> (has-alert :success #"saved")
+  {:_alerts [{:text ""}]} =not=> (has-alert :success #"saved")
+  {:_alerts [{:type :success}]} =not=> (has-alert :success #"saved")
+  nil =not=> (has-alert :success #"saved")
+  {:a 1} =not=> (has-alert :success #"saved"))
+
 (fact "exception checkers"
   (fact "404"
     (throw-not-found) => (throws-404)
