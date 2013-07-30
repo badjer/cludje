@@ -66,6 +66,12 @@
     (validate Int i) => truthy
     (validate Int s) => truthy))
 
+(fact "works with bigint"
+  (let [bi 2N]
+    (type bi) => clojure.lang.BigInt
+    (parse Int bi) => 2
+    (type (parse Int bi)) =not=> clojure.lang.BigInt))
+
 (fact "Money"
   (let [ds "$123"
         dv 12300

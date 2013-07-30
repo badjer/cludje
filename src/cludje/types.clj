@@ -74,6 +74,7 @@
         (= t java.lang.Long) x
         (= t java.lang.Integer) x
         (= t BigDecimal) (.intValue x)
+        (= t clojure.lang.BigInt) (int x)
         :else (Long. x)))))
 
 (defn- to-decimal [x]
