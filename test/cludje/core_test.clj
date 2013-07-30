@@ -82,7 +82,8 @@
 (defmodel Person {:name Str :age Int :_id Str} 
   :fieldnames {:age "How Old"}
   :require [:name]
-  :invisible [:age])
+  :invisible [:age]
+  :defaults {:age 47})
 
 (def User-copy User)
 
@@ -96,7 +97,9 @@
     (:fieldnames (meta User)) => (has-keys :name :email :pwd)
     (:fieldnames (meta Person)) => (contains {:age "How Old"})
     (:invisible (meta Person)) => [:age :_id]
+    (:defaults (meta Person)) => {:age 47}
     (table-name User) => "user"
+    (defaults User) => {}
     (key-name User) => :_id
     (field-types User) => (has-keys :name :email :pwd))
   (fact "metadata on another var"
@@ -131,6 +134,24 @@
     (problems? Cog {:amt "asdf"}) => (has-keys :amt))
   (fact "problems? only needs required fields"
     (problems? Person {}) => (just-keys :name)))
+
+(defmodel-lookup CogType)
+
+(facts "defmodel-lookup"
+  (fact "metadata"
+    (meta CogType) => (has-keys :fields :require :table)
+    (:fields (meta CogType)) => (has-keys :name :isarchived)
+    (:name (:fields (meta CogType))) => Str
+    (:isarchived (:fields (meta CogType))) => Bool
+    (:require (meta CogType)) => [:isarchived :name]
+    (:table (meta CogType)) => "cogtype"
+    (:fieldnames (meta CogType)) => (contains {:isarchived "Is Archived"})
+    (:invisible (meta CogType)) => (contains :isarchived)
+    (:defaults (meta CogType)) => {:isarchived false}
+    (table-name CogType) => "cogtype"
+    (defaults CogType) => {:isarchived false}
+    (key-name CogType) => :_id))
+
 
 (def cog {:price 123 :amt 1})
 (def cog2 {:price 123 :amt 2})

@@ -242,7 +242,7 @@
                [:div.nav-collapse.collapse
                 [:ul.nav
                  [:li {:ng-repeat "item in global.menu"}
-                  [:a {:href (ng-data "item.link")} (ng-data "item.text")]]
+                  [:a {:href (ng-data "item.url")} (ng-data "item.text")]]
                  ]
                 [:ul.nav.pull-right
                  [:li {:ng-show "global.user.username"} 

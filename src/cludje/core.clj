@@ -103,6 +103,10 @@
     (= java.lang.String (type model)) (s/lower-case model)
     :else (? (meta model) :table)))
 
+(defn defaults [model]
+  (when-let [m (meta model)]
+    (:defaults m)))
+
 (defn model-name [s]
   (cond
     (keyword? s) (s/capitalize (name s))
@@ -217,11 +221,13 @@
                      (zipmap (keys allfields) 
                              (map friendly-name (keys allfields)))
                      (get optmap :fieldnames {}))
+        defaults {}
         invisible (conj (get optmap :invisible []) :_id)
         modelopts (merge {:require reqfields
                           :cludje-model true
                           :fields allfields
                           :fieldnames fieldnames
+                          :defaults defaults
                           :table table
                           :invisible invisible
                           :key kee}
@@ -232,6 +238,12 @@
        ~(defmodel-problems nam)
        ~(defmodel-make nam)
        )))
+
+(defmacro defmodel-lookup [nam]
+  `(defmodel ~nam {:name Str :isarchived Bool} 
+     :fieldnames {:isarchived "Is Archived"}
+     :defaults {:isarchived false}
+     :invisible [:isarchived]))
 
 
 ; ####
@@ -545,43 +557,4 @@
           action (resolve-action system parsed)] 
       (auth-action system parsed)
       (exec-action system action request parsed))))
-
-
-;(defn run-action [action {:keys [uiadapter] :as system} request]
-  ;(let [parsed-input (parse-input- uiadapter request)
-        ;resolved-action (or action (resolve-action system parsed-input))
-        ;output (resolved-action system parsed-input)]
-    ;(render- uiadapter request output)))
-
-;(defn run-action [system action request]
-;  (let [parsed-input (parse-input- uiadapter request)
-;        action-key (get-action-key- actionparser parsed-input)
-;        model-name (get-model-name- actionparser parsed-input)
-;        model (get-model- modelstore model-name)
-;        user (current-user- login parsed-input)]
-;    (cond 
-;      (not (is-action- uiadapter request)) nil
-;      (nil? action) 
-;        (error-not-found system {:model model-name :action action-key})
-;      (not (authorize system action-key 
-;                      (or model model-name) user parsed-input)) 
-;        (if (nil? user) 
-;          (error-not-logged-in system {})
-;          (error-unauthorized system {:model model-name :action action-key}))
-;      :else (render- uiadapter request (action system parsed-input)))))
-
-;(defn wrap-auth [action]
-  ;(fn [system input]
-    ;(auth-action system input)
-    ;(action system input)))
-;
-;(defn do-action [system request]
-  ;(when (is-action-call? system request)
-    ;;(let [authd-action (wrap-auth (partial run-action nil))]
-      ;(authd-action system request))))
-
-
-
-;(defaction do-action
-;  (run-action system (resolve-action system input) input))
 

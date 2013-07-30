@@ -4,6 +4,7 @@
   (:import [midje.util.exceptions ICapturedThrowable])
   (:require [clj-http.client :as http]
             [cheshire.core :as cheshire]
+            [cludje.uiadapter :as ui]
             [cludje.server :as server]
             [cludje.login :as login]
             [cludje.logger :as logger]
@@ -13,7 +14,9 @@
   ([] (test-system nil))
   ([cur-user]
    (let [lgin (login/make-TestLogin cur-user)]
-     (app/make-system {:server (server/->MockServer)
+     (app/make-system {:uiadapter (ui/->TestUIAdapter (atom nil))
+                       ;:default-action nil
+                       :server (server/->MockServer)
                        :logger (logger/->MemLogger (atom []))
                        :login lgin}))))
 
