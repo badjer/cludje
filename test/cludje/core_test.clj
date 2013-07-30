@@ -65,6 +65,19 @@
   (no-bad Email {:a "a"} :a) => (has-keys :a)
   (no-bad Email {:a "a@b.cd"} :a) => falsey)
 
+(fact "with-problem"
+  (-> {} (with-problem :a "err")) => {:__problems {:a "err"}}
+  (-> nil (with-problem :a "err")) => {:__problems {:a "err"}}
+  (-> {:a 1} (with-problem :a "err")) => {:a 1 :__problems {:a "err"}}
+  (-> {} (with-problem :a "err")) => (has-problems :a))
+
+(fact "with-alert"
+  (-> {} (with-alert :info "hi")) => {:__alerts [{:type :info :text "hi"}]}
+  (-> nil (with-alert :info "hi")) => {:__alerts [{:type :info :text "hi"}]}
+  (-> {:a 1} (with-alert :info "hi")) => 
+    {:a 1 :__alerts [{:type :info :text "hi"}]}
+  (-> {} (with-alert :info "hi")) => (has-alert :info #"hi"))
+
 (defmodel Cog {:price Money :amt Int})
 (defmodel Person {:name Str :age Int :_id Str} 
   :fieldnames {:age "How Old"}

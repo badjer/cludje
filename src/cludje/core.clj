@@ -45,8 +45,11 @@
     (throw (ex-info "Not logged in" 
                     (merge {:__notloggedin "Not logged in"} details)))))
 
-(defn with-alert [m text typ]
+(defn with-alert [m typ text]
   (update-in m [:__alerts] conj {:text text :type typ}))
+
+(defn with-problem [m field text]
+  (update-in m [:__problems] assoc (keyword (name field)) (str text)))
 
 
 (defn friendly-name 
@@ -475,7 +478,7 @@
                  (if-let [problems# (:__problems (ex-data ex#))]
                    (->
                      (assoc ~'input :__problems problems#)
-                     (with-alert "There were problems" :error))
+                     (with-alert :error "There were problems"))
                    (throw ex#)))))) 
          {:cludje-action true}))))
 

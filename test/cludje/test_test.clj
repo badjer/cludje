@@ -40,19 +40,22 @@
 
 (fact "has-alerts?"
   {} =not=> has-alerts?
-  {:_alerts []} => has-alerts?
+  {:__alerts []} => has-alerts?
   nil =not=> has-alerts?
   {:a 1} =not=> has-alerts?)
 
 (fact "has-alert"
   {} =not=> (has-alert :success #"saved")
-  {:_alerts [{:type :success :text "saved"}]} => (has-alert :success #"saved")
-  {:_alerts [{:type :info :text "saved"}]} =not=> (has-alert :success #"saved")
-  {:_alerts [{:type :success :text ""}]} =not=> (has-alert :success #"saved")
-  {:_alerts [{:text ""}]} =not=> (has-alert :success #"saved")
-  {:_alerts [{:type :success}]} =not=> (has-alert :success #"saved")
-  nil =not=> (has-alert :success #"saved")
-  {:a 1} =not=> (has-alert :success #"saved"))
+  {:__alerts [{:type :success :text "save"}]} => (has-alert :success #"save")
+  {:__alerts [{:type :info :text "save"}]} =not=> (has-alert :success #"save")
+  {:__alerts [{:type :success :text ""}]} =not=> (has-alert :success #"save")
+  {:__alerts [{:text ""}]} =not=> (has-alert :success #"save")
+  {:__alerts [{:type :success}]} =not=> (has-alert :success #"save")
+  nil =not=> (has-alert :success #"save")
+  {:a 1} =not=> (has-alert :success #"save")
+  (fact "works on a seq of alerts"
+    {:__alerts '({:type :success :text "save"} {:type :info :text "s"})}
+      => (has-alert :success #"save")))
 
 (fact "exception checkers"
   (fact "404"
