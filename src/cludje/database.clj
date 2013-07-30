@@ -3,7 +3,7 @@
 
 (def permitted-types
   "The types that are allowed to be in the database"
-  #{Boolean Integer String Long Float Double})
+  #{Boolean Integer String Long Float Double clojure.lang.BigInt})
 
 (defn- validate-db-data [data]
   (let [types (distinct (map type (vals data)))
