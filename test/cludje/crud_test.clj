@@ -8,6 +8,14 @@
         cludje.test
         midje.sweet))
 
+(defn crud-test-sys []
+  (app/make-system 
+              {:uiadapter (ui/->TestUIAdapter (atom nil))
+               :default-action nil
+               :action-ns 'cludje.crud-test
+               :model-ns 'cludje.crud-test}))
+
+
 (defmodel Gear {:teeth Int})
 (def gear {:teeth 4})
 
@@ -59,11 +67,7 @@
 (defaction ac-with-lookup- (with-lookup- {} Geartype system {}))
 
 (fact "with-lookup-"
-  (let [sys (app/make-system 
-              {:uiadapter (ui/->TestUIAdapter (atom nil))
-               :default-action nil
-               :action-ns 'cludje.crud-test
-               :model-ns 'cludje.crud-test})]
+  (let [sys (crud-test-sys)]
     (run-action sys geartype-add {:name "A" :isarchived false}) => ok?
     (let [res (run-action sys ac-with-lookup- {})]
       res => (has-keys :geartypes)
@@ -80,11 +84,7 @@
 (defaction ac-lookup-fn (with-lookup {} Widgettype))
 
 (fact "with-lookup"
-  (let [sys (app/make-system 
-              {:uiadapter (ui/->TestUIAdapter (atom nil))
-               :default-action nil
-               :action-ns 'cludje.crud-test
-               :model-ns 'cludje.crud-test})]
+  (let [sys (crud-test-sys)]
     (run-action sys geartype-add {:name "A" :isarchived false}) => ok?
     (let [res (run-action sys ac-lookup {})]
       res => (has-keys :geartypes)
@@ -109,11 +109,7 @@
     (sprockettype-new sys {}) => (contains {:companyid 1})))
 
 (fact "partitions makes model-list include selector"
-  (let [sys (app/make-system 
-              {:uiadapter (ui/->TestUIAdapter (atom nil))
-               :default-action nil
-               :action-ns 'cludje.crud-test
-               :model-ns 'cludje.crud-test})] 
+  (let [sys (crud-test-sys)] 
     (run-action sys sprockettype-add {:name "A" :companyid 1}) => ok?
     (run-action sys sprockettype-add {:name "B" :companyid 2}) => ok?
     (let [sres1 (run-action sys sprockettype-list {:companyid 1})
@@ -121,11 +117,26 @@
       sres1 => ok?
       sres2 => ok?
       (map :name (:sprockettypes sres1)) => ["A"]
-      (map :name (:sprockettypes sres2)) => ["B"])
+      (map :name (:sprockettypes sres2)) => ["B"]
+      (fact "with the wrong type supplied"
+        (let [sres-w (run-action sys sprockettype-list {:companyid "1"})]
+          (map :name (:sprockettypes sres-w)) => ["A"])))
     (fact "uses default if none supplied"
       (let [sres-d (run-action sys sprockettype-list {})]
         sres-d => ok?
         (map :name (:sprockettypes sres-d)) => ["A"]))))
 
+(defmodel Footype {:companyid Str :name Str}
+  :defaults {:companyid 1}
+  :partitions [:companyid])
+
+(def-crud-actions Footype)
+
+(fact "partitions makes model-list include selector default - default is wrong type"
+  (let [sys (crud-test-sys)]
+    (run-action sys footype-add {:name "A" :companyid "1"}) => ok?
+    (run-action sys footype-add {:name "Z" :companyid "2"}) => ok?
+    (let [res (run-action sys footype-list {})]
+      (map :name (:footypes res)) => ["A"])))
 
 

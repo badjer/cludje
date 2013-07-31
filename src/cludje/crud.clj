@@ -44,10 +44,29 @@
   `(let [listkee# (keyword (str (table-name ~model) "s"))
          parts# (partitions ~model)
          defs# (defaults ~model)
-         part-defs# (realize-map ~'system ~'input 
-                                 (select-keys defs# parts#))
-         query-paras# (merge part-defs# (select-keys ~'input parts#))]
-     {listkee# (~'query ~model query-paras#)}));))
+         ; This is a bit complicated because of optimization
+         ; We want parts-def to be (select-keys (realize-map defs)),
+         ; but we do an extra internal select-keys inside of 
+         ; realize-map in order to avoid evaling any default
+         ; fields that we don't need
+         ; The reason we add a (make model..) onto this is because
+         ; we want to handle the case where the default is of the 
+         ; wrong type - this will convert it
+         part-defs# (select-keys 
+                      (make ~model
+                            (realize-map ~'system ~'input
+                                         (select-keys defs# parts#)))
+                      parts#)
+         ; We want to get a parsed version of any of the partitions
+         ; that the user passed as input - that's part-inp
+         parsed# (make ~model ~'input)
+         supplied-parts# (clojure.set/intersection 
+                           (set parts#) 
+                           (set (keys ~'input)))
+         part-inp# (select-keys parsed# supplied-parts#)
+         ; The query-paras are the defaults and input of the partitions
+         query-paras# (merge part-defs# part-inp#)]
+     {listkee# (~'query ~model query-paras#)}))
 
 (defn make-crud-model-new [model]
   `(realize-map ~'system ~'input (defaults ~model)))
