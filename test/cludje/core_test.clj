@@ -136,22 +136,6 @@
   (fact "problems? only needs required fields"
     (problems? Person {}) => (just-keys :name)))
 
-(defmodel-lookup CogType)
-
-(facts "defmodel-lookup"
-  (fact "metadata"
-    (meta CogType) => (has-keys :fields :require :table)
-    (:fields (meta CogType)) => (has-keys :name :isarchived)
-    (:name (:fields (meta CogType))) => Str
-    (:isarchived (:fields (meta CogType))) => Bool
-    (:require (meta CogType)) => [:isarchived :name]
-    (:table (meta CogType)) => "cogtype"
-    (:fieldnames (meta CogType)) => (contains {:isarchived "Is Archived"})
-    (:invisible (meta CogType)) => (contains :isarchived)
-    (:defaults (meta CogType)) => {:isarchived false}
-    (table-name CogType) => "cogtype"
-    (defaults CogType) => {:isarchived false}
-    (key-name CogType) => :_id))
 
 
 (def cog {:price 123 :amt 1})
