@@ -29,39 +29,75 @@
      (defaction ~'global-data
        (default-global-data ~'system ~'input))))
 
+(defn realize-one [system input v]
+  "Try to get a final-value for v.
+  If it's a var, deref it. If it's a fn, call it with [system input]"
+  (cond
+    (fn? v) (v system input)
+    (var? v) (realize-one system input @v)
+    :else v))
+
+(defn realize-map [system input m]
+  (into {} (for [[k v] m] [k (realize-one system input v)])))
+
+(defn make-crud-model-list [model]
+  `(let [listkee# (keyword (str (table-name ~model) "s"))
+         parts# (partitions ~model)
+         defs# (defaults ~model)
+         part-defs# (realize-map ~'system ~'input 
+                                 (select-keys defs# parts#))
+         query-paras# (merge part-defs# (select-keys ~'input parts#))]
+     {listkee# (~'query ~model query-paras#)}));))
+
+(defn make-crud-model-new [model]
+  `(realize-map ~'system ~'input (defaults ~model)))
+
+(defn make-crud-model-add [model]
+  `(-> (~'insert ~model ~'input)
+       (with-alert :success "Saved")))
+
+(defn make-crud-model-show [model]
+  `(~'fetch ~model (~'? (key-name ~model))))
+
+(defn make-crud-model-edit [model]
+  `(~'fetch ~model (~'? (key-name ~model))))
+
+(defn make-crud-model-alter [model]
+  `(do 
+     (~'? (key-name ~model))
+     (-> (~'save ~model ~'input)
+         (with-alert :success "Saved"))))
+
+(defn make-crud-model-delete [model]
+  `(do
+     (~'delete ~model (~'? (key-name ~model)))
+     nil))
+
 
 (defmacro def-crud-actions [model-sym]
   (let [model @(resolve model-sym)
-        modelname (table-name model)
-        keename (key-name model)
-        defs (defaults model)]
+        modelname (table-name model)]
     `(do
        (defaction ~(symbol (str modelname "-list"))
-         {~(keyword (str modelname "s")) (~'query ~model-sym nil)})
+         ~(make-crud-model-list model-sym))
        (defaction ~(symbol (str modelname "-new"))
-         ~defs)
+         ~(make-crud-model-new model-sym))
        (defaction ~(symbol (str modelname "-add"))
-         (-> (~'insert ~model-sym ~'input)
-             (with-alert :success "Saved")))
+         ~(make-crud-model-add model-sym))
        (defaction ~(symbol (str modelname "-show"))
-         (~'fetch ~model-sym (~'? ~keename)))
+         ~(make-crud-model-show model-sym))
        (defaction ~(symbol (str modelname "-edit"))
-         (-> (~'fetch ~model-sym (~'? ~keename))
-             (with-alert :success "Saved")))
+         ~(make-crud-model-edit model-sym))
        (defaction ~(symbol (str modelname "-alter"))
-         (~'? ~keename)
-         (~'save ~model-sym ~'input))
+         ~(make-crud-model-alter model-sym))
        (defaction ~(symbol (str modelname "-delete"))
-         (~'delete ~model-sym (~'? ~keename))
-         nil))))
+         ~(make-crud-model-delete model-sym)))))
 
-(defn with-lookup- [m system model]
+(defn with-lookup- [m model system input]
   (let [action-name (str (table-name model) "-list")
         action (resolve-action system {:_action action-name})
-        action-paras {:isarchived false}
-        lookup-res (run-action system action action-paras)]
+        lookup-res (run-action system action {})]
     (merge lookup-res m)))
 
 (defmacro with-lookup [m model]
-  `(with-lookup- ~m ~'system ~model))
-
+  `(with-lookup- ~m ~model ~'system ~'input))

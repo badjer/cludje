@@ -98,6 +98,7 @@
     (:fieldnames (meta Person)) => (contains {:age "How Old"})
     (:invisible (meta Person)) => [:age :_id]
     (:defaults (meta Person)) => {:age 47}
+    (:partitions (meta Person)) => []
     (table-name User) => "user"
     (defaults User) => {}
     (key-name User) => :_id

@@ -107,6 +107,10 @@
   (when-let [m (meta model)]
     (:defaults m)))
 
+(defn partitions [model]
+  (when-let [m (meta model)]
+    (:partitions m)))
+
 (defn model-name [s]
   (cond
     (keyword? s) (s/capitalize (name s))
@@ -222,6 +226,7 @@
                              (map friendly-name (keys allfields)))
                      (get optmap :fieldnames {}))
         defaults {}
+        partitions []
         invisible (conj (get optmap :invisible []) :_id)
         modelopts (merge {:require reqfields
                           :cludje-model true
@@ -230,6 +235,7 @@
                           :defaults defaults
                           :table table
                           :invisible invisible
+                          :partitions partitions
                           :key kee}
                          (dissoc optmap :fieldnames :invisible))]
     `(do
@@ -238,12 +244,6 @@
        ~(defmodel-problems nam)
        ~(defmodel-make nam)
        )))
-
-(defmacro defmodel-lookup [nam]
-  `(defmodel ~nam {:name Str :isarchived Bool} 
-     :fieldnames {:isarchived "Is Archived"}
-     :defaults {:isarchived false}
-     :invisible [:isarchived]))
 
 
 ; ####
