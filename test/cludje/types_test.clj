@@ -30,6 +30,10 @@
   (let [em "a@bc.de"]
     (show Email em) => em
     (parse Email em) => em
+    ; Illegal values give nil
+    (parse Email "asdf") => nil
+    (parse Email 123) => nil
+    (parse Email true) => nil
     ;Empty values are valid
     (parse Email nil) => nil
     (parse Email "") => ""
@@ -42,6 +46,9 @@
   (let [pw "1234567890"]
     (show Password pw) => ""
     (parse Password pw) => pw
+    ; Illegal values give nil
+    (parse Password 1) => nil
+    (parse Password false) => nil
     ; Empty values are valid
     (parse Password nil) => nil
     (parse Password "") => ""
@@ -57,6 +64,9 @@
     (show Int s) => s
     (parse Int s) => i
     (parse Int i) => i
+    ; Illegal values give nil
+    (parse Int "asdf") => nil
+    (parse Int true) => nil
     ; Empty values are valid
     (parse Int nil) => nil
     (parse Int "") => nil
@@ -90,6 +100,9 @@
     (parse Money dcv) => dcv
     (parse Money cs) => cv
     (parse Money cv) => cv
+    ; Illegal values give nil
+    (parse Money "asdf") => nil
+    (parse Money true) => nil
     ; Empty values are valid
     (parse Money nil) => nil
     (parse Money "") => nil
@@ -110,7 +123,7 @@
       (parse Bool v) => true)
     (for [v false-vals]
       (parse Bool v) => false)
-    (for [v [nil ""]]
+    (for [v [nil "" "asdf" 123]]
       (parse Bool v) => nil)
     (for [v (concat true-vals false-vals)]
       (validate Bool v) => truthy)
@@ -124,6 +137,9 @@
   (parse Date "1970-01-01") => 0 
   (parse Date "1970-01-02") => 86400000 
   (parse Date "2013-02-20") => feb20
+  ; Illegal values give nil
+  (parse Date "asdf") => nil
+  (parse Date true) => nil
   (parse Date "") => nil
   (parse Date nil) => nil
   (show Date feb20) => "Wed Feb 20" 
@@ -141,6 +157,9 @@
 (def one-oh-one-pm 46860000)
 
 (fact "Time"
+  ; Illegal values give nil
+  (parse Time "adf") => nil
+  (parse Time true) => nil
   (parse Time nil) => nil
   (parse Time "") => nil
   (parse Time oh-one-am) => oh-one-am
@@ -172,6 +191,9 @@
 (def thirteen-oh-one (+ thirteen-hour one-min))
 
 (fact "Timespan"
+  ; Illegal values give nil
+  (parse Timespan "adf") => nil
+  (parse Timespan true) => nil
   (parse Timespan nil) => nil
   (parse Timespan "") => nil
   (parse Timespan one-min) => one-min
@@ -196,6 +218,9 @@
   (validate Timespan "abc") => falsey)
 
 (fact "DateTime"
+  ; Illegal values give nil
+  (parse DateTime "adfs") => nil
+  (parse DateTime true) => nil
   (parse DateTime nil) => nil
   (parse DateTime "") => nil
   (parse DateTime oh-one-am) => oh-one-am

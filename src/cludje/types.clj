@@ -2,7 +2,7 @@
   (:require [clojure.string :as s]))
 
 (defprotocol IParseable
-  (parse [self in]))
+  (parse [self in] "Should always return a value (even nil) and never throw"))
 
 (defprotocol IShowable
   (show [self x]))
@@ -44,7 +44,7 @@
 (def Email
   (reify 
     IParseable 
-    (parse [self txt] (when txt (str txt)))
+    (parse [self txt] (when txt (when-not (problems? Email txt) (str txt))))
     IShowable
     (show [self x] x) 
     IValidateable
@@ -52,30 +52,35 @@
       (cond
         (nil? txt) nil
         (empty? (str txt)) nil 
-        (not (re-find #"(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?" txt))
+        (not (re-find #"(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?" (str txt)))
         "Not a valid email"))))
 
 (def Password
   (reify 
     IParseable
-    (parse [self txt] (when txt (str txt)))
+    (parse [self txt] (when txt (when-not (problems? Password txt) (str txt))))
     IShowable
     (show [self x] "")
     IValidateable
     (problems? [self txt]
-      (cond
-        (empty? txt) nil
-        (> 2 (.length txt)) "Not long enough"))))
+      (when-let [s (str txt)]
+        (cond
+          (empty? s)  nil
+          (> 2 (.length s)) "Not long enough")))))
 
 (defn- to-int [x]
   (if-not (nil? x)
-    (let [t (type x)]
-      (cond
-        (= t java.lang.Long) x
-        (= t java.lang.Integer) x
-        (= t BigDecimal) (.intValue x)
-        (= t clojure.lang.BigInt) (int x)
-        :else (Long. x)))))
+    (try
+      (let [t (type x)]
+        (cond
+          (= t java.lang.Long) x
+          (= t java.lang.Integer) x
+          (= t BigDecimal) (.intValue x)
+          (= t clojure.lang.BigInt) (int x)
+          :else (Long. x)))
+      (catch java.lang.NumberFormatException e nil)
+      (catch java.lang.IllegalArgumentException e nil))))
+
 
 (defn- to-decimal [x]
   (if (or (nil? x) (= BigDecimal (type x)))
