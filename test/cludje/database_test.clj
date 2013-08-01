@@ -73,3 +73,4 @@
 (facts "MemDb"
   (test-db (->MemDb (atom {}))))
 
+(future-facts "Implement soft deletes")
