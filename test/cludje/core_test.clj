@@ -136,9 +136,11 @@
   (fact "problems? only needs required fields"
     (problems? Person {}) => (just-keys :name))
   (fact "show"
-    (show Cog {:amt 1 :price 4321}) => {:_id nil :amt "1" :price "$43.21"}
+    (show Cog {:amt 1 :price 4321}) => {:amt "1" :price "$43.21"}
     (show Cog nil) => nil
-    (show Cog {}) => nil))
+    (show Cog {}) => nil
+    (fact "doesn't add any fields that weren't already there"
+      (show Cog {:price 4321}) => {:price "$43.21"})))
 
 
 

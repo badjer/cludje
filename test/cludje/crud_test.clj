@@ -26,11 +26,11 @@
         sys {:db db} 
         kees (gear-add sys gear)]
     (count (gear-list sys nil)) => 1
-    (first (:gears (gear-list sys nil))) => (contains gear)
+    (first (:gears (gear-list sys nil))) => (contains (show Gear gear))
     (gear-edit sys kees) => (contains gear)
     (gear-new sys {}) => {}
     (gear-alter sys (assoc kees :teeth 5)) => map?
-    (gear-show sys kees) => (contains {:teeth 5})
+    (gear-show sys kees) => (contains {:teeth "5"})
     (gear-delete sys kees) => nil
     (:gears (gear-list sys nil)) => empty?))
 
@@ -46,7 +46,7 @@
     (fact "add sets defaults"
       (let [id (widget-add sys {:teeth 2})]
         id => ok?
-        (widget-show sys id) => (contains {:teeth 2 :size 3})))))
+        (widget-show sys id) => (contains {:teeth "2" :size "3"})))))
 
 
 (defmodel Geartype {:name Str :isarchived Bool}
@@ -66,7 +66,7 @@
     (fact "can list"
       (count (:geartypes (geartype-list sys {:isarchived false}))) => 1
       (first (:geartypes (geartype-list sys {:isarchived false}))) => 
-        (contains geartype))))
+        (contains (show Geartype geartype)))))
 
 
 (defaction ac-with-lookup- (with-lookup- {} Geartype system {}))

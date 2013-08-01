@@ -216,9 +216,11 @@
        IShowable
        {:show
         (fn [self# m#]
-          (when-not (empty? m#)
-            (into {} (for [[field# typ#] (field-types ~nam)]
-                       [field# (show typ# (get m# field#))]))))})))
+          (when (and (map? m#) (not (empty? m#)))
+            (let [kees# (keys m#)
+                  fields# (select-keys (field-types ~nam) kees#)]
+              (into {} (for [[field# typ#] fields#]
+                         [field# (show typ# (get m# field#))])))))})))
 
 
 
