@@ -90,7 +90,8 @@
       (with-alert :success "Saved")))
 
 (defn crud-model-delete [model system input]
-  (delete system model (? input (key-name model))))
+  (delete system model (? input (key-name model)))
+  nil)
 
 
 (defmacro def-crud-actions [model-sym]

@@ -29,9 +29,9 @@
     (first (:gears (gear-list sys nil))) => (contains gear)
     (gear-edit sys kees) => (contains gear)
     (gear-new sys {}) => {}
-    (gear-alter sys (assoc kees :teeth 5)) => anything
+    (gear-alter sys (assoc kees :teeth 5)) => map?
     (gear-show sys kees) => (contains {:teeth 5})
-    (gear-delete sys kees) => anything
+    (gear-delete sys kees) => nil
     (:gears (gear-list sys nil)) => empty?))
 
 (defmodel Widget {:teeth Int :size Int}
