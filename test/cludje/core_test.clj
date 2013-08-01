@@ -134,7 +134,11 @@
   (fact "problems? checks type"
     (problems? Cog {:amt "asdf"}) => (has-keys :amt))
   (fact "problems? only needs required fields"
-    (problems? Person {}) => (just-keys :name)))
+    (problems? Person {}) => (just-keys :name))
+  (fact "show"
+    (show Cog {:amt 1 :price 4321}) => {:_id nil :amt "1" :price "$43.21"}
+    (show Cog nil) => nil
+    (show Cog {}) => nil))
 
 
 

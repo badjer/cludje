@@ -210,6 +210,17 @@
               (apply ~constructor (repeat (count (keys ~nam)) nil))
               parsed#)))})))
 
+(defn- defmodel-show [nam]
+  (let [rec-name (record-name nam)]
+    `(extend ~rec-name
+       IShowable
+       {:show
+        (fn [self# m#]
+          (when-not (empty? m#)
+            (into {} (for [[field# typ#] (field-types ~nam)]
+                       [field# (show typ# (get m# field#))]))))})))
+
+
 
 (defmacro defmodel [nam fields & opts]
   (let [optmap (apply hash-map opts)
@@ -243,6 +254,7 @@
        ~(defmodel-singleton nam fields modelopts)
        ~(defmodel-problems nam)
        ~(defmodel-make nam)
+       ~(defmodel-show nam)
        )))
 
 
