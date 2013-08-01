@@ -109,10 +109,10 @@
                             [:args :allow_return :reload :confirm])
           arg-str (->js args)
           click (when-let [action (:action passed-opts)]
-                  {:ng-click 
+                  {:stop-event "click" :ng-click 
                    (str "action('" (name action) "', " arg-str ")")})
           cancel (when (:cancel passed-opts)
-                   {:ng-click "cancel()"})
+                   {:stop-event "click" :ng-click "cancel()"})
           opts (merge {:type :button :class "btn btn-primary"}
                       cancel
                       click 
@@ -185,6 +185,7 @@
     (let [tablename (table-name model)]
       [:li.span4.thumbnail.well
        {:ng-repeat (str tablename " in data." tablename "s") 
+        :stop-event "click"
         :ng-click (str "redirect('/" tablename "/show?_id=" 
                        (ng-data tablename "._id") "')")}
        (summarize-fn model)])))
@@ -270,9 +271,20 @@
   "Serves the angular.js controller and module."
   ;This isn't a static file because I think we'll probably
   ;want to generate this dynamically pretty soon
-  "angular.module('mainapp', ['ui.bootstrap'], 
+  "var cludje = angular.module('mainapp', ['ui.bootstrap'], 
       function($routeProvider, $locationProvider){
       });
+  cludje.directive('stopEvent', function () {
+    return {
+        restrict: 'A',
+        link: function (scope, element, attr) {
+            element.bind(attr.stopEvent, function (e) {
+                e.stopPropagation();
+            });
+        }
+    }
+  });
+
 
   function MainCntl($scope, $http){ 
 

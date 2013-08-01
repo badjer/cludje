@@ -9,7 +9,7 @@
 (def-crud-actions Shift)
 
 (defability ab-cog
-  :delete Cog false
+  :delete Cog true
   :* Shift true
   :* Cog true)
 
