@@ -184,7 +184,9 @@
   ([model summarize-fn] 
     (let [tablename (table-name model)]
       [:li.span4.thumbnail.well
-       {:ng-repeat (str tablename " in data." tablename "s")}
+       {:ng-repeat (str tablename " in data." tablename "s") 
+        :ng-click (str "redirect('/" tablename "/show?_id=" 
+                       (ng-data tablename "._id") "')")}
        (summarize-fn model)])))
 
 (defn model-list 
@@ -274,12 +276,29 @@
 
   function MainCntl($scope, $http){ 
 
+
+    var get_querystring = function() { 
+      var assoc  = {};
+      var decode = function (s) { return decodeURIComponent(s.replace(/\\+/g, ' ')); };
+      var queryString = location.search.substring(1); 
+      var keyValues = queryString.split('&'); 
+
+      for(var i in keyValues) { 
+        var key = keyValues[i].split('=');
+        if (key.length > 1) {
+          assoc[decode(key[0])] = decode(key[1]);
+        }
+      } 
+
+      return assoc; 
+    };
+
     var getParameterByName = function(name) {
       name = name.replace(/[\\[]/, \"\\\\\\[\").replace(/[\\]]/, \"\\\\\\]\");
       var regex = new RegExp(\"[\\\\?&]\" + name + \"=([^&#]*)\"),
           results = regex.exec(location.search);
       return results == null ? \"\" : decodeURIComponent(results[1].replace(/\\+/g, \" \"));
-    }
+    };
 
     // Figure out what the current action is, based on the url
     var get_default_action = function(){
@@ -295,16 +314,19 @@
           return window.location.pathname.replace(re, \"$1-$2\");
         }
       }
-      return null;
-    };
-
-
-    var go_back = function(){
-      var ret = getParameterByName('_return');
-      if(ret != undefined && ret != null && ret != ''){
-        window.location = ret;
-      }
-    };
+      return null; 
+   }; 
+    
+   var get_default_action_args = function(){
+     return get_querystring();
+   }; 
+      
+   var go_back = function(){
+     var ret = getParameterByName('_return');
+     if(ret != undefined && ret != null && ret != ''){
+       window.location = ret;
+     }
+   };
 
 
     var reload = function(opts){
@@ -423,6 +445,11 @@
         $scope.action(action, opts);
     };
 
+    $scope.redirect = function(url){
+      window.location = url;
+    };
+      
+
     // We want to load the global data - this will get us
     // menus, titles, etc
     // We also want to load the page-specific data when we're done,
@@ -430,7 +457,8 @@
     // This code should only get run on page-load
     do_action('global-data', {}, {is_global: true, allow_return: false, 
                                   reload: false});
-    do_action(get_default_action(), {}, {allow_return: false, reload: false});
+    do_action(get_default_action(), get_default_action_args(),
+        {allow_return: false, reload: false});
   };")
 
 
