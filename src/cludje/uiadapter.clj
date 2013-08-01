@@ -23,11 +23,21 @@
 (defn- with-session [input session]
   (merge session input))
 
+(defn- check-output [output]
+  (cond
+    (map? output) output
+    (nil? output) nil
+    :else (throw 
+            (ex-info "We tried to render something that wasn't a map!  
+                     Probably, your action didn't return a map.  
+                     Always return a map from actions" {:output output}))))
+
 (defrecord TestUIAdapter [session]
   IUIAdapter
   (parse-input- [self request]
     (with-session request @session))
   (render- [self request output]
+    (check-output output)
     (let [new-session (->session @session output)]
       (reset! session new-session) 
       output))
@@ -63,14 +73,12 @@
   (let [victims (filter is-persistent-field (keys output))]
     (apply dissoc output victims)))
 
+
+
 (defn- filter-output [output]
   (cond
     (map? output) (remove-persistent-fields output)
-    (nil? output) nil
-    :else (throw 
-            (ex-info "We tried to render something that wasn't a map!  
-                     Probably, your action didn't return a map.  
-                     Always return a map from actions" {:output output}))))
+    :else output))
 
 (defrecord WebUIAdapter [allow-api-get?]
   IUIAdapter
@@ -79,6 +87,7 @@
       (when (is-api-call? allow-api-get? request)
         (cleanup-input data request))))
   (render- [self request output]
+    (check-output output)
     (-> (merge
           {:body (cheshire/generate-string (filter-output output))}
           {:cookies (make-cookies output)})
