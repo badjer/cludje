@@ -169,35 +169,57 @@
       :name
       (first (keys fts)))))
 
-(defn model-summarize [model]
+(defn summarize-model [model]
   (let [tablename (table-name model)]
-    [:div
-     (button "X" :confirm "Are you sure you want to delete?"
-             :action (str tablename "-delete")
-             :args {:_id (ng-data tablename "._id")}
-             :reload true
-             :class "btn btn-danger btn-mini pull-right")
-     [:h4 (ng-data tablename "." (model-title-field model))]]))
+    [:h4 (ng-data tablename "." (model-title-field model))]))
 
-(defn model-list-item 
-  ([model] (model-list-item model model-summarize))
-  ([model summarize-fn] 
-    (let [tablename (table-name model)]
-      [:li.span4.thumbnail.well
-       {:ng-repeat (str tablename " in data." tablename "s") 
-        :stop-event "click"
-        :ng-click (str "redirect('/" tablename "/show?_id=" 
-                       (ng-data tablename "._id") "')")}
-       (summarize-fn model)])))
+(defn list-item-model [model summarized-markup]
+  (let [tablename (table-name model)]
+    [:li.span4.thumbnail.well
+     {:ng-repeat (str tablename " in data." tablename "s")
+      :stop-event "click" :ng-click (str "redirect('/" tablename "/show?_id="
+                                         (ng-data tablename "._id") "')")}
+     [:div (button "X" :confirm "Are you sure you want to delete?"
+                   :action (str tablename "-delete")
+                   :args {:_id (ng-data tablename "._id")}
+                   :reload true
+                   :class "btn btn-danger btn-mini pull-right")
+      summarized-markup]]))
 
-(defn model-list 
-  ([model] (model-list model model-list-item))
-  ([model list-item-fn]
-    (let [tablename (table-name model)] 
-      [:ul.thumbnails  
-       (list-item-fn model)])))
+(defn list-model [model itemized-markup]
+  [:ul.thumbnails itemized-markup])
 
 
+(defn template-list-body [model listed-markup]
+  [:div 
+   [:div.pull-right.btn-toolbar
+    [:div.btn-group
+     (link "New" :href (str "/" (table-name model) "/new") :return true)]]
+   [:h3 {:ng-hide "data._title"} "List of " (table-name model)]
+   [:h3 {:ng-show "data._title"} (ng-data "data._title")]
+   listed-markup])
+   ;(model-list model)])
+
+(defn template-edit-body [model]
+  (model-form model (str "Edit " (table-name model)) :alter))
+
+(defn template-new-body [model]
+  (model-form model (str "New " (table-name model)) :add))
+
+(defn template-show-body [model]
+  (let [fields (field-types model)
+        invisible (? (meta model) :invisible)
+        visible-fields (apply dissoc fields invisible)]
+    [:div 
+     [:h3 {:ng-hide "data._title"} (table-name model)]
+     [:h3 {:ng-show "data._title"} (ng-data "data." :_title)]
+     (for [field invisible]
+       (ng-field Hidden field))
+     (for [[field typ] visible-fields] 
+       (form-line 
+         (ng-data "data." field) 
+         field
+         (friendly-name field)))]))
 
 
 
@@ -495,40 +517,17 @@
            :class "btn btn-primary btn-large")]))
    
 
-
 (defn template-edit [model]
-  (common-layout
-    (model-form model (str "Edit " (table-name model)) :alter)))
-
+  (common-layout (template-edit-body model)))
 (defn template-new [model]
-  (common-layout
-    (model-form model (str "New " (table-name model)) :add)))
-
+  (common-layout (template-new-body model)))
 (defn template-list [model]
-  (common-layout
-    [:div 
-     [:div.pull-right.btn-toolbar
-      [:div.btn-group
-       (link "New" :href (str "/" (table-name model) "/new") :return true)]]
-     [:h3 {:ng-hide "data._title"} "List of " (table-name model)]
-     [:h3 {:ng-show "data._title"} (ng-data "data._title")]
-     (model-list model)]))
-
+  (common-layout (template-list-body 
+                   model (->> (summarize-model model)
+                              (list-item-model model)
+                              (list-model model)))))
 (defn template-show [model]
-  (let [fields (field-types model)
-        invisible (? (meta model) :invisible)
-        visible-fields (apply dissoc fields invisible)]
-    (common-layout
-      [:div 
-       [:h3 {:ng-hide "data._title"} (table-name model)]
-       [:h3 {:ng-show "data._title"} (ng-data "data." :_title)]
-       (for [field invisible]
-         (ng-field Hidden field))
-       (for [[field typ] visible-fields] 
-         (form-line 
-           (ng-data "data." field) 
-           field
-           (friendly-name field)))])))
+  (common-layout (template-show-body model)))
 
 (defmacro use-default-templates []
   `(do 
