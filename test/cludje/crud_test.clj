@@ -38,10 +38,15 @@
   :defaults {:size 3})
 (def-crud-actions Widget)
 
-(fact "def-crud-actions sets defaults when calling new"
+(fact "crud defaults"
   (let [db (->MemDb (atom {}))
         sys {:db db}]
-    (widget-new sys nil) => (contains {:size 3})))
+    (fact "new sets defaults"
+      (widget-new sys nil) => (contains {:size 3}))
+    (fact "add sets defaults"
+      (let [id (widget-add sys {:teeth 2})]
+        id => ok?
+        (widget-show sys id) => (contains {:teeth 2 :size 3})))))
 
 
 (defmodel Geartype {:name Str :isarchived Bool}

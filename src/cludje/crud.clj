@@ -72,8 +72,10 @@
   `(realize-map ~'system ~'input (defaults ~model)))
 
 (defn make-crud-model-add [model]
-  `(-> (~'insert ~model ~'input)
-       (with-alert :success "Saved")))
+  `(let [defs# (make ~model (realize-map ~'system ~'input (defaults ~model)))
+         combined# (merge defs# ~'input)] 
+     (-> (~'insert ~model combined#) 
+         (with-alert :success "Saved"))))
 
 (defn make-crud-model-show [model]
   `(~'fetch ~model (~'? (key-name ~model))))
