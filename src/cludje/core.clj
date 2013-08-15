@@ -321,14 +321,6 @@
   (parse-input- [self request] "Convert request to our normal input format")
   (is-action- [self request] "Determine if some input is an action call"))
 
-;(defprotocol IRenderer
-  ;"Handle rendering output"
-  ;(render- [self request output] "Generate output for the user"))
-
-;(defprotocol IInputParser
-  ;"Handle converting input into our standard input format"
-  ;(parse-input- [self request]))
-
 
 
 ; TODO: Do something with this

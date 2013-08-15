@@ -67,9 +67,8 @@
          part-inp (select-keys parsed supplied-parts)
          ; The query-paras are the defaults and input of the partitions
          query-paras (merge part-defs part-inp)
-        rows (query system model query-paras)
-        shown (map (partial show model) rows)]
-    {listkee shown}))
+        rows (query system model query-paras)]
+    {listkee rows}))
      ;{listkee (query system model query-paras)}))
 
 (defn crud-model-new [model system input]
@@ -85,8 +84,7 @@
   (->> model
        (key-name)
        (? input)
-       (fetch system model)
-       (show model)))
+       (fetch system model)))
 
 (defn crud-model-edit [model system input]
   (fetch system model (? input (key-name model))))
