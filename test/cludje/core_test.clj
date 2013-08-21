@@ -377,7 +377,7 @@
 
 (defaction add-person
   (let [uid (save User input)
-        dt (assoc input :_id uid)]
+        dt (assoc input :_id (:_id uid))]
     (save Person dt)))
 
 (def person {:name "a" :age 2})

@@ -23,6 +23,7 @@
   "Returns true if x is truthy and not an empty string."
   (not (or (nil? x) (= x ""))))
 
+
 (def Str 
   (reify 
     IParseable 
@@ -39,7 +40,10 @@
         :else x))
     IValidateable
     ; Never any problems with str
-    (problems? [self txt])))
+    ; Unless it's a collection
+    (problems? [self txt] 
+      (when (coll? txt)
+        "Str cannot be a collection"))))
 
 (def Email
   (reify 
@@ -405,4 +409,32 @@
         (= "" txt) nil
         (nil? (parse DateTime txt))
         "Not valid date/time"))))
+
+(defn list-of [mold]
+  (reify 
+    IParseable 
+    (parse [self txt] 
+      (cond
+        (nil? txt) []
+        (= [] txt) []
+        (not (coll? txt)) [(parse mold txt)]
+        :else (map (partial parse mold) txt)))
+    IShowable
+    (show [self x]
+      (cond
+        (nil? x) []
+        (= [] x) []
+        (not (coll? x)) [(show mold x)]
+        :else (map (partial show mold) x)))
+    IValidateable
+    (problems? [self txt]
+      (cond
+        (nil? txt) nil
+        (= "" txt) nil
+        (= [] txt) nil
+        (map? txt) "List cannot be a map"
+        (not (coll? txt)) (when-let [res (problems? mold txt)] [res])
+        :else (let [res (map (partial problems? mold) txt)]
+                (when-not (empty? (filter identity res))
+                  res))))))
 

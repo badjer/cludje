@@ -23,7 +23,10 @@
   (validate Str 123) => true
   (validate Str :a) => true
   (validate Str nil) => true
-  (validate Str "a") => true)
+  (validate Str "a") => true
+  (validate Str ["a"]) => false
+  (validate Str {}) => false
+  (validate Str []) => false)
 
 
 (fact "Email"
@@ -74,13 +77,13 @@
     (validate Int "") => truthy
     (validate Int "asdf") => falsey
     (validate Int i) => truthy
-    (validate Int s) => truthy))
+    (validate Int s) => truthy)
 
-(fact "works with bigint"
-  (let [bi 2N]
-    (type bi) => clojure.lang.BigInt
-    (parse Int bi) => 2
-    (type (parse Int bi)) =not=> clojure.lang.BigInt))
+  (fact "works with bigint"
+    (let [bi 2N]
+      (type bi) => clojure.lang.BigInt
+      (parse Int bi) => 2
+      (type (parse Int bi)) =not=> clojure.lang.BigInt)))
 
 (fact "Money"
   (let [ds "$123"
@@ -245,6 +248,41 @@
   (validate DateTime oh-one-am) => truthy
   (validate DateTime one-oh-one-pm) => truthy
   (validate DateTime "abc") => falsey)
+
+
+(fact "list-of"
+  (let [ls (list-of Str)
+        lm (list-of Money)]
+    (fact "parse"
+      (parse ls []) => []
+      (parse ls nil) => []
+      (parse ls "abc") => ["abc"]
+      (parse ls ["ab" "cd"]) => ["ab" "cd"]
+      (fact "with conversion"
+        (parse lm ["1" "2"]) => [100 200]
+        (parse lm ["asdf" "1"]) => [nil 100]))
+
+    (fact "show"
+      (show ls []) => []
+      (show ls nil) => []
+      (show ls "abc") => ["abc"]
+      (show ls ["ab" "cd"]) => ["ab" "cd"]
+      (fact "with conversion"
+        (show lm [1 2]) => ["$0.01" "$0.02"]))
+
+    (fact "validate"
+      (validate ls ["ab" "cd"]) => truthy
+      (validate ls []) => truthy
+      (validate ls nil) => truthy
+      (validate ls "abc") => truthy
+      (validate ls {}) => falsey
+      (validate ls [{} {}]) => falsey
+      (fact "with conversion"
+        (validate lm ["1" "2"]) => truthy
+        (validate lm "1") => truthy
+        (validate lm "asdf") => falsey
+        (validate lm ["asdf" "1"]) => falsey))))
+
 
 
 ; Misc date/time helpers

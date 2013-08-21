@@ -161,6 +161,7 @@
 ; Model construction
 ; ####
 
+
 (defn- record-name [nam]
   (symbol (str (name nam) "-type")))
 
