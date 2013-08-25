@@ -2,7 +2,8 @@
   (:use cludje.core
         cludje.login
         cludje.database
-        cludje.app)
+        cludje.app
+        midje.repl)
   (:require [clojure.java.io :as io]
             [clojure.string :as s]
             [clojure.pprint :refer (pprint)]

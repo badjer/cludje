@@ -9,44 +9,44 @@
 
 (def fs {:name Str :price Money})
 
-(def Cog (->Mold fs {:defaults {:price 42}}))
-(def Bike (->Mold {:front Cog :back Cog :gears Int} {}))
+(def Cog (>Mold fs {:defaults {:price 42}}))
+(def Bike (>Mold {:front Cog :back Cog :gears Int} {}))
 
 
-(fact "->Mold"
+(fact ">Mold"
   (fact "implements IMold"
     (fact "Can create a mold"
-      (let [m (->Mold fs {})]
+      (let [m (>Mold fs {})]
         (satisfies? IMold m) => true))
 
     (fact "fields"
-      (let [m (->Mold fs {})]
+      (let [m (>Mold fs {})]
         (fields m) => fs))
 
     (fact "field-names"
-      (let [m (->Mold fs {:names {:name "MyName"}})]
+      (let [m (>Mold fs {:names {:name "MyName"}})]
         (field-names m) => {:name "MyName" :price "Price"})
       (fact "with a fn"
-        (let [m (->Mold fs {:names {:name getx}})]
+        (let [m (>Mold fs {:names {:name getx}})]
           (field-names m) => (contains {:name "x"}))))
 
     (fact "field-defaults"
-      (let [m (->Mold fs {:defaults {:price 42}})]
+      (let [m (>Mold fs {:defaults {:price 42}})]
         (field-defaults m) => {:price 42})
       (fact "with a fn"
-        (let [m (->Mold fs {:defaults {:name getx}})]
+        (let [m (>Mold fs {:defaults {:name getx}})]
           (field-defaults m) => {:name "x"})))
 
     (fact "required-fields"
-      (let [m (->Mold fs {:required [:name]})]
+      (let [m (>Mold fs {:required [:name]})]
         (required-fields m) => [:name]))
 
     (fact "invisible-fields"
-      (let [m (->Mold fs {:invisible [:price]})]
+      (let [m (>Mold fs {:invisible [:price]})]
         (invisible-fields m) => [:price]))))
 
-(fact "->Mold implements IValidateable"
-  (let [m (->Mold fs {})]
+(fact ">Mold implements IValidateable"
+  (let [m (>Mold fs {})]
     (satisfies? IValidateable m) => true
     (problems? m {}) => (just-keys :name :price)
     (problems? m {:name "a" :price "asdf"}) => (just-keys :price)
@@ -63,8 +63,8 @@
                        :back {:name "a" :price 234}
                        :gears 1}) => (just-keys :front))))
 
-(fact "->Mold implements IShowable"
-  (let [m (->Mold fs {})]
+(fact ">Mold implements IShowable"
+  (let [m (>Mold fs {})]
     (satisfies? IShowable m) => true
     (show m {:price 123}) => {:price "$1.23"}
 
@@ -86,8 +86,8 @@
          :back {:name "b" :price "$0.02"}
          :gears "3"}))))
 
-(fact "->Mold implements IParseable"
-  (let [m (->Mold fs {})]
+(fact ">Mold implements IParseable"
+  (let [m (>Mold fs {})]
     (satisfies? IParseable m) => true
 
     (fact "parse returns all fields"
@@ -115,14 +115,14 @@
 
     (fact "with defaults"
       (fact "value"
-        (let [md (->Mold fs {:defaults {:price 42}})]
+        (let [md (>Mold fs {:defaults {:price 42}})]
           (fact "if not supplied"
             (parse md {}) => (contains {:price 42}))
           (fact "if supplied"
             (parse md {:price 11}) => (contains {:price 11}))))
 
       (fact "fn"
-        (let [mf (->Mold fs {:defaults {:name getx}})]
+        (let [mf (>Mold fs {:defaults {:name getx}})]
           (fact "if not supplied"
             (parse mf {}) => (contains {:name "x"}))
           (fact "if supplied"
@@ -130,7 +130,7 @@
 
 
 
-(def Cog+ (->Mold {:_ Cog :id Int} {}))
+(def Cog+ (>Mold {:_ Cog :id Int} {}))
 
 (fact "can extend an existing mold"
   (fields Cog+) => (has-keys :name :price :id)
@@ -140,7 +140,7 @@
   (invisible-fields Cog+) => [])
 
 
-(def Cog-list (->Mold {:cogs (list-of Cog)} {}))
+(def Cog-list (>Mold {:cogs (list-of Cog)} {}))
 
 (fact "can have a list in a mold"
   (parse Cog-list {:cogs [{:name "a" :price 1}

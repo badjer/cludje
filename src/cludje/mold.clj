@@ -67,7 +67,7 @@
   ; Return the original object so we can chain things
   mold)
 
-(defn ->Mold [fs opts]
+(defn >Mold [fs opts]
   (let [base (get fs :_)
         allfields (merge 
                     (when base (fields base))

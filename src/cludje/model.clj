@@ -22,7 +22,7 @@
         invisible-fields (conj (get opts :invisible []) kee)
         mold-opts (merge {:required required-fields
                           :invisible invisible-fields})
-        model-mold (->Mold allfields mold-opts)]
+        model-mold (>Mold allfields mold-opts)]
     (-> (reify IModel
           (mold [self] model-mold)
           (tablename [self] tablename)

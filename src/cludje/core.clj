@@ -2,6 +2,9 @@
   (:use cludje.types)
   (:require [clojure.string :as s]))
 
+;TODO: DELETE ALL THIS - SHOULD BE REPLACE BY THINGS IN SYSTEM / PIPELINE /
+; MOLD / ACTION
+
 (defn- find-ns-var [nas thing]
   (when (and nas thing)
     (cond 

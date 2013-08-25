@@ -23,7 +23,7 @@
 
 (defprotocol IAuthorizer
   "Controls permissions"
-  (allowed? [self system action model user input] 
+  (allowed? [self system action-sym user input] 
             "Is the user allowed to do this?"))
 
 (defprotocol IActionFinder
@@ -33,6 +33,5 @@
   (get-mold [self context]))
 
 (defprotocol IDataAdapter
-  (parse-rawinput [self rawinput])
-  (render-data [self output]))
-
+  (parse-input [self rawinput])
+  (render-output [self output]))

@@ -14,7 +14,6 @@
   :source-paths ["src"]
   :test-paths ["test"]
   :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.3"] 
-                                  [lazytest "1.2.3"]
                                   [midje "1.5.1"]]
                    :source-paths ["test" "dev"]
                    :plugins [[lein-midje "3.0.1"]]}})

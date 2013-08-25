@@ -1,58 +1,33 @@
 (ns cludje.pipeline
   (:use cludje.util
+        cludje.types
+        cludje.errors
         cludje.system))
 
-(defn add-session [{:keys [system rawdata]}])
-
-(defn authenticate [{:keys [system rawdata session] :as context}])
-
-(defn resolve-action [{:keys [system rawdata session user] :as context}])
-
-(defn authorize [{:keys [system rawdata session action user] :as context}])
-
-(defn resolve-input-mold [{:keys [system rawdata action user] :as context}])
-
-(defn parse-data [{:keys [system rawdata action user input-mold] :as context}])
-
-(defn run-action [{:keys [system rawdata action user input-mold data]}])
-
-(defn resolve-output-format [{:keys [system rawdata action user 
-                                     input-mold data output] :as context}])
-
-(defn render-output [{:keys [system rawdata action user
-                             input-mold data output output-mold] :as context}])
-(defn persist-session [context])
-
-(defn with-session [{:keys [system rawdata]}])
-(defn with-authenticate [{:keys [system rawdata session]}])
-(defn with-action [{:keys [system rawdata session user]}])
-(defn with-authorize [{:keys [system rawdata session user action]}])
-(defn with-input-mold [{:keys [system rawdata session user action]}])
-(defn with-data [{:keys [system rawdata session user action input-mold]}])
-(defn with-output [{:keys [system rawdata session user action input-mold 
-                           data]}])
-(defn with-output-format [{:keys [system rawdata session user action 
-                                  input-mold data output]}])
-(defn with-rendered-output [{:keys [system rawdata session user action
-                                    input-mold data output output-mold]}])
-(defn persist-session [context])
-
-
-(defn wrap-context [f]
-  (fn [rawinput]
-    (-> {:rawinput rawinput}
-        (f))))
 (defn wrap-system [f system]
   (fn [context]
     (-> context
         (assoc :system system)
+        (f))))
+(defn wrap-unparsed-input [f]
+  (fn [unparsed-input]
+    (-> {:unparsed-input unparsed-input}
         (f))))
 (defn wrap-session [f]
   (fn [context]
     (-> context
         (assoc :session nil)
         (f)
-        (persist-session))))
+        ;(persist-session)
+        )))
+(defn wrap-parsed-input [f]
+  (fn [context]
+    (let [adapter (? context [:system :data-adapter])
+          unparsed-input (? context :unparsed-input)
+          parsed (parse-input adapter unparsed-input)]
+      (-> context
+          (assoc :parsed-input parsed)
+          (f)))))
 (defn wrap-authenticate [f]
   (fn [context]
     (let [authenticator (? context [:system :authenticator])
@@ -62,31 +37,63 @@
           (f)))))
 (defn wrap-action [f]
   (fn [context]
-    (-> context
-        (assoc :action nil)
-        (f))))
+    (let [finder (? context [:system :action-finder])
+          action (find-action finder context)]
+      (-> context
+          (assoc :action-sym action)
+          (f)))))
+(defn wrap-input-mold [f]
+  (fn [context]
+    (let [moldstore (? context [:system :mold-store])
+          input-mold (get-mold moldstore context)]
+      (-> context
+          (assoc :input-mold input-mold)
+          (f)))))
+(defn wrap-input [f]
+  (fn [context]
+    (let [input-mold (? context :input-mold)
+          parsed-input (? context :parsed-input)
+          molded-input (parse input-mold parsed-input)]
+      (-> context
+          (assoc :input molded-input)
+          (f)))))
 (defn wrap-authorize [f]
   (fn [context]
-    (-> context
-        ; Throw exception
-        (assoc :authorized? nil)
-        (f))))
-(defn wrap-molds [f]
-  (fn [context]
-    (-> context
-        (assoc :input-mold nil)
-        (f)
-        (assoc :output-mold nil))))
-(defn wrap-data [f]
-  (fn [context]
-    (-> context
-        (assoc :input nil)
-        (f)
-        (assoc :rawoutput nil))))
+    (let [system (? context :system)
+          authorizer (? system :authorizer)
+          action-sym (? context :action-sym)
+          user (? context :user)
+          input (? context :input)
+          ok? (allowed? authorizer system action-sym user input)]
+      (if-not ok?
+        (throw-unauthorized)
+        (f context)))))
 (defn wrap-output [f]
   (fn [context]
-    (let [output ((:action context) (:system context) (:input context))]
+    (let [action-sym (? context :action-sym)
+          action (resolve action-sym)
+          output (action context)]
       (-> context
           (assoc :output output)
           (f)))))
+(defn wrap-output-mold [f]
+  (fn [context]
+    (let [done-context (f context)
+          moldstore (? done-context [:system :mold-store])
+          output-mold (get-mold moldstore done-context)]
+      (assoc done-context :output-mold output-mold))))
+(defn wrap-molded-output [f]
+  (fn [context]
+    (let [done-context (f context)
+          output-mold (? done-context :output-mold)
+          output (? done-context :output)
+          molded (show output-mold output)]
+      (assoc done-context :molded-output molded))))
+(defn wrap-rendered-output [f]
+  (fn [context]
+    (let [done-context (f context)
+          data-adapter (? done-context [:system :data-adapter])
+          molded-output (? done-context :molded-output)
+          rendered (render-output data-adapter molded-output)]
+      (assoc done-context :rendered-output rendered))))
 

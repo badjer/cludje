@@ -3,24 +3,30 @@
         cludje.test
         cludje.system
         cludje.authenticate
+        cludje.actionfind
+        cludje.authorize
+        cludje.moldstore
+        cludje.dataadapt
+        cludje.types
+        cludje.mold
         cludje.pipeline))
 
-(def input {:price "$1.23"})
-(def context {:rawinput input})
-(defn echo [context] context)
-
-(fact "wrap-context"
-  (let [handler (wrap-context identity)]
-    (fact "adds :rawinput"
-      (handler input) => (contains context))))
+(def unparsed-input {:price "$1.23"})
+(def raw-context {:unparsed-input unparsed-input})
 
 (fact "wrap-system"
   (let [sys {:system 1}
-        handler (wrap-system identity sys)]
+        handler (wrap-system identity sys)
+        context raw-context]
     (fact "adds :system"
       (handler context) => (contains {:system sys}))
     (fact "returns original data"
       (handler context) => (contains context))))
+
+(fact "wrap-unparsed-input"
+  (let [handler (wrap-unparsed-input identity)]
+    (fact "adds :unparsed-input"
+      (handler unparsed-input) => (contains raw-context))))
 
 (future-fact "wrap-session"
   (fact "adds :session")
@@ -28,54 +34,173 @@
   (fact "persists :session")
   (fact "returns original data"))
 
+(def data-adapter (>TestDataAdapter))
+(def parsed-input {:price "$1.23"})
+
+(fact "wrap-parsed-input"
+  (let [handler (wrap-parsed-input identity)
+        sys {:data-adapter data-adapter}
+        context (assoc raw-context :system sys)]
+    (fact "adds :input"
+      (handler context) => (contains {:parsed-input parsed-input}))
+    (fact "requires system/data-adapter"
+      (fact "no system"
+        (handler raw-context) => (throws))
+      (fact "no data-adapter"
+        (handler (assoc context :system {})) => (throws)))
+    (fact "requires unparsed-input"
+      (handler (dissoc context :unparsed-input)) => (throws))
+    (fact "returns original data"
+      (handler context) => (contains context))))
+
 (def user {:name "A"})
 (def authenticator (>TestAuthenticator user))
 
 (fact "wrap-authenticate"
   (let [sys {:authenticator authenticator}
-        handler (-> identity 
-                    (wrap-authenticate)
-                    (wrap-system sys))]
-  (fact "adds :user"
-    (handler context) => (contains {:user user}))
-  (fact "requires system/authenticator"
-    (fact "no system"
-      ((wrap-authenticate identity) context) => throws
-    (fact "no authenticator"
-      ((-> identity (wrap-system {}) (wrap-authenticate)) context) => throws)))
-  (fact "returns original data"
-    (handler context) => (contains context))))
+        handler (wrap-authenticate identity)
+        context (assoc raw-context :system sys)]
+    (fact "adds :user"
+      (handler context) => (contains {:user user}))
+    (fact "requires system/authenticator"
+      (fact "no system"
+        (handler {}) => (throws))
+      (fact "no authenticator"
+        (handler raw-context) => (throws)))
+    (fact "returns original data"
+      (handler context) => (contains context))))
 
 
-(def output {:count 2})
-(defn action [context] (assoc context :output output))
-(def action-finder (>SingleActionFinder action))
+(def output {:price 987})
+(defn action [context] output)
+(def action-finder (>SingleActionFinder `action))
 
 (fact "wrap-action"
-  (let [sys {:action-finder action-finder}]
-    (fact "adds :action")
-    (fact "requires system/action-finder")
-    (fact "returns original data")))
+  (let [sys {:action-finder action-finder}
+        handler (wrap-action identity)
+        context (assoc raw-context :system sys)]
+    (fact "adds :action"
+      (handler context) => (contains {:action-sym `action}))
+    (fact "requires system/action-finder"
+      (fact "no system"
+        (handler {}) => (throws))
+      (fact "no action-finder"
+        (handler raw-context) => (throws)))
+    (fact "returns original data"
+      (handler context) => (contains context))))
+
+(def action-context (assoc raw-context :user user :action-sym `action))
+(def mold (>Mold {:price Money} {}))
+(def moldstore (>SingleMoldStore mold))
+
+(fact "wrap-input-mold"
+  (let [sys {:mold-store moldstore}
+        handler (wrap-input-mold identity)
+        context (assoc action-context :system sys)]
+    (fact "adds :input-mold"
+      (handler context) => (contains {:input-mold mold}))
+    (fact "requires system/mold-store"
+      (fact "no system"
+        (handler raw-context) => (throws))
+      (fact "no moldstore"
+        (handler (assoc-in context [:system :mold-store] nil)) => (throws)))
+    (fact "returns original data"
+      (handler context) => (contains context))))
+
+(def parsed-context 
+  (assoc raw-context :input-mold mold :parsed-input parsed-input))
+(def input {:price 123})
+
+(fact "wrap-input"
+  (let [handler (wrap-input identity)
+        context parsed-context]
+  (fact "turns parsed-input to input"
+    (handler context) => (contains {:input input}))
+  (fact "requires parsed-input"
+    (handler (dissoc context :parsed-input)) => (throws))
+  (fact "requires input-mold"
+    (handler (dissoc context :input-mold)) => (throws))))
+
+(def authorizor (>TestAuthorizer true))
+(def input-context
+  (assoc action-context :input input))
+
 
 (fact "wrap-authorize"
-  (fact "requires system/authorizer")
-  (fact "throws exception if unauthorized")
-  (fact "returns original data"))
+  (let [sys {:authorizer authorizor}
+        handler (wrap-authorize identity)
+        context (assoc input-context :system sys)]
+    (fact "requires system/authorizer"
+      (fact "no system"
+        (handler {}) => (throws))
+      (fact "no authorizer"
+        (handler raw-context) => (throws)))
+    (fact "does nothing if authorized"
+      (handler context) => context)
+    (fact "throws exception if unauthorized"
+      (let [unauth (>TestAuthorizer false)
+            unauth-sys {:authorizer unauth}
+            context (assoc input-context :system unauth-sys)]
+        (handler context) => (throws)))
+    (fact "returns original data"
+      (handler context) => (contains context))))
 
-(fact "wrap-molds"
-  (fact "adds :input-mold")
-  (fact "adds :output-mold")
-  (fact "requires system/mold-store")
-  (fact "returns original data"))
+(fact "wrap-output" 
+  (let [handler (wrap-output identity)
+        sys {}
+        context (assoc input-context :system sys)]
+    (fact "adds :output"
+      (handler context) => (contains {:output anything}))
+    (fact "requires action-sym"
+      (handler (dissoc context :action-sym)) => (throws))
+    (fact "calls action"
+      (handler context) => (contains {:output output}))
+    (fact "returns original data"
+      (handler context) => (contains context))))
 
-(fact "wrap-data"
-  (fact "adds :input")
-  (fact "adds :rawoutput")
-  (fact "requires system/data-adapter")
-  (fact "returns original data"))
+(fact "wrap-output-mold"
+  (let [sys {:mold-store moldstore}
+        handler (wrap-output-mold identity)
+        context (assoc input-context :system sys)]
+    (fact "adds :output-mold"
+      (handler context) => (contains {:output-mold mold}))
+    (fact "requires system/mold-store"
+      (fact "no system"
+        (handler raw-context) => (throws))
+      (fact "no moldstore"
+        (handler (assoc-in context [:system :mold-store] nil)) => (throws)))
+    (fact "returns original data"
+      (handler context) => (contains context))))
 
-(fact "wrap-output"
-  (fact "adds :output")
-  (fact "calls action")
-  (fact "returns original data"))
+(def molded-output {:price "$9.87"})
+(def output-context (assoc input-context :output output :output-mold mold))
 
+(fact "wrap-molded-output"
+  (let [handler (wrap-molded-output identity)
+        context output-context]
+    (fact "turns output to molded-output"
+      (handler context) => (contains {:molded-output molded-output}))
+    (fact "requires output-mold"
+      (handler (dissoc context :output-mold)) => (throws))
+    (fact "requires output"
+      (handler (dissoc context :output)) => (throws))))
+
+(def molded-output-context 
+  (assoc output-context :molded-output molded-output :output-mold mold))
+(def rendered-output molded-output)
+
+(fact "wrap-rendered-output"
+  (let [handler (wrap-rendered-output identity)
+        sys {:data-adapter data-adapter}
+        context (assoc molded-output-context :system sys)]
+    (fact "adds :rendered-output"
+      (handler context) => (contains {:rendered-output rendered-output}))
+    (fact "requires molded-output"
+      (handler (dissoc context :molded-output)) => (throws))
+    (fact "requires system/data-adapter"
+      (fact "no system"
+        (handler raw-context) => (throws))
+      (fact "no data-adapter"
+        (handler (assoc context :system {})) => (throws)))
+    (fact "returns original data"
+      (handler context) => (contains context))))
