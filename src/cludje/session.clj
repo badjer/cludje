@@ -1,6 +1,5 @@
 (ns cludje.session
-  (:use cludje.system)
-  (:import java.util.UUID))
+  (:use cludje.system))
 
 (defrecord TestSessionStore [contents]
   ISessionStore

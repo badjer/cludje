@@ -19,6 +19,7 @@
   (write2 [self coll kee data] "Insert or update. If kee is nil, insert. The key is returned")
   (delete2 [self coll kee] "Delete"))
 
+
 (defprotocol IEmailer
   "Sends email"
   (send-mail [self message] "Takes an email map. Expected keys are :from :to :subject :text :html"))

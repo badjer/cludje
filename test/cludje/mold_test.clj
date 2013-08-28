@@ -12,8 +12,9 @@
 (def Cog (>Mold fs {:defaults {:price 42}}))
 (def Bike (>Mold {:front Cog :back Cog :gears Int} {}))
 
-
 (fact ">Mold"
+  (fact "creates different types"
+    (type Bike) =not=> (type Cog))
   (fact "implements IMold"
     (fact "Can create a mold"
       (let [m (>Mold fs {})]
@@ -127,6 +128,15 @@
             (parse mf {}) => (contains {:name "x"}))
           (fact "if supplied"
             (parse mf {:name "a"}) => (contains {:name "a"})))))))
+
+
+(fact "make"
+  (fact "constructs an instance from a mold"
+    (make Cog {:name "A" :price 123}) => {:name "A" :price 123})
+  (fact "converts fields"
+    (make Cog {:name "A" :price "1.23"}) => {:name "A" :price 123})
+  (fact "throws problems if it can't validate"
+    (make Cog {:name "A" :price "asdf"}) => (throws-problems)))
 
 
 

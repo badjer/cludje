@@ -10,22 +10,36 @@
   (keyname [self])
   (partitions [self]))
 
-
-(defn ->Model [tablename fs opts]
+(defn extend-imodel [obj tablename fs opts]
   (let [tablename (s/lower-case (name tablename))
         no-key? (:no-key opts)
+        kee (if no-key? nil :_id)
+        parts (get opts :partitions [])]
+    (extend (type obj)
+      IModel
+      {:tablename (fn [self] tablename)
+       :keyname (fn [self] kee)
+       :partitions (fn [self] parts)})
+    obj))
+
+(defn >Model [tablename fs opts]
+  (let [no-key? (:no-key opts)
         kee (if no-key? nil :_id)
         allfields (if no-key?  fs (assoc fs kee Str))
         ; Don't include kee in required fields
         required-fields (vec (keys fs))
-        parts (get opts :partitions [])
         invisible-fields (conj (get opts :invisible []) kee)
-        mold-opts (merge {:required required-fields
-                          :invisible invisible-fields})
-        model-mold (>Mold allfields mold-opts)]
-    (-> (reify IModel
-          (mold [self] model-mold)
-          (tablename [self] tablename)
-          (keyname [self] kee)
-          (partitions [self] parts)))))
-
+        mold-opts (merge opts {:required required-fields 
+                               :invisible invisible-fields})]
+    ; Terrible hack here.
+    ; We want to create a new type at runtime. We can't just
+    ; call (reify), it seems, because it gives back the same
+    ; type every time.
+    ; So instead, we eval in order to get new types
+    ; NOTE: If specify gets added to Clojure, that's what we'd like here
+    (-> (eval '(reify))
+        (extend-imodel tablename fs opts)
+        (extend-imold allfields mold-opts)
+        (extend-ivalidateable)
+        (extend-ishowable)
+        (extend-iparseable))))

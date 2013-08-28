@@ -69,6 +69,9 @@
 (defn throws-403 [] 
   "Check that the fn throws a forbidden exception"
   (throws clojure.lang.ExceptionInfo "Unauthorized"))
+(defn throws-problems []
+  "Check that the fn throws problems"
+  (throws clojure.lang.ExceptionInfo "Problems"))
 
 (defn ok? [x]
   "A midje checker that makes sure there's no exception, and that
