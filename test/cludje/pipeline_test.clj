@@ -6,6 +6,7 @@
         cludje.actionfind
         cludje.authorize
         cludje.moldstore
+        cludje.session
         cludje.dataadapt
         cludje.types
         cludje.mold
@@ -28,11 +29,25 @@
     (fact "adds :unparsed-input"
       (handler unparsed-input) => (contains raw-context))))
 
-(future-fact "wrap-session"
-  (fact "adds :session")
-  (fact "requires system/session-store")
-  (fact "persists :session")
-  (fact "returns original data"))
+(def session-store (>TestSessionStore))
+
+(fact "wrap-session"
+  (let [add-session-handler (wrap-session #(assoc-in % [:session :a] 1))
+        handler (wrap-session identity)
+        sys {:session-store session-store}
+        context (assoc raw-context :system sys)]
+    (fact "adds :session"
+      (handler context) => (has-keys :session))
+    (fact "requires system/session-store"
+      (fact "no system"
+        (handler (dissoc context :system)) => (throws))
+      (fact "no session-store"
+        (handler (assoc context :system {})) => (throws)))
+    (fact "persists :session"
+      (add-session-handler context) => anything
+      (handler context) => (contains {:session {:a 1}}))
+    (fact "returns original data"
+      (handler context) => (contains context))))
 
 (def data-adapter (>TestDataAdapter))
 (def parsed-input {:price "$1.23"})

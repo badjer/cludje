@@ -6,6 +6,12 @@
   (log-in [self context user])
   (log-out [self context]))
 
+(defprotocol ISessionStore
+  "Represent session"
+  (current-session [store context])
+  (persist-session [store session context]))
+
+
 (defprotocol IDatastore
   "Represents a datastore"
   (fetch2 [self coll kee] "Get an item from the datastore")

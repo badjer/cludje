@@ -15,11 +15,13 @@
         (f))))
 (defn wrap-session [f]
   (fn [context]
-    (-> context
-        (assoc :session nil)
-        (f)
-        ;(persist-session)
-        )))
+    (let [session-store (? context [:system :session-store])
+          in-session (current-session session-store context)
+          input (assoc context :session in-session)
+          output (f input)
+          out-session (:session output)]
+      (persist-session session-store out-session output)
+      output)))
 (defn wrap-parsed-input [f]
   (fn [context]
     (let [adapter (? context [:system :data-adapter])
