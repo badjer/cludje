@@ -22,6 +22,20 @@
        :partitions (fn [self] parts)})
     obj))
 
+; We want strings and keywords to act as models,
+; for when people pass strings instead of models
+; to db functions, for example
+(extend String
+  IModel
+  {:tablename (fn [self] (s/lower-case self))
+   :keyname (fn [self] :_id)
+   :partitions (fn [self] [])})
+(extend clojure.lang.Keyword
+  IModel
+  {:tablename (fn [self] (s/lower-case (name self)))
+   :keyname (fn [self] :_id)
+   :partitions (fn [self] [])})
+
 (defn >Model [tablename fs opts]
   (let [no-key? (:no-key opts)
         kee (if no-key? nil :_id)

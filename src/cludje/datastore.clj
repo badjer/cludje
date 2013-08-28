@@ -1,5 +1,7 @@
 (ns cludje.datastore
-  (:use cludje.system)
+  (:use cludje.system
+        cludje.mold
+        cludje.model)
   (:import java.io.File
            java.io.FileWriter
            java.util.UUID))
@@ -26,15 +28,16 @@
   (fetch [self coll kee] 
     (let [params {:_id kee}
           _ (validate-db-data params)
-          results (query self coll params)]
+          tbl (tablename coll)
+          results (query self tbl params)]
       (or (first results) nil)))
   (query [self coll params] 
     (let [_ (validate-db-data params)
-          kwcoll (keyword coll)]
+          tbl (tablename coll)]
       (if (empty? params)
-        (let [res (get @dbatom kwcoll)]
+        (let [res (get @dbatom tbl)]
           (if (empty? res) nil res))
-        (let [table (get @dbatom kwcoll)
+        (let [table (get @dbatom tbl)
               comparison-keys (keys params)
               row-matches? #(= params (select-keys % comparison-keys))
               res (filter row-matches? table)]
@@ -44,19 +47,19 @@
           keemap {:_id kee}
           _ (validate-db-data keemap)
           _ (validate-db-data data)
-          kwcoll (keyword coll)
+          tbl (tablename coll)
           record (merge data keemap)
-          oldtable (get @dbatom kwcoll)
-          victims (set (query self kwcoll keemap))
+          oldtable (get @dbatom tbl)
+          victims (set (query self tbl keemap))
           newtable (conj (remove victims oldtable) record)]
-      (swap! dbatom assoc kwcoll newtable)
+      (swap! dbatom assoc tbl newtable)
       kee))
   (delete [self coll kee] 
-    (let [kwcoll (keyword coll)
-          victims (set (query self kwcoll {:_id kee}))
-          oldtable (get @dbatom kwcoll)
+    (let [tbl (tablename coll)
+          victims (set (query self tbl {:_id kee}))
+          oldtable (get @dbatom tbl)
           newtable (remove victims oldtable)]
-      (swap! dbatom assoc kwcoll newtable))))
+      (swap! dbatom assoc tbl newtable))))
 
 (defn >TestDatastore 
   ([] (>TestDatastore {}))
@@ -76,3 +79,13 @@
     (when-let [dba (read-string (slurp filename))]
       (println "Contents were " dba)
       (>TestDatastore dba))))
+
+(defn save [store model m]
+  (let [parsed (make model m)
+        kee (get m (keyname model))
+        id (write store (tablename model) kee parsed)]
+    {:_id id}))
+
+(defn insert [store model m]
+  (save store model (dissoc m (keyname model))))
+
