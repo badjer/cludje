@@ -1,4 +1,7 @@
-(ns cludje.system)
+(ns cludje.system
+  (:use cludje.types
+        cludje.mold
+        cludje.model))
 
 (defprotocol IAuthenticator
   "Contols identifying the user"
@@ -19,14 +22,31 @@
   (write [self coll kee data] "Insert or update. If kee is nil, insert. The key is returned")
   (delete [self coll kee] "Delete"))
 
+(defn save [store model m]
+  (let [parsed (make model m)
+        kee (get m (keyname model))
+        id (write store (tablename model) kee parsed)]
+    {:_id id}))
+
+(defn insert [store model m]
+  (save store model (dissoc m (keyname model))))
+
+
+(def MailMessage 
+  (>Mold {:to Email :from Email :subject Str :body Str :text Str} {}))
 
 (defprotocol IEmailer
   "Sends email"
-  (send-mail [self message] "Takes an email map. Expected keys are :from :to :subject :text :html"))
+  (send-mailmessage [self message] "Takes an email map. Expected keys are :from :to :subject :text :html"))
+
+(defn send-mail [emailer raw-message]
+  (let [parsed (make MailMessage raw-message)]
+    (send-mailmessage emailer parsed)))
+
 
 (defprotocol ILog
   "Represents logging"
-  (log2 [self message] "Log a message"))
+  (log [self message] "Log a message"))
 
 (defprotocol IAuthorizer
   "Controls permissions"

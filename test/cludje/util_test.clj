@@ -1,5 +1,6 @@
 (ns cludje.util-test
   (:use midje.sweet
+        cludje.test
         cludje.util))
 
 (facts "map-vals"
@@ -36,4 +37,17 @@
   (&? {:a {:b 1}} [:a :z]) => (throws)
   (&? {:a {:b 1}} [:a :z] [:a :b]) => 1
   (&? {:a {:b 1}} [:a :z] [:a :y]) => (throws))
+
+(fact "with-problem"
+  (-> {} (with-problem :a "err")) => {:__problems {:a "err"}}
+  (-> nil (with-problem :a "err")) => {:__problems {:a "err"}}
+  (-> {:a 1} (with-problem :a "err")) => {:a 1 :__problems {:a "err"}}
+  (-> {} (with-problem :a "err")) => (has-problems :a))
+
+(fact "with-alert"
+  (-> {} (with-alert :info "hi")) => {:__alerts [{:type :info :text "hi"}]}
+  (-> nil (with-alert :info "hi")) => {:__alerts [{:type :info :text "hi"}]}
+  (-> {:a 1} (with-alert :info "hi")) => 
+    {:a 1 :__alerts [{:type :info :text "hi"}]}
+  (-> {} (with-alert :info "hi")) => (has-alert :info #"hi"))
 

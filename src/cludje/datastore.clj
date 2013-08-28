@@ -80,12 +80,3 @@
       (println "Contents were " dba)
       (>TestDatastore dba))))
 
-(defn save [store model m]
-  (let [parsed (make model m)
-        kee (get m (keyname model))
-        id (write store (tablename model) kee parsed)]
-    {:_id id}))
-
-(defn insert [store model m]
-  (save store model (dissoc m (keyname model))))
-

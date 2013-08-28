@@ -53,3 +53,9 @@
       (throw-problems (zipmap kees (repeat "At least one was expected")))
       (first vs))))
 
+(defn with-alert [m typ text]
+  (update-in m [:__alerts] conj {:text text :type typ}))
+
+(defn with-problem [m field text]
+  (update-in m [:__problems] assoc (keyword (name field)) (str text)))
+

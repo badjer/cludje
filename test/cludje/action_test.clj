@@ -7,3 +7,4 @@
         cludje.system
         cludje.datastore))
 
+(future-fact "Test actions")
