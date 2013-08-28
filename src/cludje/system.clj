@@ -14,10 +14,10 @@
 
 (defprotocol IDatastore
   "Represents a datastore"
-  (fetch2 [self coll kee] "Get an item from the datastore")
-  (query2 [self coll params] "Get multiple items from the datastore. If params is empty, all entries should be returned")
-  (write2 [self coll kee data] "Insert or update. If kee is nil, insert. The key is returned")
-  (delete2 [self coll kee] "Delete"))
+  (fetch [self coll kee] "Get an item from the datastore")
+  (query [self coll params] "Get multiple items from the datastore. If params is empty, all entries should be returned")
+  (write [self coll kee data] "Insert or update. If kee is nil, insert. The key is returned")
+  (delete [self coll kee] "Delete"))
 
 
 (defprotocol IEmailer

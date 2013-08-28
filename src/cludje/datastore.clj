@@ -4,9 +4,6 @@
            java.io.FileWriter
            java.util.UUID))
 
-; Helper functions
-
-
 
 (def permitted-types
   "The types that are allowed to be in the database"
@@ -24,14 +21,14 @@
   (str (UUID/randomUUID)))
 
 
-(defrecord MemDb [dbatom]
+(defrecord TestDatastore [dbatom]
   IDatastore
-  (fetch2 [self coll kee] 
+  (fetch [self coll kee] 
     (let [params {:_id kee}
           _ (validate-db-data params)
-          results (query2 self coll params)]
+          results (query self coll params)]
       (or (first results) nil)))
-  (query2 [self coll params] 
+  (query [self coll params] 
     (let [_ (validate-db-data params)
           kwcoll (keyword coll)]
       (if (empty? params)
@@ -42,7 +39,7 @@
               row-matches? #(= params (select-keys % comparison-keys))
               res (filter row-matches? table)]
           (if (empty? res) nil res)))))
-  (write2 [self coll kee data] 
+  (write [self coll kee data] 
     (let [kee (if kee kee (new-id)) ; If no kee is supplied, create a new one
           keemap {:_id kee}
           _ (validate-db-data keemap)
@@ -50,27 +47,32 @@
           kwcoll (keyword coll)
           record (merge data keemap)
           oldtable (get @dbatom kwcoll)
-          victims (set (query2 self kwcoll keemap))
+          victims (set (query self kwcoll keemap))
           newtable (conj (remove victims oldtable) record)]
       (swap! dbatom assoc kwcoll newtable)
       kee))
-  (delete2 [self coll kee] 
+  (delete [self coll kee] 
     (let [kwcoll (keyword coll)
-          victims (set (query2 self kwcoll {:_id kee}))
+          victims (set (query self kwcoll {:_id kee}))
           oldtable (get @dbatom kwcoll)
           newtable (remove victims oldtable)]
       (swap! dbatom assoc kwcoll newtable))))
 
-(defn spit-memdb [db filename]
+(defn >TestDatastore 
+  ([] (>TestDatastore {}))
+  ([contents]
+    (->TestDatastore (atom contents))))
+
+(defn spit-testdatastore [db filename]
   (let [dba (:dbatom db)]
     (println "Saving db to " filename)
     (binding [*out* (FileWriter. filename)]
       (prn @dba))))
 
-(defn slurp-memdb [filename]
+(defn slurp-testdatastore [filename]
   (println "Reading db from " filename)
   (when (.isFile (File. filename))
     (println "File found...")
     (when-let [dba (read-string (slurp filename))]
       (println "Contents were " dba)
-      (->MemDb (atom dba)))))
+      (>TestDatastore dba))))

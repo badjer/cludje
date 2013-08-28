@@ -7,12 +7,9 @@
 (defn save [context model m]
   (let [store (? context [:system :data-store])
         parsed (make model m)
-        kee nil;(get-key model parsed)
-        id nil];(write2 sys model kee parsed)]
+        kee (get m (keyname model))
+        id (write store (tablename model) kee parsed)]
     {:_id id}))
 
 (defn insert [context model m]
-  );(save sys model (dissoc m (key-name model))))
-
-
-
+  (save context model (dissoc m (keyname model))))
