@@ -24,3 +24,8 @@
     (throw (ex-info "Not logged in" 
                     (merge {:__notloggedin "Not logged in"} details)))))
 
+(defn throw-error
+  ([] (throw-error {}))
+  ([details]
+   (throw (ex-info "System error"
+                   (merge {:__systemerror "System Error"} details)))))

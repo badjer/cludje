@@ -29,6 +29,8 @@
   crash an action.
   kee can be a vector for nested maps"
   ([input kee]
+   (when-not (map? input)
+     (throw-error {:input "? must be passed a map as input"}))
    (cond
      (vector? kee) (?-map input kee)
      :else (?- input kee))))
@@ -39,6 +41,8 @@
   ([input kee]
    (?? input kee nil))
   ([input kee default]
+   (when-not (map? input)
+     (throw-error {:input "?? must be passed a map as input"}))
    (if (vector? kee)
      (get-in input kee default)
      (get input kee default))))
@@ -46,6 +50,8 @@
 (defn &? [input & kees]
   "Returns the value of the first of kees found in input.
   If none are found, an excption will be thrown, like ?"
+   (when-not (map? input)
+     (throw-error {:input "&? must be passed a map as input"}))
   (when (empty? kees)
     (throw-problems {nil "Called &? with no kees"}))
   (let [vs (filter identity (map (partial ?? input) kees))]

@@ -9,10 +9,12 @@
     (-> context
         (assoc :system system)
         (f))))
+
 (defn wrap-unparsed-input [f]
   (fn [unparsed-input]
     (-> {:unparsed-input unparsed-input}
         (f))))
+
 (defn wrap-session [f]
   (fn [context]
     (let [session-store (? context [:system :session-store])
@@ -22,6 +24,7 @@
           out-session (:session output)]
       (persist-session session-store out-session output)
       output)))
+
 (defn wrap-parsed-input [f]
   (fn [context]
     (let [adapter (? context [:system :data-adapter])
@@ -30,6 +33,7 @@
       (-> context
           (assoc :parsed-input parsed)
           (f)))))
+
 (defn wrap-authenticate [f]
   (fn [context]
     (let [authenticator (? context [:system :authenticator])
@@ -37,6 +41,7 @@
       (-> context
           (assoc :user user)
           (f)))))
+
 (defn wrap-action [f]
   (fn [context]
     (let [finder (? context [:system :action-finder])
@@ -44,32 +49,33 @@
       (-> context
           (assoc :action-sym action)
           (f)))))
+
 (defn wrap-input-mold [f]
   (fn [context]
-    (let [moldstore (? context [:system :mold-store])
-          input-mold (get-mold moldstore context)]
+    (let [moldfinder (? context [:system :mold-finder])
+          input-mold-sym (find-mold moldfinder context)]
       (-> context
-          (assoc :input-mold input-mold)
+          (assoc :input-mold-sym input-mold-sym)
           (f)))))
+
 (defn wrap-input [f]
   (fn [context]
-    (let [input-mold (? context :input-mold)
+    (let [input-mold-sym (? context :input-mold-sym)
+          input-mold @(resolve input-mold-sym)
           parsed-input (? context :parsed-input)
           molded-input (parse input-mold parsed-input)]
       (-> context
           (assoc :input molded-input)
           (f)))))
+
 (defn wrap-authorize [f]
   (fn [context]
-    (let [system (? context :system)
-          authorizer (? system :authorizer)
-          action-sym (? context :action-sym)
-          user (? context :user)
-          input (? context :input)
-          ok? (allowed? authorizer system action-sym user input)]
+    (let [authorizer (? context [:system :authorizer])
+          ok? (can? authorizer context)]
       (if-not ok?
         (throw-unauthorized)
         (f context)))))
+
 (defn wrap-output [f]
   (fn [context]
     (let [action-sym (? context :action-sym)
@@ -78,19 +84,23 @@
       (-> context
           (assoc :output output)
           (f)))))
+
 (defn wrap-output-mold [f]
   (fn [context]
     (let [done-context (f context)
-          moldstore (? done-context [:system :mold-store])
-          output-mold (get-mold moldstore done-context)]
-      (assoc done-context :output-mold output-mold))))
+          moldfinder (? done-context [:system :mold-finder])
+          output-mold-sym (find-mold moldfinder done-context)]
+      (assoc done-context :output-mold-sym output-mold-sym))))
+
 (defn wrap-molded-output [f]
   (fn [context]
     (let [done-context (f context)
-          output-mold (? done-context :output-mold)
+          output-mold-sym (? done-context :output-mold-sym)
+          output-mold @(resolve output-mold-sym)
           output (? done-context :output)
           molded (show output-mold output)]
       (assoc done-context :molded-output molded))))
+
 (defn wrap-rendered-output [f]
   (fn [context]
     (let [done-context (f context)

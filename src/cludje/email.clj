@@ -1,10 +1,10 @@
 (ns cludje.email
   (:use cludje.system))
 
-(defrecord TestEmailer [mails]
+(defrecord TestEmailer [messages]
   IEmailer
   (send-mailmessage [self message]
-    (swap! mails conj message)))
+    (swap! messages conj message)))
 
 (defn >TestEmailer []
   (->TestEmailer (atom [])))

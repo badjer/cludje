@@ -72,6 +72,9 @@
 (defn throws-problems []
   "Check that the fn throws problems"
   (throws clojure.lang.ExceptionInfo "Problems"))
+(defn throws-error []
+  "Check that the fn throws errors"
+  (throws clojure.lang.ExceptionInfo "System error"))
 
 (defn ok? [x]
   "A midje checker that makes sure there's no exception, and that

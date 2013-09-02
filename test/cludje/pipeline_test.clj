@@ -5,7 +5,7 @@
         cludje.authenticate
         cludje.actionfind
         cludje.authorize
-        cludje.moldstore
+        cludje.moldfind
         cludje.session
         cludje.dataadapt
         cludje.types
@@ -106,24 +106,24 @@
 
 (def action-context (assoc raw-context :user user :action-sym `action))
 (def mold (>Mold {:price Money} {}))
-(def moldstore (>SingleMoldStore mold))
+(def moldfinder (>SingleMoldFinder `mold))
 
 (fact "wrap-input-mold"
-  (let [sys {:mold-store moldstore}
+  (let [sys {:mold-finder moldfinder}
         handler (wrap-input-mold identity)
         context (assoc action-context :system sys)]
     (fact "adds :input-mold"
-      (handler context) => (contains {:input-mold mold}))
-    (fact "requires system/mold-store"
+      (handler context) => (contains {:input-mold-sym `mold}))
+    (fact "requires system/mold-finder"
       (fact "no system"
         (handler raw-context) => (throws))
       (fact "no moldstore"
-        (handler (assoc-in context [:system :mold-store] nil)) => (throws)))
+        (handler (assoc-in context [:system :mold-finder] nil)) => (throws)))
     (fact "returns original data"
       (handler context) => (contains context))))
 
 (def parsed-context 
-  (assoc raw-context :input-mold mold :parsed-input parsed-input))
+  (assoc raw-context :input-mold-sym `mold :parsed-input parsed-input))
 (def input {:price 123})
 
 (fact "wrap-input"
@@ -133,8 +133,8 @@
     (handler context) => (contains {:input input}))
   (fact "requires parsed-input"
     (handler (dissoc context :parsed-input)) => (throws))
-  (fact "requires input-mold"
-    (handler (dissoc context :input-mold)) => (throws))))
+  (fact "requires input-mold-sym"
+    (handler (dissoc context :input-mold-sym)) => (throws))))
 
 (def authorizor (>TestAuthorizer true))
 (def input-context
@@ -174,21 +174,21 @@
       (handler context) => (contains context))))
 
 (fact "wrap-output-mold"
-  (let [sys {:mold-store moldstore}
+  (let [sys {:mold-finder moldfinder}
         handler (wrap-output-mold identity)
         context (assoc input-context :system sys)]
     (fact "adds :output-mold"
-      (handler context) => (contains {:output-mold mold}))
+      (handler context) => (contains {:output-mold-sym `mold}))
     (fact "requires system/mold-store"
       (fact "no system"
         (handler raw-context) => (throws))
       (fact "no moldstore"
-        (handler (assoc-in context [:system :mold-store] nil)) => (throws)))
+        (handler (assoc-in context [:system :mold-finder] nil)) => (throws)))
     (fact "returns original data"
       (handler context) => (contains context))))
 
 (def molded-output {:price "$9.87"})
-(def output-context (assoc input-context :output output :output-mold mold))
+(def output-context (assoc input-context :output output :output-mold-sym `mold))
 
 (fact "wrap-molded-output"
   (let [handler (wrap-molded-output identity)
@@ -196,12 +196,12 @@
     (fact "turns output to molded-output"
       (handler context) => (contains {:molded-output molded-output}))
     (fact "requires output-mold"
-      (handler (dissoc context :output-mold)) => (throws))
+      (handler (dissoc context :output-mold-sym)) => (throws))
     (fact "requires output"
       (handler (dissoc context :output)) => (throws))))
 
 (def molded-output-context 
-  (assoc output-context :molded-output molded-output :output-mold mold))
+  (assoc output-context :molded-output molded-output :output-mold-sym `mold))
 (def rendered-output molded-output)
 
 (fact "wrap-rendered-output"

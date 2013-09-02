@@ -6,7 +6,7 @@
 (defprotocol IAuthenticator
   "Contols identifying the user"
   (current-user [self context] "Returns the currently logged-in user.")
-  (log-in [self context user])
+  (log-in [self context])
   (log-out [self context]))
 
 (defprotocol ISessionStore
@@ -50,11 +50,13 @@
 
 (defprotocol IAuthorizer
   "Controls permissions"
-  (allowed? [self system action-sym user input] 
-            "Is the user allowed to do this?"))
+  (can? [self context]))
 
 (defprotocol IActionFinder
   (find-action [self context] "Get the action, or nil if it doesn't exist"))
+
+(defprotocol IMoldFinder
+  (find-mold [self context]))
 
 (defprotocol IMoldStore
   (get-mold [self context]))

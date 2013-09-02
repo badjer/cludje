@@ -64,7 +64,9 @@
 (defn >TestDatastore 
   ([] (>TestDatastore {}))
   ([contents]
-    (->TestDatastore (atom contents))))
+   (let [cleaned-contents (into {} (for [[tbl rows] contents]
+                                     [(name tbl) rows]))]
+     (->TestDatastore (atom cleaned-contents)))))
 
 (defn spit-testdatastore [db filename]
   (let [dba (:dbatom db)]
