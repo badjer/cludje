@@ -58,9 +58,21 @@
 (defprotocol IMoldFinder
   (find-mold [self context]))
 
+;;;; TOOD: Remove this
 (defprotocol IMoldStore
   (get-mold [self context]))
+;;;;
 
 (defprotocol IDataAdapter
   (parse-input [self rawinput])
   (render-output [self output]))
+
+
+
+(defprotocol IServer
+  (start [self])
+  (stop [self]))
+
+(defprotocol ITemplateFinder
+  (find-template [self context]))
+

@@ -15,8 +15,7 @@
 
 (defn looks-like-action? [sym]
   (let [f @(resolve sym)]
-    (when (and (fn? f) (= 1 (arity f)))
-      true)))
+    (and (fn? f) (= 1 (arity f)))))
 
 (defrecord NSActionFinder [action-namespaces]
   IActionFinder

@@ -38,7 +38,7 @@
         (cond 
           (empty? finds)
           (throw-error {:mold (str "Couldn't find mold! Couldn't find anything "
-                                   "named " moldname "in the namespaces "
+                                   "named " moldname " in the namespaces "
                                    (s/join ", " @mold-namespaces))})
           :else 
           (throw-error {:mold (str "Couldn't find mold! Found these: "
