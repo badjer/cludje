@@ -24,11 +24,12 @@
       (first)
       (dissoc :hashed-pwd)))
 
-(defn- validate-user [input datastore user-table check-hash-fn]
+(defn- validate-user [input datastore user-table hash-fn]
   (let [username (? input :username)
         password (? input :password)]
     (when-let [user (first (query datastore user-table {:username username}))]
-      (when (check-hash-fn password (? user :hashed-pwd))
+      (when (= (? user :hashed-pwd)
+               (hash-fn password))
         user))))
 
 (defn- make-token [user] (:username user))
@@ -36,9 +37,9 @@
 (defn- expire-token [context app-name] 
   (assoc-in context [:session app-name] ""))
 
-(defn- check-hash [text hashed]
+(defn- hash-password [text]
   ; TODO: Actual hashing
-  (= text hashed))
+  text)
 
 (defrecord TokenAuthenticator [app-name user-table]
   IAuthenticator
@@ -50,7 +51,7 @@
     (let [datastore (? context [:system :data-store])
           input (? context :input)
           user (parse LoginUser input)]
-      (if-let [val-user (validate-user input datastore user-table check-hash)]
+      (if-let [val-user (validate-user input datastore user-table hash-password)]
         (assoc-in context [:session app-name] (make-token val-user))
         (throw-problems {:username "Invalid username/password" 
                          :password "Invalid username/password"}))))
