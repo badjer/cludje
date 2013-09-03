@@ -67,9 +67,6 @@
   (parse-input [self raw-data])
   (render-output [self output]))
 
-(defprotocol IActionParser
-  (parse-action [self context]))
-
 
 
 (defprotocol IServer

@@ -20,15 +20,6 @@
           (assoc :parsed-input parsed)
           (f)))))
 
-;(defn wrap-parsed-action [f]
-  ;(fn [context]
-    ;(let [action-parser (? context [:system :action-parser])
-          ;up-action (parse-action action-parser context)]
-      ;(-> context
-          ;;(assoc :parsed-action up-action)
-          ;(f)))))
-
-
 (defn wrap-session [f]
   (fn [context]
     (let [session-store (? context [:system :session-store])
