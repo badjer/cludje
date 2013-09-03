@@ -10,10 +10,14 @@
         (assoc :system system)
         (f))))
 
-(defn wrap-unparsed-input [f]
-  (fn [unparsed-input]
-    (-> {:unparsed-input unparsed-input}
-        (f))))
+(defn wrap-parsed-input [f]
+  (fn [context]
+    (let [adapter (? context [:system :data-adapter])
+          unparsed-input (? context :unparsed-input)
+          parsed (parse-input adapter unparsed-input)]
+      (-> context
+          (assoc :parsed-input parsed)
+          (f)))))
 
 (defn wrap-session [f]
   (fn [context]
@@ -25,14 +29,6 @@
       (persist-session session-store out-session output)
       output)))
 
-(defn wrap-parsed-input [f]
-  (fn [context]
-    (let [adapter (? context [:system :data-adapter])
-          unparsed-input (? context :unparsed-input)
-          parsed (parse-input adapter unparsed-input)]
-      (-> context
-          (assoc :parsed-input parsed)
-          (f)))))
 
 (defn wrap-authenticate [f]
   (fn [context]
@@ -108,4 +104,14 @@
           molded-output (? done-context :molded-output)
           rendered (render-output data-adapter molded-output)]
       (assoc done-context :rendered-output rendered))))
+
+
+
+; Pipeline constructor actions
+(defn >pipeline [f]
+  "Loads the input into a context, and extracts the output from the context"
+  (fn [raw-input]
+    (let [context {:unparsed-input raw-input}
+          out-context (f context)]
+      (:rendered-output out-context))))
 

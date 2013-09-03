@@ -8,8 +8,10 @@
   IAuthorizer
   (can? [self context] @allow?))
 
-(defn >TestAuthorizer [allow?]
-  (->TestAuthorizer (atom allow?)))
+(defn >TestAuthorizer 
+  ([] (>TestAuthorizer true))
+  ([allow?]
+    (->TestAuthorizer (atom allow?))))
 
 
 (defrecord AbilityAuthorizer [auth-fns]

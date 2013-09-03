@@ -1,7 +1,6 @@
-(ns cludje.dataadapt-test
+(ns cludje.serve-test
   (:use midje.sweet
+        cludje.serve
         cludje.system
-        cludje.dataadapt
         cludje.test))
-
 

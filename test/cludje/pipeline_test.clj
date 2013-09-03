@@ -24,11 +24,6 @@
     (fact "returns original data"
       (handler context) => (contains context))))
 
-(fact "wrap-unparsed-input"
-  (let [handler (wrap-unparsed-input identity)]
-    (fact "adds :unparsed-input"
-      (handler unparsed-input) => (contains raw-context))))
-
 (def session-store (>TestSessionStore))
 
 (fact "wrap-session"
@@ -219,3 +214,5 @@
         (handler (assoc context :system {})) => (throws)))
     (fact "returns original data"
       (handler context) => (contains context))))
+
+
