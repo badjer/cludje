@@ -20,18 +20,18 @@
 (defrecord NSActionFinder [action-namespaces]
   IActionFinder
   (find-action [self context] 
-    (let [action-str (? context [:unparsed-input :_action])
+    (let [action-str (? context [:parsed-input :_action])
           finds (keep identity (map #(find-in-ns % action-str) @action-namespaces))
           matches (filter looks-like-action? finds)]
       (if-not (empty? matches)
         (first matches)
         (cond 
           (empty? finds)
-          (throw-error {:action (str "Couldn't find action! Couldn't find anything "
+          (throw-error {:parsed-action (str "Couldn't find action! Couldn't find anything "
                                      "named " action-str "in the namespaces "
                                      (s/join ", " @action-namespaces))})
           :else 
-          (throw-error {:action (str "Couldn't find action! Found these: "
+          (throw-error {:parsed-action (str "Couldn't find action! Found these: "
                                      (s/join ", " finds) ", but none of them "
                                      "looked like actions")}))))))
 

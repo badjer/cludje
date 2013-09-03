@@ -6,7 +6,7 @@
   (:require [cludje.altnamespace :as ans]))
 
 (defn >input [action-str]
-  {:unparsed-input {:_action action-str}})
+  {:parsed-input {:_action action-str}})
 
 (defn an-action [context])
 (defn not-an-action [a b c])

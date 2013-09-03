@@ -4,6 +4,7 @@
         cludje.errors
         cludje.system))
 
+
 (defn wrap-system [f system]
   (fn [context]
     (-> context
@@ -13,11 +14,20 @@
 (defn wrap-parsed-input [f]
   (fn [context]
     (let [adapter (? context [:system :data-adapter])
-          unparsed-input (? context :unparsed-input)
+          unparsed-input (? context :raw-input)
           parsed (parse-input adapter unparsed-input)]
       (-> context
           (assoc :parsed-input parsed)
           (f)))))
+
+;(defn wrap-parsed-action [f]
+  ;(fn [context]
+    ;(let [action-parser (? context [:system :action-parser])
+          ;up-action (parse-action action-parser context)]
+      ;(-> context
+          ;;(assoc :parsed-action up-action)
+          ;(f)))))
+
 
 (defn wrap-session [f]
   (fn [context]
@@ -111,7 +121,7 @@
 (defn >pipeline [f]
   "Loads the input into a context, and extracts the output from the context"
   (fn [raw-input]
-    (let [context {:unparsed-input raw-input}
+    (let [context {:raw-input raw-input}
           out-context (f context)]
       (:rendered-output out-context))))
 

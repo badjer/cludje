@@ -97,5 +97,6 @@
                                                 method :get}}]
   (case method 
     :get (http/get url)
+    :get-json (<-json (:body (http/get url)))
     :json (<-json (:body (http/post url {:form-params body :content-type :json})))))
 

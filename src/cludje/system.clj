@@ -58,14 +58,17 @@
 (defprotocol IMoldFinder
   (find-mold [self context]))
 
-;;;; TOOD: Remove this
+;;;; TODO: Remove this
 (defprotocol IMoldStore
   (get-mold [self context]))
 ;;;;
 
 (defprotocol IDataAdapter
-  (parse-input [self rawinput])
+  (parse-input [self raw-data])
   (render-output [self output]))
+
+(defprotocol IActionParser
+  (parse-action [self context]))
 
 
 

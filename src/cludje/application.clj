@@ -22,6 +22,12 @@
    :data-store (>TestDatastore)
    :emailer (>TestEmailer)})
 
+(defn with-web [system]
+  (let [web-data-adapter (>WebDataAdapter)]
+    (-> system
+        (assoc :data-adapter web-data-adapter))))
+
+
 ; Define pipelines
 (defn >api-pipeline [system]
   (>pipeline

@@ -13,7 +13,6 @@
 (def system-args {:action-namespaces ['cludje.application-test] 
                   :mold-namespaces ['cludje.application-test]})
 
-
 (fact ">api-pipeline"
   (let [system (>test-system system-args)
         ap (>api-pipeline system)]

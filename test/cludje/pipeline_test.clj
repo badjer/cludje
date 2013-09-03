@@ -12,8 +12,9 @@
         cludje.mold
         cludje.pipeline))
 
-(def unparsed-input {:price "$1.23"})
-(def raw-context {:unparsed-input unparsed-input})
+
+(def raw-input {:price "$1.23"})
+(def raw-context {:raw-input raw-input})
 
 (fact "wrap-system"
   (let [sys {:system 1}
@@ -23,6 +24,7 @@
       (handler context) => (contains {:system sys}))
     (fact "returns original data"
       (handler context) => (contains context))))
+
 
 (def session-store (>TestSessionStore))
 
@@ -51,15 +53,15 @@
   (let [handler (wrap-parsed-input identity)
         sys {:data-adapter data-adapter}
         context (assoc raw-context :system sys)]
-    (fact "adds :input"
+    (fact "adds :parsed-input"
       (handler context) => (contains {:parsed-input parsed-input}))
     (fact "requires system/data-adapter"
       (fact "no system"
         (handler raw-context) => (throws))
       (fact "no data-adapter"
         (handler (assoc context :system {})) => (throws)))
-    (fact "requires unparsed-input"
-      (handler (dissoc context :unparsed-input)) => (throws))
+    (fact "requires read-input"
+      (handler (dissoc context :raw-input)) => (throws))
     (fact "returns original data"
       (handler context) => (contains context))))
 
