@@ -5,7 +5,6 @@
 
 
 (defprotocol IModel
-  (mold [self])
   (tablename [self])
   (keyname [self])
   (partitions [self]))

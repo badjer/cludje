@@ -1,16 +1,5 @@
-(ns cludje.find)
-
-(defn arity [f] 
-  (let [m (first (.getDeclaredMethods (class f))) 
-        p (.getParameterTypes m)] 
-    (alength p)))
-
-(defn- to-symbol [thing]
-  (cond 
-    (symbol? thing) thing
-    (keyword? thing) (symbol (name thing))
-    (= "" thing) nil
-    :else (symbol thing)))
+(ns cludje.find
+  (:use cludje.util))
 
 (defn- find-ns-var [nas thing]
   (when (and nas thing)

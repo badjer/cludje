@@ -1,147 +1,138 @@
 (ns cludje.crud-test
-  (:require [cludje.app :as app]
-            [cludje.uiadapter :as ui])
-  (:use cludje.core
+  (:use cludje.action
         cludje.types
+        cludje.model
         cludje.crud
-        cludje.database
+        cludje.datastore
+        cludje.actionfind
         cludje.test
         midje.sweet))
 
-(defn crud-test-sys []
-  (app/make-system 
-              {:uiadapter (ui/->TestUIAdapter (atom nil))
-               :default-action nil
-               :action-ns 'cludje.crud-test
-               :model-ns 'cludje.crud-test}))
+(def Gear (>Model "gear" {:teeth Int} {}))
 
-
-(defmodel Gear {:teeth Int})
 (def gear {:teeth 4})
 
-(def-crud-actions Gear)
 
-(fact "def-crud-actions"
-  (let [db (->MemDb (atom {}))
-        sys {:db db} 
-        kees (gear-add sys gear)]
-    (count (gear-list sys nil)) => 1
-    (first (:gears (gear-list sys nil))) => (contains gear)
-    (gear-edit sys kees) => (contains gear)
-    (gear-new sys {}) => {}
-    (gear-alter sys (assoc kees :teeth 5)) => map?
-    (gear-show sys kees) => (contains {:teeth 5})
-    (gear-delete sys kees) => nil
-    (:gears (gear-list sys nil)) => empty?))
+(defn >context [moldsym]
+  {:system {:data-store (>TestDatastore)} :input-mold-sym moldsym})
 
-(defmodel Widget {:teeth Int :size Int}
-  :defaults {:size 3})
+(defn >in [context input] 
+  (-> context
+      (assoc :input input)))
+
+(fact "crud actions"
+  (let [context (>context `Gear)
+        kees (crud-model-add (>in context gear))]
+    kees => (has-keys :_id)
+    (count (crud-model-list context)) => 1
+    (first (:gears (crud-model-list context))) => (contains gear)
+    (crud-model-edit (>in context kees)) => (contains gear)
+    (crud-model-new context) => {}
+    (crud-model-alter (>in context (assoc kees :teeth 5))) => map?
+    (crud-model-show (>in context kees)) => (contains {:teeth 5})
+    (crud-model-delete (>in context kees)) => nil
+    (:gears (crud-model-list context)) => empty?
+    ))
+
+(def Widget (>Model "widget" {:teeth Int :size Int}
+                    {:defaults {:size 3}}))
 (def-crud-actions Widget)
 
+(defn ac-companyid [context] 1)
+(def Widgettype (>Model "widgettype" {:companyid Int :name Str}
+                        {:defaults {:companyid ac-companyid}}))
+(def-crud-actions Widgettype)
+
 (fact "crud defaults"
-  (let [db (->MemDb (atom {}))
-        sys {:db db}]
+  (let [context (>context `Widget)]
     (fact "new sets defaults"
-      (widget-new sys nil) => (contains {:size 3}))
+      (new-widget context) => (contains {:size 3}))
     (fact "add sets defaults"
-      (let [id (widget-add sys {:teeth 2})]
+      (let [id (add-widget (>in context {:teeth 2}))]
         id => ok?
-        (widget-show sys id) => (contains {:teeth 2 :size 3})))))
+        (show-widget (>in context id)) => (contains {:teeth 2 :size 3})))
+    (fact "set defaults with fn"
+      (new-widgettype (>context `Widgettype)) => (contains {:companyid 1}))))
 
 
-(defmodel Geartype {:name Str :isarchived Bool}
-  :defaults {:isarchived false})
+(def Geartype (>Model "geartype" {:name Str :isarchived Bool}
+                      {:defaults {:isarchived false}}))
 (def geartype {:name "A" :isarchived false})
 
 (def-crud-actions Geartype)
 
 (fact "def-crud-actions with lookup model"
-  (let [db (->MemDb (atom {}))
-        sys {:db db}
-        kees (geartype-add sys geartype)]
-    (fact "-new automatically sets isarchived"
-      (geartype-new sys nil) => (contains {:isarchived false}))
+  (let [context (>context `Geartype)
+        kees (add-geartype (>in context geartype))]
+    (fact "new- automatically sets isarchived"
+      (new-geartype context) => (contains {:isarchived false}))
     (fact "can add without isarchived"
       kees => ok?)
     (fact "can list"
-      (count (:geartypes (geartype-list sys {:isarchived false}))) => 1
-      (first (:geartypes (geartype-list sys {:isarchived false}))) => 
+      (count (:geartypes (list-geartype (>in context {:isarchived false})))) => 1
+      (first (:geartypes (list-geartype (>in context {:isarchived false})))) => 
         (contains geartype))))
 
 
-(defaction ac-with-lookup- (with-lookup- {} Geartype system {}))
+(defn ac-with-lookup [context]
+  (with-lookup context {} Geartype))
 
-(fact "with-lookup-"
-  (let [sys (crud-test-sys)]
-    (run-action sys geartype-add {:name "A" :isarchived false}) => ok?
-    (let [res (run-action sys ac-with-lookup- {})]
-      res => (has-keys :geartypes)
-      (map :name (:geartypes res)) => ["A"])))
-
-(defaction ac-lookup (with-lookup {} Geartype))
-
-(defaction ac-companyid 1)
-
-(defmodel Widgettype {:companyid Int :name Str}
-  :defaults {:companyid #'ac-companyid})
-(def-crud-actions Widgettype)
-
-(defaction ac-lookup-fn (with-lookup {} Widgettype))
+(defn ac-lookup-fn [context]
+  (with-lookup context {} Widgettype))
 
 (fact "with-lookup"
-  (let [sys (crud-test-sys)]
-    (run-action sys geartype-add {:name "A" :isarchived false}) => ok?
-    (let [res (run-action sys ac-lookup {})]
+  (let [action-finder (>NSActionFinder 'cludje.crud-test)
+        context (assoc-in (>context `Geartype) 
+                          [:system :action-finder] action-finder)]
+    ; Set up our test data
+    (add-geartype (>in context {:name "A"})) => ok?
+    (let [res (ac-with-lookup context)]
       res => (has-keys :geartypes)
       (map :name (:geartypes res)) => ["A"])
-    (fact "using a fn for a default value"
-      (run-action sys widgettype-add {:name "A" :companyid 1}) => ok?
-      (let [sres (run-action sys ac-lookup-fn {})]
+    (fact "using a fn for a default value" 
+      (let [context (assoc context :input-mold-sym `Widgettype)
+            _ (add-widgettype (>in context {:name "A"}))
+            sres (ac-lookup-fn context)]
         sres => ok?
         sres => (has-keys :widgettypes)
         (map :name (:widgettypes sres)) => ["A"]))))
 
 
-(defmodel Sprockettype {:companyid Int :name Str}
-  :defaults {:companyid #'ac-companyid}
-  :partitions [:companyid])
+
+(def Sprockettype (>Model "sprockettype" 
+                          {:companyid Int :name Str}
+                          {:defaults {:companyid #'ac-companyid} 
+                           :partitions [:companyid]}))
 
 (def-crud-actions Sprockettype)
 
-(fact "def-crud-actions sets defaults with a func"
-  (let [db (->MemDb (atom {}))
-        sys {:db db}]
-    (sprockettype-new sys {}) => (contains {:companyid 1})))
-
 (fact "partitions makes model-list include selector"
-  (let [sys (crud-test-sys)] 
-    (run-action sys sprockettype-add {:name "A" :companyid 1}) => ok?
-    (run-action sys sprockettype-add {:name "B" :companyid 2}) => ok?
-    (let [sres1 (run-action sys sprockettype-list {:companyid 1})
-          sres2 (run-action sys sprockettype-list {:companyid 2})]
+  (let [context (>context `Sprockettype)]
+    (add-sprockettype (>in context {:name "A" :companyid 1})) => ok?
+    (add-sprockettype (>in context {:name "B" :companyid 2})) => ok?
+    (let [sres1 (list-sprockettype (>in context {:companyid 1})) 
+          sres2 (list-sprockettype (>in context {:companyid 2}))]
       sres1 => ok?
       sres2 => ok?
       (map :name (:sprockettypes sres1)) => ["A"]
-      (map :name (:sprockettypes sres2)) => ["B"]
-      (fact "with the wrong type supplied"
-        (let [sres-w (run-action sys sprockettype-list {:companyid "1"})]
-          (map :name (:sprockettypes sres-w)) => ["A"])))
+      (map :name (:sprockettypes sres2)) => ["B"])
     (fact "uses default if none supplied"
-      (let [sres-d (run-action sys sprockettype-list {})]
+      (let [sres-d (list-sprockettype context)]
         sres-d => ok?
         (map :name (:sprockettypes sres-d)) => ["A"]))))
 
-(defmodel Footype {:companyid Str :name Str}
-  :defaults {:companyid 1}
-  :partitions [:companyid])
+(def Footype (>Model "footype" 
+                     {:companyid Str :name Str}
+                     {:defaults {:companyid 1} 
+                      :partitions [:companyid]}))
 
 (def-crud-actions Footype)
 
 (fact "partitions makes model-list include selector default - default is wrong type"
-  (let [sys (crud-test-sys)]
-    (run-action sys footype-add {:name "A" :companyid "1"}) => ok?
-    (run-action sys footype-add {:name "Z" :companyid "2"}) => ok?
-    (let [res (run-action sys footype-list {})]
+  (let [context (>context `Footype)]
+    (add-footype (>in context {:name "A" :companyid "1"})) => ok?
+    (add-footype (>in context {:name "B" :companyid "2"})) => ok?
+    (let [res (list-footype context)]
       (map :name (:footypes res)) => ["A"])))
 
 

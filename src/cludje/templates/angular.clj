@@ -2,7 +2,8 @@
   (:require [clojure.string :as s])
   (:use [hiccup.core :only [html]]
         [hiccup.page :only [html5]]
-        cludje.core
+        cludje.model
+        cludje.mold
         cludje.types))
 
 (defn ng-path [& path] 
@@ -142,12 +143,12 @@
    (ng-data "alert.text")])
 
 (defn action-name [model action]
-  (str (table-name model) "-" (name action)))
+  (str (tablename model) "-" (name action)))
 
 (defn model-form [model title action]
   (let [ac-name (action-name model action)
-        fields (field-types model)
-        invisible (? (meta model) :invisible)
+        fields (fields model)
+        invisible (invisible-fields model)
         visible-fields (apply dissoc fields invisible)]
     (form 
       (when title [:h3 {:ng-hide "data._title"} title])
@@ -164,17 +165,17 @@
                     (cancel-button "Cancel")])))))
 
 (defn model-title-field [model]
-  (let [fts (field-types model)]
+  (let [fts (fields model)]
     (if (:name fts)
       :name
       (first (keys fts)))))
 
 (defn summarize-model [model]
-  (let [tablename (table-name model)]
+  (let [tablename (tablename model)]
     [:h4 (ng-data tablename "." (model-title-field model))]))
 
 (defn list-item-model [model summarized-markup]
-  (let [tablename (table-name model)]
+  (let [tablename (tablename model)]
     [:li.span4.thumbnail.well
      {:ng-repeat (str tablename " in data." tablename "s")
       :stop-event "click" :ng-click (str "redirect('/" tablename "/show?_id="
@@ -194,24 +195,24 @@
   [:div 
    [:div.pull-right.btn-toolbar
     [:div.btn-group
-     (link "New" :href (str "/" (table-name model) "/new") :return true)]]
-   [:h3 {:ng-hide "data._title"} "List of " (table-name model)]
+     (link "New" :href (str "/" (tablename model) "/new") :return true)]]
+   [:h3 {:ng-hide "data._title"} "List of " (tablename model)]
    [:h3 {:ng-show "data._title"} (ng-data "data._title")]
    listed-markup])
    ;(model-list model)])
 
 (defn template-edit-body [model]
-  (model-form model (str "Edit " (table-name model)) :alter))
+  (model-form model (str "Edit " (tablename model)) :alter))
 
 (defn template-new-body [model]
-  (model-form model (str "New " (table-name model)) :add))
+  (model-form model (str "New " (tablename model)) :add))
 
 (defn template-show-body [model]
-  (let [fields (field-types model)
-        invisible (? (meta model) :invisible)
+  (let [fields (fields model)
+        invisible (invisible-fields model)
         visible-fields (apply dissoc fields invisible)]
     [:div 
-     [:h3 {:ng-hide "data._title"} (table-name model)]
+     [:h3 {:ng-hide "data._title"} (tablename model)]
      [:h3 {:ng-show "data._title"} (ng-data "data." :_title)]
      (for [field invisible]
        (ng-field Hidden field))

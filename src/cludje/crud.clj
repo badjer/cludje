@@ -1,128 +1,147 @@
 (ns cludje.crud
-  (:use cludje.core
+  (:use cludje.action 
+        cludje.util
+        cludje.system
+        cludje.model
+        cludje.mold
         cludje.types))
 
 (def crud-actions [:new :add :show :edit :alter :delete :list])
 
-(defaction default-global-dologin
-  (login input))
-(defaction default-global-login
-  {})
-(defaction default-global-logout
-  (logout input))
-(defaction default-global-data
-  {:user (current-user)
-   :menu [{:text "A" :url "/a"} {:text "B" :url "/b"}]
-   :footer "© 2013 Cludje"
-   :title "Cludje"})
-
-(defmacro def-system-actions []
-  `(do
-     (defability ~'-system-data-ability
-       :* "Global" :anon)
-     (defaction ~'global-dologin
-       (default-global-dologin ~'system ~'input))
-     (defaction ~'global-login
-       (default-global-login ~'system ~'input))
-     (defaction ~'global-logout
-       (default-global-logout ~'system ~'input))
-     (defaction ~'global-data
-       (default-global-data ~'system ~'input))))
-
-(defn realize-one [system input v]
+; (defn global-dologin [context]
+;   (with-action-dsl context
+;     (log-in context)))
+; 
+; (defn global-login [context]
+;   {})
+; 
+; (defn global-logout [context]
+;   (with-action-dsl context
+;     (log-out context)))
+; 
+; (defn global-data [context]
+;   (with-action-dsl context
+;     {:user (current-user)
+;      :menu [{:text "A" :url "/a"} {:text "B" :url "/b"}]
+;      :footer "© 2013 Cludje"
+;      :title "Cludje"}))
+; 
+(defn realize-one [context v]
   "Try to get a final-value for v.
   If it's a var, deref it. If it's a fn, call it with [system input]"
   (cond
-    (fn? v) (v system input)
-    (var? v) (realize-one system input @v)
+    (fn? v) (v context)
+    (var? v) (realize-one context @v)
     :else v))
 
-(defn realize-map [system input m]
-  (into {} (for [[k v] m] [k (realize-one system input v)])))
+(defn realize-map [context m]
+  (into {} (for [[k v] m] [k (realize-one context v)])))
+
+(defn get-model [context]
+  (let [model-sym (? context :input-mold-sym)]
+    @(resolve model-sym)))
 
 
-(defn crud-model-list [model system input]
-  (let [listkee (keyword (str (table-name model) "s"))
-         parts (partitions model)
-         defs (defaults model)
-         ; This is a bit complicated because of optimization
-         ; We want parts-def to be (select-keys (realize-map defs)),
-         ; but we do an extra internal select-keys inside of 
-         ; realize-map in order to avoid evaling any default
-         ; fields that we don't need
-         ; The reason we add a (make model..) onto this is because
-         ; we want to handle the case where the default is of the 
-         ; wrong type - this will convert it
-         part-defs (select-keys 
-                      (make model
-                            (realize-map system input
-                                         (select-keys defs parts)))
-                      parts)
-         ; We want to get a parsed version of any of the partitions
-         ; that the user passed as input - that's part-inp
-         parsed (make model input)
-         supplied-parts (clojure.set/intersection 
-                           (set parts) 
-                           (set (keys input)))
-         part-inp (select-keys parsed supplied-parts)
-         ; The query-paras are the defaults and input of the partitions
-         query-paras (merge part-defs part-inp)
-        rows (query system model query-paras)]
-    {listkee rows}))
-     ;{listkee (query system model query-paras)}))
+(defn crud-model-list [context]
+  (let [model (get-model context)
+        input (?? context :input)
+        listkee (keyword (str (tablename model) "s"))
+        parts (partitions model)
+        defs (field-defaults model)
+        ; This is a bit complicated because of optimization
+        ; We want parts-def to be (select-keys (realize-map defs)),
+        ; but we do an extra internal select-keys inside of 
+        ; realize-map in order to avoid evaling any default
+        ; fields that we don't need
+        ; The reason we add a (make model..) onto this is because
+        ; we want to handle the case where the default is of the 
+        ; wrong type - this will convert it
+        part-defs (select-keys 
+                     (parse model
+                           (realize-map context (select-keys defs parts)))
+                     parts)
+        ; We want to get a parsed version of any of the partitions
+        ; that the user passed as input - that's part-inp
+        parsed (parse model input)
+        supplied-parts (clojure.set/intersection 
+                          (set parts) 
+                          (set (keys input)))
+        part-inp (select-keys parsed supplied-parts)
+        ; The query-paras are the defaults and input of the partitions
+        query-paras (merge part-defs part-inp)]
+    (with-action-dsl context
+      {listkee (query model query-paras)})))
 
-(defn crud-model-new [model system input]
-  (realize-map system input (defaults model)))
+(defn crud-model-new [context]
+  (let [model (get-model context) 
+        defaults (field-defaults model)]
+    (realize-map context defaults)))
 
-(defn crud-model-add [model system input]
-  (let [defs (make model (realize-map system input (defaults model)))
+(defn crud-model-add [context]
+  (let [model (get-model context)
+        input (?? context :input)
+        defs (parse model (realize-map context (field-defaults model)))
         combined (merge defs input)]
-    (-> (insert system model combined)
-        (with-alert :success "Saved"))))
+    (with-action-dsl context
+      (-> (insert model combined)
+          (with-alert :success "Saved")))))
 
-(defn crud-model-show [model system input]
-  (->> model
-       (key-name)
-       (? input)
-       (fetch system model)))
+(defn crud-model-show [context]
+  (let [model (get-model context)
+        keyfield (keyname model)]
+    (with-action-dsl context
+      (fetch model (?in keyfield)))))
 
-(defn crud-model-edit [model system input]
-  (fetch system model (? input (key-name model))))
+(defn crud-model-edit [context]
+  (let [model-sym (? context :input-mold-sym)
+        model @(resolve model-sym)]
+    (with-action-dsl context
+      (fetch model (?in (keyname model))))))
 
-(defn crud-model-alter [model system input]
-  (? input (key-name model))
-  (-> (save system model input)
-      (with-alert :success "Saved")))
+(defn crud-model-alter [context]
+  (let [model (get-model context)
+        input (? context :input)]
+    (with-action-dsl context 
+      ; Ensure we've got the key
+      (?in (keyname model))
+      (-> (save model input)
+          (with-alert :success "Saved")))))
 
-(defn crud-model-delete [model system input]
-  (delete system model (? input (key-name model)))
-  nil)
+(defn crud-model-delete [context]
+  (let [model (get-model context)
+        keyfield (keyname model)]
+    (with-action-dsl context
+      (delete model (?in keyfield))
+      nil)))
 
 
 (defmacro def-crud-actions [model-sym]
   (let [model @(resolve model-sym)
-        modelname (table-name model)]
+        modelname (tablename model)]
     `(do
-       (defaction ~(symbol (str modelname "-list"))
-         (crud-model-list ~model-sym ~'system ~'input))
-       (defaction ~(symbol (str modelname "-new"))
-         (crud-model-new ~model-sym ~'system ~'input))
-       (defaction ~(symbol (str modelname "-add"))
-         (crud-model-add ~model-sym ~'system ~'input))
-       (defaction ~(symbol (str modelname "-show"))
-         (crud-model-show ~model-sym ~'system ~'input))
-       (defaction ~(symbol (str modelname "-edit"))
-         (crud-model-edit ~model-sym ~'system ~'input))
-       (defaction ~(symbol (str modelname "-alter"))
-         (crud-model-alter ~model-sym ~'system ~'input))
-       (defaction ~(symbol (str modelname "-delete"))
-         (crud-model-delete ~model-sym ~'system ~'input)))))
+       (defn ~(symbol (str "list-" modelname)) [context#]
+         (crud-model-list context#));~model-sym ~'system ~'input))
+       (defn ~(symbol (str "new-" modelname)) [context#]
+         (crud-model-new context#));~model-sym ~'system ~'input))
+       (defn ~(symbol (str "add-" modelname)) [context#]
+         (crud-model-add context#));~model-sym ~'system ~'input))
+       (defn ~(symbol (str "show-" modelname)) [context#]
+         (crud-model-show context#));~model-sym ~'system ~'input))
+       (defn ~(symbol (str "edit-" modelname)) [context#]
+         (crud-model-edit context#));~model-sym ~'system ~'input))
+       (defn ~(symbol (str "alter-" modelname)) [context#]
+         (crud-model-alter context#));~model-sym ~'system ~'input))
+       (defn ~(symbol (str "delete-" modelname)) [context#]
+         (crud-model-delete context#));~model-sym ~'system ~'input)))))
+       )))
 
-(defn with-lookup- [m model system input]
-  (let [action-name (str (table-name model) "-list")
-        action (resolve-action system {:_action action-name})
-        lookup-res (run-action system action {})]
+
+(defn with-lookup [context m model]
+  (let [model (get-model context)
+        action-name (str "list-" (tablename model))
+        actionfinder (? context [:system :action-finder])
+        af-context (assoc context :parsed-input {:_action action-name})
+        action-sym (find-action actionfinder af-context)
+        action @(resolve action-sym)
+        lookup-res (action context)]
     (merge lookup-res m)))
-
-(defmacro with-lookup [m model]
-  `(with-lookup- ~m ~model ~'system ~'input))

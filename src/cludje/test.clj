@@ -1,24 +1,8 @@
 (ns cludje.test
-  (:use midje.sweet
-        cludje.core)
+  (:use midje.sweet)
   (:import [midje.util.exceptions ICapturedThrowable])
   (:require [clj-http.client :as http]
-            [cheshire.core :as cheshire]
-            [cludje.uiadapter :as ui]
-            [cludje.server :as server]
-            [cludje.login :as login]
-            [cludje.logger :as logger]
-            [cludje.app :as app]))
-
-(defn test-system 
-  ([] (test-system nil))
-  ([cur-user]
-   (let [lgin (login/make-TestLogin cur-user)]
-     (app/make-system {:uiadapter (ui/->TestUIAdapter (atom nil))
-                       ;:default-action nil
-                       :server (server/->MockServer)
-                       :logger (logger/->MemLogger (atom []))
-                       :login lgin}))))
+            [cheshire.core :as cheshire]))
 
 
 (defn has-keys [& kees]
@@ -62,19 +46,19 @@
 
 (defn throws-404 [] 
   "Check that the fn throws a not found exception"
-  (throws clojure.lang.ExceptionInfo "Not found"))
+  (throws clojure.lang.ExceptionInfo #"^Not found"))
 (defn throws-401 [] 
   "Check that the fn throws a not logged in exception"
-  (throws clojure.lang.ExceptionInfo "Not logged in"))
+  (throws clojure.lang.ExceptionInfo #"^Not logged in"))
 (defn throws-403 [] 
   "Check that the fn throws a forbidden exception"
-  (throws clojure.lang.ExceptionInfo "Unauthorized"))
+  (throws clojure.lang.ExceptionInfo #"^Unauthorized"))
 (defn throws-problems []
   "Check that the fn throws problems"
-  (throws clojure.lang.ExceptionInfo "Problems"))
+  (throws clojure.lang.ExceptionInfo #"^Problems"))
 (defn throws-error []
   "Check that the fn throws errors"
-  (throws clojure.lang.ExceptionInfo "System error"))
+  (throws clojure.lang.ExceptionInfo #"^System error"))
 
 (defn ok? [x]
   "A midje checker that makes sure there's no exception, and that

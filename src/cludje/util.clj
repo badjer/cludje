@@ -4,10 +4,22 @@
 (defn map-vals [m f]
   (into {} (for [[k v] m] [k (f v)])))
 
+(defn arity [f] 
+  (let [m (first (.getDeclaredMethods (class f))) 
+        p (.getParameterTypes m)] 
+    (alength p)))
+
+(defn to-symbol [thing]
+  (cond 
+    (symbol? thing) thing
+    (keyword? thing) (symbol (name thing))
+    (= "" thing) nil
+    :else (symbol thing)))
+
 (defn realize [x]
   "Get the value of x. If it is a fn, invoke it. Else just return"
   (cond 
-    (fn? x) (x)
+    (and (fn? x) (= 0 (arity x))) (x)
     :else x))
 
 (declare ?)
@@ -64,4 +76,5 @@
 
 (defn with-problem [m field text]
   (update-in m [:__problems] assoc (keyword (name field)) (str text)))
+
 

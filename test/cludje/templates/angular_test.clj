@@ -1,6 +1,5 @@
 (ns cludje.templates.angular-test
   (:use midje.sweet
-        cludje.core
         cludje.templates.angular))
 
 (facts "->js"

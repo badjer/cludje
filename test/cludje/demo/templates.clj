@@ -1,5 +1,4 @@
-(ns cludje.demo.templates
-  (:require [cludje.templates.angular :as ng])
-  (:use cludje.core))
+(ns cludje.demo.templates)
+  ;(:require [cludje.templates.angular :as ng]))
 
-(ng/use-default-templates)
+;(ng/use-default-templates)

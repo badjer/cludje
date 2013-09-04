@@ -7,6 +7,7 @@
 (defprotocol IMold
   (fields [self])
   (field-names [self])
+  ; TODO: Make this take context as an arg, so we can use fns as defaults
   (field-defaults [self])
   (required-fields [self])
   (invisible-fields [self]))

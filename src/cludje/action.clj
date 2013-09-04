@@ -3,26 +3,26 @@
         cludje.util))
 
 (defmacro with-log-dsl [context & forms]
-  `(let [~'log (partial log (? ~context [:system :logger]))]
+  `(let [~'log (partial log (?? ~context [:system :logger]))]
      ~@forms))
 
 (defmacro with-datastore-dsl [context & forms]
-  `(let [~'write (partial write (? ~context [:system :data-store]))
-         ~'query (partial query (? ~context [:system :data-store]))
-         ~'fetch (partial fetch (? ~context [:system :data-store]))
-         ~'delete (partial delete (? ~context [:system :data-store]))
-         ~'insert (partial insert (? ~context [:system :data-store]))
-         ~'save (partial save (? ~context [:system :data-store]))]
+  `(let [~'write (partial write (?? ~context [:system :data-store]))
+         ~'query (partial query (?? ~context [:system :data-store]))
+         ~'fetch (partial fetch (?? ~context [:system :data-store]))
+         ~'delete (partial delete (?? ~context [:system :data-store]))
+         ~'insert (partial insert (?? ~context [:system :data-store]))
+         ~'save (partial save (?? ~context [:system :data-store]))]
      ~@forms))
 
 (defmacro with-email-dsl [context & forms]
-  `(let [~'send-mail (partial send-mail (? ~context [:system :emailer]))]
+  `(let [~'send-mail (partial send-mail (?? ~context [:system :emailer]))]
     ~@forms))
 
 (defmacro with-input-dsl [context & forms]
-  `(let [~'?in (partial ? (? ~context :input))
-         ~'??in (partial ?? (? ~context :input))
-         ~'&?in (partial &? (? ~context :input))]
+  `(let [~'?in (partial ? (?? ~context :input))
+         ~'??in (partial ?? (?? ~context :input))
+         ~'&?in (partial &? (?? ~context :input))]
      ~@forms))
 
 (defmacro with-action-dsl [context & forms]

@@ -9,15 +9,16 @@
 
 
 (fact "propose-moldname"
-  (propose-moldname :add-cog) => "cog"
-  (propose-moldname :some-ns/add-cog) => "cog"
-  (propose-moldname :foobar) => "foobar"
-  (propose-moldname :some-ns/foobar) => "foobar")
+  (propose-moldnames :add-cog) => ["Cog" "cog"]
+  (propose-moldnames :some-ns/add-cog) => ["Cog" "cog"]
+  (propose-moldnames :foobar) => ["Foobar" "foobar"]
+  (propose-moldnames :some-ns/foobar) => ["Foobar" "foobar"])
 
 (defn >input [action-sym]
   {:action-sym action-sym})
 
 (def mold (>Mold {:name Str} {}))
+(def Cog (>Mold {:name Str} {}))
 (def notmold 1)
 
 (fact "NSMoldFinder"
@@ -25,7 +26,10 @@
     (fact "satisfies IMoldFinder"
       (satisfies? IMoldFinder mf) => true)
     (fact "finds a mold"
-      (find-mold mf (>input :mold)) => `mold)
+      (find-mold mf (>input :mold)) => `mold
+      (fact "with different casing"
+        (find-mold mf (>input :cog)) => `Cog
+        (find-mold mf (>input "cog")) => `Cog))
     (fact "works with fully-qualified names"
       (find-mold mf (>input `mold)) => `mold)
     (fact "finds a mold in another namespace"

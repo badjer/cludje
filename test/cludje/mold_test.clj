@@ -37,6 +37,7 @@
       (fact "with a fn"
         (let [m (>Mold fs {:defaults {:name getx}})]
           (field-defaults m) => {:name "x"})))
+    (future-facts "field-defaults takes context as argument so we can use fns for defalts")
 
     (fact "required-fields"
       (let [m (>Mold fs {:required [:name]})]
@@ -45,6 +46,7 @@
     (fact "invisible-fields"
       (let [m (>Mold fs {:invisible [:price]})]
         (invisible-fields m) => [:price]))))
+
 
 (fact ">Mold implements IValidateable"
   (let [m (>Mold fs {})]

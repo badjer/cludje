@@ -1,20 +1,20 @@
 (ns cludje.demo.actions
   (:use cludje.types
-        cludje.core
         cludje.crud
+        cludje.authorize
         cludje.demo.models))
 
-(def-system-actions)
+;(def-system-actions)
 (def-crud-actions Cog)
 (def-crud-actions Shift)
 
-(defability ab-cog
+(def ab-cog (>Ability
   :delete Cog true
   :* Shift true
-  :* Cog true)
+  :* Cog true))
 
 
-(defaction shift-new
+(defn new-shift [context]
   {:_title "NEW STUFF GOES HERE!"
    :date_options (date-range (now) -15 15)
    :ilikecats true

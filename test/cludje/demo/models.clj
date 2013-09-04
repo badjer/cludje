@@ -1,7 +1,8 @@
 (ns cludje.demo.models
-  (:use cludje.core
+  (:use cludje.model
         cludje.types))
 
-(defmodel Cog {:name Str :amt Int :companyid Int})
+(def Cog (>Model "cog" {:name Str :amt Int :companyid Int} {}))
 
-(defmodel Shift {:date Date :start Time :breaks Timespan :ilikecats Bool})
+(def Shift (>Model "shift" {:date Date :start Time :breaks Timespan :ilikecats Bool}
+                   {}))
