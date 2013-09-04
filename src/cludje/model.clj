@@ -40,7 +40,7 @@
         kee (if no-key? nil :_id)
         allfields (if no-key?  fs (assoc fs kee Str))
         ; Don't include kee in required fields
-        required-fields (vec (keys fs))
+        required-fields (get opts :required (vec (keys fs)))
         invisible-fields (conj (get opts :invisible []) kee)
         mold-opts (merge opts {:required required-fields 
                                :invisible invisible-fields})]

@@ -37,3 +37,13 @@
         (partitions (>Model :cog fs {:partitions [:name]})) => [:name])
       (fact "not supplied"
         (partitions (>Model :cog fs {})) => []))))
+
+(def Gear (>Model "gear" {:name Str :teeth Int :size Int}
+                  {:required [:name]
+                   :invisible [:teeth]}))
+
+(fact ">Model overrides mold fields"
+  (fact "required-fields"
+    (required-fields Gear) => [:name])
+  (fact "invisible-fields"
+    (invisible-fields Gear) => [:teeth :_id]))

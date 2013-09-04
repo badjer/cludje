@@ -1,4 +1,4 @@
-(defproject cludje "0.2.0"
+(defproject cludje "0.2.1"
   :description "Cludje - A clojure web framework"
   :url "http://github.com/badjer/cludje"
   :license {:name "Eclipse Public License"
