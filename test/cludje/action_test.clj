@@ -10,56 +10,50 @@
         cludje.email
         cludje.datastore))
 
-(defn >log-context [logger]
-  {:system {:logger logger}})
+(def logger (>TestLogger))
+(def log-context {:system {:logger logger}})
 
 (fact "with-log-dsl"
-  (let [logger (>TestLogger)
-        context (>log-context logger)]
-    (with-log-dsl context
-      (fact "defines log"
-        (log "hi") =not=> (throws)
-        @(? logger :entries) => ["hi"]))))
+  (with-log-dsl log-context
+    (fact "defines log"
+      (log "hi") =not=> (throws)
+      @(? logger :entries) => ["hi"])))
 
 (def row {:a 1})
 
 (def Cog (>Model "cog" {:a Int} {}))
 
-(defn >ds-context [datastore]
-  {:system {:data-store datastore}})
+(def datastore (>TestDatastore))
+(def ds-context {:system {:data-store datastore}})
 
 (fact "with-datastore-dsl"
-  (let [ds (>TestDatastore)
-        context (>ds-context ds)]
-    (with-datastore-dsl context
-      (fact "defines write"
-        (write :cog 1 row) =not=> (throws)
-        (first (query :cog {})) => (contains row))
-      (fact "defines query"
-        (count (query :cog {})) => 1)
-      (fact "defines fetch"
-        (fetch :cog 1) => (contains row))
-      (fact "defines delete"
-        (delete :cog 1) => anything
-        (count (query :cog {})) => 0)
-      (fact "defines insert"
-        (insert Cog row) => anything
-        (count (query :cog {})) => 1)
-      (fact "defines save"
-        (save Cog row) => anything
-        (count (query :cog {})) => 2))))
+  (with-datastore-dsl ds-context
+    (fact "defines write"
+      (write :cog 1 row) =not=> (throws)
+      (first (query :cog {})) => (contains row))
+    (fact "defines query"
+      (count (query :cog {})) => 1)
+    (fact "defines fetch"
+      (fetch :cog 1) => (contains row))
+    (fact "defines delete"
+      (delete :cog 1) => anything
+      (count (query :cog {})) => 0)
+    (fact "defines insert"
+      (insert Cog row) => anything
+      (count (query :cog {})) => 1)
+    (fact "defines save"
+      (save Cog row) => anything
+      (count (query :cog {})) => 2)))
 
 (def message {:to "a@b.cd" :from "b@b.cd" :subject "s" :text "b" :body "h"})
-(defn >email-context [emailer]
-  {:system {:emailer emailer}})
+(def emailer (>TestEmailer))
+(def email-context {:system {:emailer emailer}})
 
 (fact "with-email-dsl"
-  (let [emailer (>TestEmailer)
-        context (>email-context emailer)]
-    (with-email-dsl context
-      (fact "defines send-mail"
-        (send-mail message) => anything
-        @(? emailer :messages) => [message]))))
+  (with-email-dsl email-context
+    (fact "defines send-mail"
+      (send-mail message) => anything
+      @(? emailer :messages) => [message])))
 
 (def in-context {:input {:a 1 :b 2}})
 
@@ -71,4 +65,20 @@
       (??in :z) => nil)
     (fact "defines &?in"
       (&?in :z :a) => 1)))
+
+(def action-context 
+  (-> (merge in-context email-context)
+      (assoc-in [:system :data-store] datastore)
+      (assoc-in [:system :logger] logger)))
+
+(fact "with-action-dsl"
+  (with-action-dsl action-context
+    (fact "defines a log fn"
+      (log "asdf") =not=> (throws))
+    (fact "defines a datastore fn"
+      (query :cog {}) =not=> (throws))
+    (fact "defines an email fn"
+      (send-mail message) =not=> (throws))
+    (fact "defines an input fn"
+      (?in :a) =not=> (throws))))
 

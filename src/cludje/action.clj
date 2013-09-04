@@ -24,3 +24,10 @@
          ~'??in (partial ?? (? ~context :input))
          ~'&?in (partial &? (? ~context :input))]
      ~@forms))
+
+(defmacro with-action-dsl [context & forms]
+  `(with-log-dsl ~context
+     (with-datastore-dsl ~context
+       (with-email-dsl ~context
+         (with-input-dsl ~context
+           ~@forms)))))
