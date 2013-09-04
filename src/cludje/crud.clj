@@ -99,8 +99,7 @@
       (fetch model (?in (keyname model))))))
 
 (defn crud-model-alter [context]
-  (let [model (get-model context)
-        input (? context :input)]
+  (let [model (get-model context)]
     (with-action-dsl context 
       ; Ensure we've got the key
       (?in (keyname model))
@@ -145,3 +144,8 @@
         action @(resolve action-sym)
         lookup-res (action context)]
     (merge lookup-res m)))
+
+(defmacro with-crud-dsl [context & forms]
+  `(let [~'model (get-model ~context)
+         ~'with-lookup (partial with-lookup ~context)]
+     ~@forms))

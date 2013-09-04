@@ -20,7 +20,8 @@
     ~@forms))
 
 (defmacro with-input-dsl [context & forms]
-  `(let [~'?in (partial ? (?? ~context :input))
+  `(let [~'input (?? ~context :input)
+         ~'?in (partial ? (?? ~context :input))
          ~'??in (partial ?? (?? ~context :input))
          ~'&?in (partial &? (?? ~context :input))]
      ~@forms))

@@ -80,5 +80,10 @@
     (fact "defines an email fn"
       (send-mail message) =not=> (throws))
     (fact "defines an input fn"
-      (?in :a) =not=> (throws))))
+      (?in :a) =not=> (throws))
+    (fact "defines input"
+      input => {:a 1 :b 2})
+    ;(fact "defines with-lookup"
+      ;(with-lookup {} Cog) =not=> (throws))
+    ))
 

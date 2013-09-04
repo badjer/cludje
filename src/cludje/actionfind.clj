@@ -28,7 +28,7 @@
         (cond 
           (empty? finds)
           (throw-error {:parsed-action (str "Couldn't find action! Couldn't find anything "
-                                     "named " action-str "in the namespaces "
+                                     "named " action-str " in the namespaces "
                                      (s/join ", " @action-namespaces))})
           :else 
           (throw-error {:parsed-action (str "Couldn't find action! Found these: "

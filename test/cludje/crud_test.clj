@@ -12,9 +12,11 @@
 
 (def gear {:teeth 4})
 
-
+(def action-finder (>NSActionFinder 'cludje.crud-test))
 (defn >context [moldsym]
-  {:system {:data-store (>TestDatastore)} :input-mold-sym moldsym})
+  {:system {:data-store (>TestDatastore)
+            :action-finder action-finder}
+   :input-mold-sym moldsym})
 
 (defn >in [context input] 
   (-> context
@@ -81,9 +83,7 @@
   (with-lookup context {} Widgettype))
 
 (fact "with-lookup"
-  (let [action-finder (>NSActionFinder 'cludje.crud-test)
-        context (assoc-in (>context `Geartype) 
-                          [:system :action-finder] action-finder)]
+  (let [context (>context `Geartype)]
     ; Set up our test data
     (add-geartype (>in context {:name "A"})) => ok?
     (let [res (ac-with-lookup context)]
@@ -135,4 +135,11 @@
     (let [res (list-footype context)]
       (map :name (:footypes res)) => ["A"])))
 
+
+(facts "with-crud-dsl"
+  (with-crud-dsl (>context `Widget)
+    (fact "defines with-lookup"
+      (with-lookup {} Widget) =not=> (throws))
+    (fact "defines model"
+      model => Widget)))
 
