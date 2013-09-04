@@ -2,6 +2,9 @@
   (:use cludje.system
         cludje.mold
         cludje.model)
+  (:require [monger.core :as mg]
+            [monger.collection :as mgcoll]
+            [monger.db :as mgdb])
   (:import java.io.File
            java.io.FileWriter
            java.util.UUID))
@@ -82,3 +85,44 @@
       (println "Contents were " dba)
       (>TestDatastore dba))))
 
+
+
+
+;; ********************
+;; Mongodb datastore
+;; ********************
+
+(defn- parse-mongo-str [connstr]
+  (let [groups (flatten (re-seq #"^.*://(.*?):(.*?)@(.*?):(\d+)/(.*)$" connstr)) 
+        mongo_port (Integer. (nth groups 4))] 
+    (merge (zipmap [:match :user :pass :host :port :db] groups) 
+           {:port mongo_port})))
+
+(defn mongo-conn [connstr]
+   (mg/connect-via-uri! connstr))
+
+(defrecord MongoDatabase [mongodb]
+  IDatastore
+  (fetch [self coll kee] 
+    (if (nil? kee)
+      ; MongoDb driver throws error if kee is nil, so check here
+      nil
+      (let [_ (validate-db-data {:_id kee})
+            fromdb (mgcoll/find-map-by-id (tablename coll) kee)]
+        (if (empty? fromdb)
+          nil
+          fromdb))))
+  (query [self coll params] 
+    (validate-db-data params)
+    (mgcoll/find-maps (tablename coll) params))
+  (write [self coll kee data] 
+    (let [kee (if kee kee (new-id))
+          keedata {:_id kee}
+          _ (validate-db-data keedata)
+          _ (validate-db-data data)
+          objdata (merge data keedata)]
+      (mgcoll/update (tablename coll) keedata objdata :upsert true) 
+      kee))
+  (delete [self coll kee] 
+    (validate-db-data {:_id kee})
+    (mgcoll/remove-by-id (tablename coll) kee)))

@@ -170,4 +170,6 @@
   (test-db >TestDatastore)
   (test-higher-level >TestDatastore))
 
+(future-facts "Test mongodb")
+
 (future-facts "Implement soft deletes")
