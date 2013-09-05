@@ -25,9 +25,9 @@
 (declare ?)
 
 (defn- ?- [input kee]
- (if-not (contains? input kee)
-   (throw-problems {kee " is required but was not provided"})
-   (get input kee)))
+  (if-let [res (get input kee)]
+    res
+    (throw-problems {kee " is required but was not provided"}) ))
 
 (defn- ?-map [input [k & ks]]
   (if (empty? ks)

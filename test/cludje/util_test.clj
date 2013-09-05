@@ -20,13 +20,19 @@
   (? {:a 1} :a) => 1
   (? {:a 1} :b) => (throws)
   (? {:a {:b 1}} [:a :b]) => 1
-  (? {:a {:b 1}} [:a :z]) => (throws))
+  (? {:a {:b 1}} [:a :z]) => (throws)
+  (facts "with nil values"
+    (? {:a nil} :a) => (throws)
+    (? {:a {:b nil}} [:a :b]) => (throws)))
 
 (facts "??"
   (?? {:a 1} :a) => 1
   (?? {:a 1} :b) => nil
   (?? {:a {:b 1}} [:a :b]) => 1
-  (?? {:a {:b 1}} [:a :z]) => nil)
+  (?? {:a {:b 1}} [:a :z]) => nil
+  (fact "with nil values"
+    (?? {:a nil} :a) => nil
+    (?? {:a {:b nil}} [:a :b]) => nil))
 
 (facts "&?"
   (&? {:a 1} :a) => 1
@@ -36,7 +42,12 @@
   (&? {:a {:b 1}} [:a :b]) => 1
   (&? {:a {:b 1}} [:a :z]) => (throws)
   (&? {:a {:b 1}} [:a :z] [:a :b]) => 1
-  (&? {:a {:b 1}} [:a :z] [:a :y]) => (throws))
+  (&? {:a {:b 1}} [:a :z] [:a :y]) => (throws)
+  (fact "with nil values"
+    (&? {:a nil} :a) => (throws)
+    (&? {:a nil} :b :a) => (throws)
+    (&? {:a {:b nil}} [:a :b]) => (throws)))
+
 
 (fact "with-problem"
   (-> {} (with-problem :a "err")) => {:__problems {:a "err"}}

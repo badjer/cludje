@@ -47,3 +47,6 @@
     (required-fields Gear) => [:name])
   (fact "invisible-fields"
     (invisible-fields Gear) => [:teeth :_id]))
+
+
+(future-facts "Allow models to have separate model and table names")
