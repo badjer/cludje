@@ -50,7 +50,7 @@
 (defn wrap-input-mold [f]
   (fn [context]
     (let [moldfinder (? context [:system :mold-finder])
-          input-mold-sym (find-mold moldfinder context)]
+          input-mold-sym (find-input-mold moldfinder context)]
       (-> context
           (assoc :input-mold-sym input-mold-sym)
           (f)))))
@@ -84,10 +84,12 @@
 
 (defn wrap-output-mold [f]
   (fn [context]
-    (let [done-context (f context)
-          moldfinder (? done-context [:system :mold-finder])
-          output-mold-sym (find-mold moldfinder done-context)]
-      (assoc done-context :output-mold-sym output-mold-sym))))
+    (let [done-context (f context)]
+      (if (:output-mold-sym done-context)
+        done-context
+        (let [moldfinder (? done-context [:system :mold-finder]) 
+              output-mold-sym (find-output-mold moldfinder done-context)] 
+          (assoc done-context :output-mold-sym output-mold-sym))))))
 
 (defn wrap-molded-output [f]
   (fn [context]

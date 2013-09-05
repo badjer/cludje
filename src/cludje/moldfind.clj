@@ -8,7 +8,8 @@
 
 (defrecord SingleMoldFinder [mold-sym]
   IMoldFinder
-  (find-mold [self context] mold-sym))
+  (find-input-mold [self context] mold-sym)
+  (find-output-mold [self context] mold-sym))
 
 (defn >SingleMoldFinder [mold-sym]
   (->SingleMoldFinder mold-sym))
@@ -17,43 +18,49 @@
   (let [m @(resolve sym)]
     (satisfies? IMold m)))
 
-(defn propose-moldnames [action-sym]
+
+(defn propose-input-moldnames [action-sym]
   (let [action (str (name action-sym))
         ; We assume that the action is of the form:
         ; some-ns/operation-model
         unqualified-act (last (s/split action #"/"))
+        input-mold (str unqualified-act "-input")
         modelname (last (s/split unqualified-act #"-"))
         uppered (s/capitalize modelname)]
-    [uppered modelname]))
+    [input-mold uppered modelname]))
 
-(defn- find-one-ns [nam namesp]
-  (find-in-ns namesp nam))
+(defn propose-output-moldnames [action-sym]
+  (let [action (str (name action-sym))
+        ; We assume that the action is of the form:
+        ; some-ns/operation-model
+        unqualified-act (last (s/split action #"/"))
+        output-mold (str unqualified-act "-output")
+        modelname (last (s/split unqualified-act #"-"))
+        uppered (s/capitalize modelname)]
+    [output-mold uppered modelname]))
 
-(defn- find-one [namespaces nam]
-  (keep identity (map (partial find-one-ns nam) namespaces)))
-
-(defn finder [names namespaces]
-  (keep identity (flatten (map (partial find-one namespaces) names))))
-
-(defrecord NSMoldFinder [mold-namespaces]
-  IMoldFinder
-  (find-mold [self context]
-    (let [action-sym (? context :action-sym)
-          moldnames (propose-moldnames action-sym)
-          finds (finder moldnames @mold-namespaces)
-          ;finds (keep identity (map #(find-in-ns % moldname) @mold-namespaces))
-          matches (filter is-mold? finds)]
-      (if-not (empty? matches)
+(defn- find-mold- [mold-namespaces mold-names]
+  (let [finds (search-in-nses mold-namespaces mold-names)
+        matches (filter is-mold? finds)]
+      (if (seq matches)
         (first matches)
         (cond 
           (empty? finds)
           (throw-error {:mold (str "Couldn't find mold! Couldn't find anything "
-                                   "named " moldnames " in the namespaces "
-                                   (s/join ", " @mold-namespaces))})
+                                   "named " mold-names " in the namespaces "
+                                   (s/join ", " mold-namespaces))})
           :else 
           (throw-error {:mold (str "Couldn't find mold! Found these: "
                                    (s/join ", " finds) ", but none of them "
-                                   "looked were molds")}))))))
+                                   "looked were molds")})))))
+
+
+(defrecord NSMoldFinder [mold-namespaces]
+  IMoldFinder
+  (find-input-mold [self context]
+    (find-mold- @mold-namespaces (propose-input-moldnames (? context :action-sym))))
+  (find-output-mold [self context]
+    (find-mold- @mold-namespaces (propose-output-moldnames (? context :action-sym)))))
 
 
 (defn >NSMoldFinder [& mold-namespaces]

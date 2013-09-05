@@ -105,6 +105,8 @@
 (def mold (>Mold {:price Money} {}))
 (def moldfinder (>SingleMoldFinder `mold))
 
+(def bar (>Mold {:name Str} {}))
+
 (fact "wrap-input-mold"
   (let [sys {:mold-finder moldfinder}
         handler (wrap-input-mold identity)
@@ -114,10 +116,11 @@
     (fact "requires system/mold-finder"
       (fact "no system"
         (handler raw-context) => (throws))
-      (fact "no moldstore"
+      (fact "no mold-finder"
         (handler (assoc-in context [:system :mold-finder] nil)) => (throws)))
     (fact "returns original data"
       (handler context) => (contains context))))
+
 
 (def parsed-context 
   (assoc raw-context :input-mold-sym `mold :parsed-input parsed-input))
@@ -170,6 +173,7 @@
     (fact "returns original data"
       (handler context) => (contains context))))
 
+
 (fact "wrap-output-mold"
   (let [sys {:mold-finder moldfinder}
         handler (wrap-output-mold identity)
@@ -181,6 +185,8 @@
         (handler raw-context) => (throws))
       (fact "no moldstore"
         (handler (assoc-in context [:system :mold-finder] nil)) => (throws)))
+    (fact "doesn't overwrite output-mold-sym if it's already set"
+      (handler (assoc context :output-mold-sym 'foo)) => (contains {:output-mold-sym 'foo}))
     (fact "returns original data"
       (handler context) => (contains context))))
 

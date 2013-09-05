@@ -56,12 +56,9 @@
   (find-action [self context] "Get the action, or nil if it doesn't exist"))
 
 (defprotocol IMoldFinder
-  (find-mold [self context]))
+  (find-input-mold [self context])
+  (find-output-mold [self context]))
 
-;;;; TODO: Remove this
-(defprotocol IMoldStore
-  (get-mold [self context]))
-;;;;
 
 (defprotocol IDataAdapter
   (parse-input [self raw-data])

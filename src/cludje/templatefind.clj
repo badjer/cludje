@@ -28,7 +28,7 @@
         (let [moldfinder (? context [:system :mold-finder])
               modelname (model-name template-name)
               moldcontext (assoc context :action-sym template-name)
-              model (find-mold moldfinder moldcontext)
+              model (find-output-mold moldfinder moldcontext)
               template (first matches)]
           (@(resolve template) model))))))
 

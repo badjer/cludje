@@ -20,3 +20,8 @@
       (qualify nas thing))))
 
 
+(defn find-in-nses [namespaces nam]
+  (keep identity (map #(find-in-ns % nam) namespaces)))
+
+(defn search-in-nses [namespaces names]
+  (keep identity (flatten (map (partial find-in-nses namespaces) names))))
