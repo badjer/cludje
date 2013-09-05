@@ -15,6 +15,16 @@
   being tested contains only the specified keys"
   (just (zipmap kees (repeat anything))))
 
+(defn has-item? [partial-item]
+  "A midje checker that returns true if the thing
+  being tested is a seq, and one of the things in it
+  contains partial-item"
+  (fn [xs]
+    (let [checker-fn (contains partial-item)
+          res (map checker-fn xs)]
+      (some #{true} res))))
+
+
 (defn has-problems? [x]
   "A midje checker that returns true if the thing
   being tested is a cludje response that has problems"

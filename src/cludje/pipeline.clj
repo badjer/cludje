@@ -114,10 +114,10 @@
   (fn [raw-input]
     (f {:raw-input raw-input})))
 
-(defn unwrap-context [f]
+(defn unwrap-context [f selector]
   (fn [context]
     (let [done-context (f context)
-          res (:rendered-output done-context)]
+          res (selector done-context)]
       (if-not (empty? res)
         res
         (throw-error {:context (dissoc done-context :system)})))))

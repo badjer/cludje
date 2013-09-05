@@ -22,6 +22,7 @@
    :data-store (>TestDatastore)
    :emailer (>TestEmailer)})
 
+
 (defn with-web [system]
   (let [web-data-adapter (>WebDataAdapter)]
     (-> system
@@ -29,18 +30,32 @@
 
 
 ; Define pipelines
+(defn >test-pipeline [system]
+  (-> identity
+      (wrap-output)
+      (wrap-input)
+      (wrap-input-mold)
+      (wrap-action)
+      (wrap-session)
+      (wrap-parsed-input)
+      (wrap-system system)
+      (wrap-context)
+      (unwrap-context :output)))
+
+
 (defn >api-pipeline [system]
-  (>pipeline
-    (-> identity
-        (wrap-output)
-        (wrap-output-mold)
-        (wrap-molded-output)
-        (wrap-rendered-output)
-        (wrap-authorize)
-        (wrap-input)
-        (wrap-input-mold)
-        (wrap-action)
-        (wrap-authenticate)
-        (wrap-session)
-        (wrap-parsed-input)
-        (wrap-system system))))
+  (-> identity
+      (wrap-output)
+      (wrap-output-mold)
+      (wrap-molded-output)
+      (wrap-rendered-output)
+      (wrap-authorize)
+      (wrap-input)
+      (wrap-input-mold)
+      (wrap-action)
+      (wrap-authenticate)
+      (wrap-session)
+      (wrap-parsed-input)
+      (wrap-system system)
+      (wrap-context)
+      (unwrap-context :rendered-output)))

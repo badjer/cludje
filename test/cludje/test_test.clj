@@ -22,6 +22,17 @@
     x =not=> (just-keys :a :b :c)
     x =not=> (just-keys :c)))
 
+(facts "has-item?"
+  [{:a 1}] => (has-item? {:a 1})
+  [{:a 1} {:z 1}] => (has-item? {:a 1})
+  [{:a 1 :b 1}] => (has-item? {:a 1})
+  1 =not=> (has-item? {:a 1})
+  nil =not=> (has-item? {:a 1})
+  [] =not=> (has-item? {:a 1})
+  [{:z 1}] =not=> (has-item? {:a 1})
+  [{:a 2}] =not=> (has-item? {:a 1}))
+
+
 (fact "has-problems?"
   {} =not=> has-problems?
   {:__problems {}} => has-problems?
