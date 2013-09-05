@@ -181,5 +181,7 @@
   (test-db >mongo-test)
   (test-higher-level >mongo-test))
 
+(future-facts "MongoDatastore shouldn't rely on the global var to store connection")
+
 
 (future-facts "Implement soft deletes")
