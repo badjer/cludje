@@ -109,12 +109,22 @@
       (assoc done-context :rendered-output rendered))))
 
 
+; Pipeline constructor functions
+(defn wrap-context [f]
+  (fn [raw-input]
+    (f {:raw-input raw-input})))
 
-; Pipeline constructor actions
+(defn unwrap-context [f]
+  (fn [context]
+    (let [done-context (f context)
+          res (:rendered-output done-context)]
+      (if-not (empty? res)
+        res
+        (throw-error {:context (dissoc done-context :system)})))))
+
+
 (defn >pipeline [f]
   "Loads the input into a context, and extracts the output from the context"
-  (fn [raw-input]
-    (let [context {:raw-input raw-input}
-          out-context (f context)]
-      (:rendered-output out-context))))
-
+  (-> f
+      (wrap-context)
+      (unwrap-context)))
