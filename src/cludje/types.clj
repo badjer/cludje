@@ -64,7 +64,7 @@
     IParseable
     (parse [self txt] (when txt (when-not (problems? Password txt) (str txt))))
     IShowable
-    (show [self x] "")
+    (show [self x] (when-not (nil? x) ""))
     IValidateable
     (problems? [self txt]
       (when-let [s (str txt)]
@@ -96,7 +96,7 @@
     IParseable
     (parse [self txt] (when-not (empty? (str txt)) (to-int txt)))
     IShowable
-    (show [self x] (str x))
+    (show [self x] (when-not (nil? x) (str x)))
     IValidateable
     (problems? [self txt]
       (when (not (re-find #"^\d*$" (str txt)))
@@ -179,7 +179,7 @@
         (re-find #"^[fF](alse)$" (str txt)) false
         :else nil))
     IShowable
-    (show [self x] (if x "yes" "no"))
+    (show [self x] (when-not (nil? x) (if x "yes" "no")))
     IValidateable
     (problems? [self txt]
       (cond
@@ -339,7 +339,7 @@
     IParseable
     (parse [self txt] (to-time txt))
     IShowable
-    (show [self x] (time-str x))
+    (show [self x] (when-not (nil? x) (time-str x)))
     IValidateable
     (problems? [self txt]
       (cond
@@ -377,7 +377,7 @@
     IParseable
     (parse [self txt] (to-time txt))
     IShowable
-    (show [self x] (duration-str x))
+    (show [self x] (when-not (nil? x) (duration-str x)))
     IValidateable
     (problems? [self txt]
       (cond
@@ -401,7 +401,7 @@
     IParseable
     (parse [self txt] (to-time txt))
     IShowable
-    (show [self x] (time-str x))
+    (show [self x] (when-not (nil? x) (time-str x)))
     IValidateable
     (problems? [self txt]
       (cond

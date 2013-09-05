@@ -13,6 +13,7 @@
 (fact "Str"
   (show Str "a") => "a"
   (show Str :a) => "a"
+  (show Str nil) => nil
   (parse Str "a") => "a"
   (parse Str 123) => "123"
   (parse Str :abc) => "abc"
@@ -32,6 +33,7 @@
 (fact "Email"
   (let [em "a@bc.de"]
     (show Email em) => em
+    (show Email nil) => nil
     (parse Email em) => em
     ; Illegal values give nil
     (parse Email "asdf") => nil
@@ -48,6 +50,7 @@
 (fact "Password"
   (let [pw "1234567890"]
     (show Password pw) => ""
+    (show Password nil) => nil
     (parse Password pw) => pw
     ; Illegal values give nil
     (parse Password 1) => nil
@@ -65,6 +68,7 @@
         i 123]
     (show Int i) => s
     (show Int s) => s
+    (show Int nil) => nil
     (parse Int s) => i
     (parse Int i) => i
     ; Illegal values give nil
@@ -82,6 +86,7 @@
   (fact "works with bigint"
     (let [bi 2N]
       (type bi) => clojure.lang.BigInt
+      (show Int bi) => "2"
       (parse Int bi) => 2
       (type (parse Int bi)) =not=> clojure.lang.BigInt)))
 
@@ -95,6 +100,7 @@
         cv 67]
     (show Money dv) => ds
     (show Money dcv) => dcs
+    (show Money nil) => nil
     (parse Money ds) => dv
     (parse Money dv) => dv
     (parse Money dcs) => dcv
@@ -122,6 +128,7 @@
         false-vals [false "false" "False" "f" "F" "no" "No" "n" "N" 0]]
     (show Bool true) => "yes"
     (show Bool false) => "no"
+    (show Bool nil) => nil
     (for [v true-vals]
       (parse Bool v) => true)
     (for [v false-vals]
@@ -182,6 +189,7 @@
   (show Time oh-one-am) => "12:01 AM"
   (show Time one-oh-one-pm) => "01:01 PM"
   (show Time (+ feb20 oh-one-am)) => "12:01 AM"
+  (show Time nil) => nil
   (validate Time nil) => truthy
   (validate Time "") => truthy
   (validate Time oh-one-am) => truthy
@@ -212,6 +220,7 @@
   (show Timespan fifteen-min) => "0.25"
   (show Timespan thirteen-hour) => "13.00"
   (show Timespan (+ thirteen-hour fifteen-min)) => "13.25"
+  (show Timespan nil) => nil
   (validate Timespan nil) => truthy
   (validate Timespan "") => truthy
   (validate Timespan one-min) => truthy
@@ -243,6 +252,7 @@
   (show DateTime oh-one-am) => "12:01 AM"
   (show DateTime one-oh-one-pm) => "01:01 PM"
   (show DateTime (+ feb20 oh-one-am)) => "12:01 AM"
+  (show DateTime nil) => nil
   (validate DateTime nil) => truthy
   (validate DateTime "") => truthy
   (validate DateTime oh-one-am) => truthy
