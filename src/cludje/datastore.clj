@@ -92,16 +92,17 @@
 ;; Mongodb datastore
 ;; ********************
 
-(defn- parse-mongo-str [connstr]
-  (let [groups (flatten (re-seq #"^.*://(.*?):(.*?)@(.*?):(\d+)/(.*)$" connstr)) 
-        mongo_port (Integer. (nth groups 4))] 
-    (merge (zipmap [:match :user :pass :host :port :db] groups) 
-           {:port mongo_port})))
+; TODO: Don't use the global-variable-dependent version of mongo fns
+;(defn- parse-mongo-str [connstr]
+  ;(let [groups (flatten (re-seq #"^.*://(.*?):(.*?)@(.*?):(\d+)/(.*)$" connstr)) 
+        ;mongo_port (Integer. (nth groups 4))] 
+    ;(merge (zipmap [:match :user :pass :host :port :db] groups) 
+           ;{:port mongo_port})))
 
-(defn mongo-conn [connstr]
-   (mg/connect-via-uri! connstr))
+(defn connect-to-mongo! [uri]
+   (mg/connect-via-uri! uri))
 
-(defrecord MongoDatabase [mongodb]
+(defrecord MongoDatastore []
   IDatastore
   (fetch [self coll kee] 
     (if (nil? kee)
@@ -114,7 +115,8 @@
           fromdb))))
   (query [self coll params] 
     (validate-db-data params)
-    (mgcoll/find-maps (tablename coll) params))
+    (let [res (mgcoll/find-maps (tablename coll) params)]
+      (when-not (empty? res) res)))
   (write [self coll kee data] 
     (let [kee (if kee kee (new-id))
           keedata {:_id kee}
@@ -124,5 +126,17 @@
       (mgcoll/update (tablename coll) keedata objdata :upsert true) 
       kee))
   (delete [self coll kee] 
-    (validate-db-data {:_id kee})
-    (mgcoll/remove-by-id (tablename coll) kee)))
+    (when kee
+      (validate-db-data {:_id kee})
+      (mgcoll/remove-by-id (tablename coll) kee))))
+
+
+(defn >MongoDatastore [uri]
+  (connect-to-mongo! uri)
+  (->MongoDatastore))
+
+(defn drop-mongo! [uri db-name]
+  (connect-to-mongo! uri)
+  (let [db (mg/get-db db-name)]
+    (mgdb/drop-db db)))
+

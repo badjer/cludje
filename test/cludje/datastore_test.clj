@@ -170,6 +170,16 @@
   (test-db >TestDatastore)
   (test-higher-level >TestDatastore))
 
-(future-facts "Test mongodb")
+(def test-mongo-db "cludje-datastore-test")
+(def test-mongo-uri (str "mongodb://127.0.0.1/" test-mongo-db))
+
+(defn >mongo-test []
+  (drop-mongo! test-mongo-uri test-mongo-db)
+  (>MongoDatastore test-mongo-uri))
+
+(facts "MongoDatastore"
+  (test-db >mongo-test)
+  (test-higher-level >mongo-test))
+
 
 (future-facts "Implement soft deletes")
