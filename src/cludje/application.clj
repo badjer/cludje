@@ -1,5 +1,6 @@
 (ns cludje.application
   (:use cludje.system
+        cludje.util
         cludje.pipeline
         cludje.dataadapt
         cludje.session
@@ -8,8 +9,10 @@
         cludje.moldfind
         cludje.authorize
         cludje.datastore
+        cludje.serve
         cludje.email
         cludje.log))
+
 
 (defn >test-system [{:keys [action-namespaces mold-namespaces]}]
   {:data-adapter (>TestDataAdapter)
@@ -20,13 +23,15 @@
    :authorizer (>TestAuthorizer)
    :logger (>TestLogger)
    :data-store (>TestDatastore)
-   :emailer (>TestEmailer)})
+   :emailer (>TestEmailer)
+   })
 
 
 (defn with-web [system]
-  (let [web-data-adapter (>WebDataAdapter)]
-    (-> system
-        (assoc :data-adapter web-data-adapter))))
+  (-> system
+      (assoc :server (>JettyServer))
+      (assoc :data-adapter (>WebDataAdapter))
+      (assoc :port 8888)))
 
 
 ; Define pipelines
@@ -59,3 +64,17 @@
       (wrap-system system)
       (wrap-context)
       (unwrap-context :rendered-output)))
+
+; System functions
+(defn start-system [system]
+  (let [server (? system :server)
+        port (? system :port)
+        handler (>api-pipeline system)]
+    (start server port handler)
+    system))
+
+(defn stop-system [system]
+  (let [server (? system :server)]
+    (stop server)
+    system))
+

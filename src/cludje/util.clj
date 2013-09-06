@@ -42,7 +42,7 @@
   kee can be a vector for nested maps"
   ([input kee]
    (when-not (map? input)
-     (throw-error {:input "? must be passed a map as input"}))
+     (throw-error {:input (str "? must be passed a map as input, but was " input)}))
    (cond
      (vector? kee) (?-map input kee)
      :else (?- input kee))))
@@ -54,7 +54,7 @@
    (?? input kee nil))
   ([input kee default]
    (when-not (map? input)
-     (throw-error {:input "?? must be passed a map as input"}))
+     (throw-error {:input (str "?? must be passed a map as input, but was " input)}))
    (if (vector? kee)
      (get-in input kee default)
      (get input kee default))))
@@ -63,7 +63,7 @@
   "Returns the value of the first of kees found in input.
   If none are found, an excption will be thrown, like ?"
    (when-not (map? input)
-     (throw-error {:input "&? must be passed a map as input"}))
+     (throw-error {:input (str "&? must be passed a map as input, but was " input)}))
   (when (empty? kees)
     (throw-problems {nil "Called &? with no kees"}))
   (let [vs (filter identity (map (partial ?? input) kees))]

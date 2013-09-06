@@ -67,7 +67,7 @@
 
 
 (defprotocol IServer
-  (start [self])
+  (start [self port handler])
   (stop [self]))
 
 (defprotocol ITemplateFinder

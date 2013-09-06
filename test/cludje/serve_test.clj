@@ -10,8 +10,8 @@
 (def req {:url "http://localhost:8099"})
 
 (facts ">JettyServer"
-  (let [serv (>JettyServer 8099 identity)]
-    (start serv) => anything 
+  (let [serv (>JettyServer)]
+    (start serv 8099 identity) => anything 
     (do-request req) => (contains {:status 200})
     (stop serv) => anything
     (do-request) => (throws)))
@@ -30,14 +30,16 @@
 
 (facts ">JettyServer"
   (let [sys (with-web (>test-system sys-config))
-        pipeline (>api-pipeline sys)
-        server (>JettyServer 8099 pipeline)]
-    (start server) => anything
+        handler (>api-pipeline sys)
+        server (>JettyServer)]
+    (start server 8099 handler) => anything
     (fact "handles GET request"
       (do-request get-req) => {:name "A"})
     ;(fact "handles JSON input"
       ;(do-request json-req) => {:a 1})
     (stop server) => anything))
+
+(future-facts "Finish testing server")
 
 ;(let [pipeline (>api-pipeline
       ;serv (>JettyServer 8099)

@@ -16,13 +16,17 @@
           :configurator jetty-configurator}
          config))
 
-(defrecord JettyServer [port handler jetty-instance]
+(defrecord JettyServer [port jetty-instance]
   IServer
-  (start [self]
-    (reset! jetty-instance (jetty/run-jetty @handler (jetty-opts self))))
+  (start [self start-port handler]
+    (reset! port start-port)
+    (reset! jetty-instance (jetty/run-jetty handler (jetty-opts {:port start-port}))))
+    ;(reset! jetty-instance (jetty/run-jetty @handler (jetty-opts self))))
   (stop [self]
-    (when @jetty-instance (.stop @jetty-instance))))
+    (when @jetty-instance 
+      (.stop @jetty-instance)
+      (reset! port nil))))
 
-(defn >JettyServer [port handler]
-  (->JettyServer port (atom handler) (atom nil)))
+(defn >JettyServer []
+  (->JettyServer (atom nil) (atom nil)))
 
