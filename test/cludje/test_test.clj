@@ -32,6 +32,16 @@
   [{:z 1}] =not=> (has-item? {:a 1})
   [{:a 2}] =not=> (has-item? {:a 1}))
 
+(facts "just-item?"
+  [{:a 1}] => (just-item? {:a 1})
+  [{:a 1 :b 1}] => (just-item? {:a 1})
+  [{:a 1} {:z 1}] =not=> (just-item? {:a 1})
+  1 =not=> (just-item? {:a 1})
+  nil =not=> (just-item? {:a 1})
+  [] =not=> (just-item? {:a 1})
+  [{:z 1}] =not=> (just-item? {:a 1})
+  [{:a 2}] =not=> (just-item? {:a 1}))
+
 
 (fact "has-problems?"
   {} =not=> has-problems?

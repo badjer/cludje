@@ -24,6 +24,17 @@
           res (map checker-fn xs)]
       (some #{true} res))))
 
+(defn just-item? [partial-item]
+  "A midje checker that returns true if the thing
+  being tested is a seq, and all the things in the seq
+  contains partial-item"
+  (fn [xs]
+    (let [checker-fn (contains partial-item)
+          res (map checker-fn xs)]
+      (and (seq res) (every? #{true} res)))))
+
+
+
 
 (defn has-problems? [x]
   "A midje checker that returns true if the thing
