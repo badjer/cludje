@@ -127,4 +127,4 @@
   "Loads the input into a context, and extracts the output from the context"
   (-> f
       (wrap-context)
-      (unwrap-context)))
+      (unwrap-context :rendered-output)))
