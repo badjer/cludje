@@ -21,7 +21,7 @@
 
 (def row {:a 1})
 
-(def Cog (>Model "cog" {:a Int} {}))
+(def Cog (>Model {:a Int} {:modelname "cog"}))
 
 (def datastore (>TestDatastore))
 (def ds-context {:system {:data-store datastore}})

@@ -8,7 +8,7 @@
         cludje.test
         midje.sweet))
 
-(def Gear (>Model "gear" {:teeth Int} {}))
+(def Gear (>Model {:teeth Int} {:modelname "gear"}))
 
 (def gear {:teeth 4})
 
@@ -36,13 +36,13 @@
     (:gears (crud-model-list context)) => empty?
     ))
 
-(def Widget (>Model "widget" {:teeth Int :size Int}
-                    {:defaults {:size 3}}))
+(def Widget (>Model {:teeth Int :size Int}
+                    {:modelname "widget" :defaults {:size 3}}))
 (def-crud-actions Widget)
 
 (defn ac-companyid [context] 1)
-(def Widgettype (>Model "widgettype" {:companyid Int :name Str}
-                        {:defaults {:companyid ac-companyid}}))
+(def Widgettype (>Model {:companyid Int :name Str}
+                        {:modelname "widgettype" :defaults {:companyid ac-companyid}}))
 (def-crud-actions Widgettype)
 
 (fact "crud defaults"
@@ -57,8 +57,8 @@
       (new-widgettype (>context `Widgettype)) => (contains {:companyid 1}))))
 
 
-(def Geartype (>Model "geartype" {:name Str :isarchived Bool}
-                      {:defaults {:isarchived false}}))
+(def Geartype (>Model {:name Str :isarchived Bool}
+                      {:modelname "geartype" :defaults {:isarchived false}}))
 (def geartype {:name "A" :isarchived false})
 
 (def-crud-actions Geartype)
@@ -99,9 +99,9 @@
 
 
 
-(def Sprockettype (>Model "sprockettype" 
-                          {:companyid Int :name Str}
-                          {:defaults {:companyid #'ac-companyid} 
+(def Sprockettype (>Model {:companyid Int :name Str}
+                          {:modelname "sprockettype"
+                           :defaults {:companyid #'ac-companyid} 
                            :partitions [:companyid]}))
 
 (def-crud-actions Sprockettype)
@@ -121,9 +121,10 @@
         sres-d => ok?
         (map :name (:sprockettypes sres-d)) => ["A"]))))
 
-(def Footype (>Model "footype" 
+(def Footype (>Model 
                      {:companyid Str :name Str}
-                     {:defaults {:companyid 1} 
+                     {:modelname "footype"
+                      :defaults {:companyid 1} 
                       :partitions [:companyid]}))
 
 (def-crud-actions Footype)

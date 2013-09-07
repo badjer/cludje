@@ -7,7 +7,7 @@
         cludje.moldfind
         cludje.templatefind))
 
-(def cog (>Model :cog {:name Str} {}))
+(def cog (>Model {:name Str} {:modelname :cog}))
 (defn template-for-edit [model] "Edit")
 (defn template-for-delete [model] "Delete")
 (defn >moldfinder [] (>NSMoldFinder 'cludje.templatefind-test))

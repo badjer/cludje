@@ -2,7 +2,7 @@
   (:use cludje.model
         cludje.types))
 
-(def Cog (>Model "cog" {:name Str :amt Int :companyid Int} {}))
+(def Cog (>Model {:name Str :amt Int :companyid Int} {:modelname "cog"}))
 
-(def Shift (>Model "shift" {:date Date :start Time :breaks Timespan :ilikecats Bool}
-                   {}))
+(def Shift (>Model {:date Date :start Time :breaks Timespan :ilikecats Bool}
+                   {:modelname "shift"}))

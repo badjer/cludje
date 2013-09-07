@@ -12,7 +12,7 @@
   ([action-sym] (>input action-sym {}))
   ([action-sym input] {:action-sym action-sym :input input :user {:username "a"}}))
 
-(def Cog (>Model "cog" {:amt Int} {}))
+(def Cog (>Model {:amt Int} {:modelname "cog"}))
 
 (def ab-all-cog (>Ability :add Cog true))
 
@@ -65,7 +65,7 @@
   (ab-star-override-cog (>input 'add-cog)) => truthy
   (ab-star-override-cog (>input 'delete-cog)) => falsey)
 
-(def Person (>Model "person" {:name Str} {}))
+(def Person (>Model {:name Str} {:modelname "person"}))
 (def ab-cog-person
   (>Ability
     :add Cog #(= 1 (:amt (:input %)))

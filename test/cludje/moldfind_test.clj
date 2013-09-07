@@ -32,14 +32,14 @@
 
 (defn test-find [f mf]
   (fact "finds a mold"
-    (f mf (>input :mold)) => `mold
+    (f mf (>input :mold)) => mold
     (fact "with different casing"
-      (f mf (>input :cog)) => `Cog
-      (f mf (>input "cog")) => `Cog))
+      (f mf (>input :cog)) => Cog
+      (f mf (>input "cog")) => Cog))
   (fact "works with fully-qualified names"
-    (f mf (>input `mold)) => `mold)
+    (f mf (>input `mold)) => mold)
   (fact "finds a mold in another namespace"
-    (f mf (>input :altnsmold)) => `ans/altnsmold)
+    (f mf (>input :altnsmold)) => ans/altnsmold)
   (fact "throws exception if _action not supplied"
     (f mf (>input nil)) => (throws-error))
   (fact "throws exception if can't find"
@@ -54,9 +54,9 @@
     (fact "find-input-mold"
       (test-find find-input-mold mf)
       (fact "Finds <action-name>-input first"
-        (find-input-mold mf (>input :foo-bar)) => `foo-bar-input))
+        (find-input-mold mf (>input :foo-bar)) => foo-bar-input))
     (fact "find-output-mold"
       (test-find find-output-mold mf)
       (fact "finds <action-name>-output first"
-        (find-output-mold mf (>input :foo-bar)) => `foo-bar-output))))
+        (find-output-mold mf (>input :foo-bar)) => foo-bar-output))))
 

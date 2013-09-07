@@ -7,7 +7,7 @@
 
 (def fs {:name Str :price Money})
 
-(def Cogmodel (>Model :cog fs {}))
+(def Cogmodel (>Model fs {:modelname "cog"}))
 
 (fact ">Model"
   (fact "implements IModel"
@@ -18,28 +18,37 @@
       (fact "adds kee field"
         (fields Cogmodel) => (has-keys :_id)
         (fact "unless no-key is supplied"
-          (fields (>Model :cog fs {:no-key true})) =not=> (has-keys :_id)))
+          (fields (>Model fs {:modelname :cog :no-key true})) =not=> (has-keys :_id)))
       (fact "required-fields excludes kee"
         (required-fields Cogmodel) =not=> (contains :_id))
       (fact "invisible-fields includes kee"
         (invisible-fields Cogmodel) => (contains :_id)))
+    (fact "modelname"
+      (fact "with string model"
+        (modelname (>Model {} {:modelname "cogi"})) => "cogi")
+      (fact "with keyword model"
+        (modelname (>Model {} {:modelname :cogi})) => "cogi"))
     (fact "tablename"
       (fact "with string table"
-        (tablename (>Model "cog" {} {})) => "cog"
-        (tablename (>Model "Cog" {} {})) => "cog")
+        (tablename (>Model {} {:modelname "cog"})) => "cog"
+        (tablename (>Model {} {:modelname "Cog"})) => "cog")
       (fact "with keyword table"
-        (tablename (>Model :cog {} {})) => "cog"
-        (tablename (>Model :Cog {} {})) => "cog"))
+        (tablename (>Model {} {:modelname :cog})) => "cog"
+        (tablename (>Model {} {:modelname :Cog})) => "cog")
+      (fact "is set automatically from modelname"
+        (tablename (>Model {} {:modelname :Cog})) => "cog")
+      (fact "can be different than modelname"
+        (tablename (>Model {} {:modelname :Cog :tablename "cogt"})) => "cogt"))
     (fact "keyname"
       (keyname Cogmodel) => :_id)
     (fact "partitions"
       (fact "supplied"
-        (partitions (>Model :cog fs {:partitions [:name]})) => [:name])
+        (partitions (>Model fs {:modelname :cog :partitions [:name]})) => [:name])
       (fact "not supplied"
-        (partitions (>Model :cog fs {})) => []))))
+        (partitions (>Model fs {:modelname :cog})) => []))))
 
-(def Gear (>Model "gear" {:name Str :teeth Int :size Int}
-                  {:required [:name]
+(def Gear (>Model {:name Str :teeth Int :size Int}
+                  {:modelname "gear" :required [:name]
                    :invisible [:teeth]}))
 
 (fact ">Model overrides mold fields"
