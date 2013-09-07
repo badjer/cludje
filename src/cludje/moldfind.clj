@@ -58,9 +58,9 @@
 (defrecord NSMoldFinder [mold-namespaces]
   IMoldFinder
   (find-input-mold [self context]
-    (find-mold- @mold-namespaces (propose-input-moldnames (? context :action-sym))))
+    (find-mold- @mold-namespaces (propose-input-moldnames (?! context :action-sym))))
   (find-output-mold [self context]
-    (find-mold- @mold-namespaces (propose-output-moldnames (? context :action-sym)))))
+    (find-mold- @mold-namespaces (propose-output-moldnames (?! context :action-sym)))))
 
 
 (defn >NSMoldFinder [& mold-namespaces]

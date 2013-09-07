@@ -22,30 +22,44 @@
     (and (fn? x) (= 0 (arity x))) (x)
     :else x))
 
-(declare ?)
+(declare ?-)
 
-(defn- ?- [input kee]
+(defn- ?-val [ex-fn input kee]
   (if-let [res (get input kee)]
     res
-    (throw-problems {kee " is required but was not provided"}) ))
+    (if ex-fn
+      (ex-fn {kee " is required but was not provided"}) )))
 
-(defn- ?-map [input [k & ks]]
+(defn- ?-vec [ex-fn input [k & ks]]
   (if (empty? ks)
-    (?- input k)
-    (? (? input k) (vec ks))))
+    (?-val ex-fn input k)
+    (?- ex-fn (?- ex-fn input k) (vec ks))))
+
+(defn- ?- [ex-fn input kee]
+  (if-not (map? input) 
+    (when ex-fn
+      (throw-error {:input (str "? must be passed a map as input, but was " input)}))
+    (cond 
+      (vector? kee) (?-vec ex-fn input kee) 
+      :else (?-val ex-fn input kee))))
 
 (defn ? 
-  "Returns kee from input, throwing an exception if it's not found.
+  "Returns kee from input, throwing problems if it's not found.
   The exception will contain problem data, so that it will be
   caught by the handler if defaction, meaning errors won't 
   crash an action.
   kee can be a vector for nested maps"
   ([input kee]
-   (when-not (map? input)
-     (throw-error {:input (str "? must be passed a map as input, but was " input)}))
-   (cond
-     (vector? kee) (?-map input kee)
-     :else (?- input kee))))
+   (?- throw-problems input kee)))
+
+
+(defn ?!
+  "Exactly like ?, but throws a system error instead of a
+  problems exception. Use this to query for things that mean
+  a system-level error has happened; use ? to indicate that
+  it's a user-input problem"
+  ([input kee]
+   (?- throw-error input kee)))
 
 (defn ?? 
   "Returns kee from input, but does NOT throw an exception if it's
@@ -53,15 +67,11 @@
   ([input kee]
    (?? input kee nil))
   ([input kee default]
-   (when-not (map? input)
-     (throw-error {:input (str "?? must be passed a map as input, but was " input)}))
-   (if (vector? kee)
-     (get-in input kee default)
-     (get input kee default))))
+   (or (?- nil input kee) default)))
 
 (defn &? [input & kees]
   "Returns the value of the first of kees found in input.
-  If none are found, an excption will be thrown, like ?"
+  If none are found, problems excption will be thrown, like ?"
    (when-not (map? input)
      (throw-error {:input (str "&? must be passed a map as input, but was " input)}))
   (when (empty? kees)

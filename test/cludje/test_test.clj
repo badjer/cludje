@@ -80,6 +80,12 @@
       => (has-alert :success #"save")))
 
 (fact "exception checkers"
+  (fact "problems"
+    (throw-problems {}) => (throws-problems)
+    (throw-error {}) =not=> (throws-problems))
+  (fact "error"
+    (throw-error {}) => (throws-error)
+    (throw-problems {}) =not=> (throws-error))
   (fact "404"
     (throw-not-found) => (throws-404)
     (throw-unauthorized) =not=> (throws-404)

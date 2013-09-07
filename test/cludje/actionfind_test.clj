@@ -29,5 +29,7 @@
       (test-find find-action af)
       (fact "throws exception if can't find"
         (find-action af (>input :random-func)) => (throws-error))
+      (fact "throws if no action supplied"
+        (find-action af (>input nil)) => (throws-error))
       (fact "throws exception if the thing doesn't look like an action"
         (find-action af (>input :not-an-action)) => (throws-error)))))

@@ -15,7 +15,7 @@
   IDataAdapter
   (parse-input [self rawdata] 
     (let [parsed (ring-parser rawdata)
-          params (? parsed :params)]
+          params (?! parsed :params)]
       params))
   (render-output [self output] 
     (json-respond output)))

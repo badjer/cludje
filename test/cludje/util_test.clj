@@ -16,20 +16,30 @@
   (fact "within map-vals"
     (map-vals {:a getx :b 1} realize) => {:a "x" :b 1}))
 
+(defn is-?-like [f ex-checker]
+  (facts "is-?-like"
+    (f {:a 1} :a) => 1
+    (f {:a 1} :b) => (ex-checker)
+    (f {:a {:b 1}} [:a :b]) => 1
+    (f {:a {:b 1}} [:a :z]) => (ex-checker)
+    (facts "with nil values"
+      (f {:a nil} :a) => (ex-checker)
+      (f {:a {:b nil}} [:a :b]) => (ex-checker))))
+
 (facts "?"
-  (? {:a 1} :a) => 1
-  (? {:a 1} :b) => (throws)
-  (? {:a {:b 1}} [:a :b]) => 1
-  (? {:a {:b 1}} [:a :z]) => (throws)
-  (facts "with nil values"
-    (? {:a nil} :a) => (throws)
-    (? {:a {:b nil}} [:a :b]) => (throws)))
+  (is-?-like ? throws-problems)
+  (? nil :a) => (throws-error))
+
+(facts "?!"
+  (is-?-like ?! throws-error)
+  (?! nil :a) => (throws-error))
 
 (facts "??"
   (?? {:a 1} :a) => 1
   (?? {:a 1} :b) => nil
   (?? {:a {:b 1}} [:a :b]) => 1
   (?? {:a {:b 1}} [:a :z]) => nil
+  (?? {:a {:b 1}} [:z :y]) => nil
   (fact "with nil values"
     (?? {:a nil} :a) => nil
     (?? {:a {:b nil}} [:a :b]) => nil))
@@ -47,7 +57,6 @@
     (&? {:a nil} :a) => (throws)
     (&? {:a nil} :b :a) => (throws)
     (&? {:a {:b nil}} [:a :b]) => (throws)))
-
 
 (fact "with-problem"
   (-> {} (with-problem :a "err")) => {:__problems {:a "err"}}

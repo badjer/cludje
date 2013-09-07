@@ -37,9 +37,9 @@
       (handler context) => (has-keys :session))
     (fact "requires system/session-store"
       (fact "no system"
-        (handler (dissoc context :system)) => (throws))
+        (handler (dissoc context :system)) => (throws-error))
       (fact "no session-store"
-        (handler (assoc context :system {})) => (throws)))
+        (handler (assoc context :system {})) => (throws-error)))
     (fact "persists :session"
       (add-session-handler context) => anything
       (handler context) => (contains {:session {:a 1}}))
@@ -57,11 +57,11 @@
       (handler context) => (contains {:parsed-input parsed-input}))
     (fact "requires system/data-adapter"
       (fact "no system"
-        (handler raw-context) => (throws))
+        (handler raw-context) => (throws-error))
       (fact "no data-adapter"
-        (handler (assoc context :system {})) => (throws)))
+        (handler (assoc context :system {})) => (throws-error)))
     (fact "requires read-input"
-      (handler (dissoc context :raw-input)) => (throws))
+      (handler (dissoc context :raw-input)) => (throws-error))
     (fact "returns original data"
       (handler context) => (contains context))))
 
@@ -76,9 +76,9 @@
       (handler context) => (contains {:user user}))
     (fact "requires system/authenticator"
       (fact "no system"
-        (handler {}) => (throws))
+        (handler {}) => (throws-error))
       (fact "no authenticator"
-        (handler raw-context) => (throws)))
+        (handler raw-context) => (throws-error)))
     (fact "returns original data"
       (handler context) => (contains context))))
 
@@ -95,9 +95,9 @@
       (handler context) => (contains {:action-sym `action}))
     (fact "requires system/action-finder"
       (fact "no system"
-        (handler {}) => (throws))
+        (handler {}) => (throws-error))
       (fact "no action-finder"
-        (handler raw-context) => (throws)))
+        (handler raw-context) => (throws-error)))
     (fact "returns original data"
       (handler context) => (contains context))))
 
@@ -115,9 +115,9 @@
       (handler context) => (contains {:input-mold-sym `mold}))
     (fact "requires system/mold-finder"
       (fact "no system"
-        (handler raw-context) => (throws))
+        (handler raw-context) => (throws-error))
       (fact "no mold-finder"
-        (handler (assoc-in context [:system :mold-finder] nil)) => (throws)))
+        (handler (assoc-in context [:system :mold-finder] nil)) => (throws-error)))
     (fact "returns original data"
       (handler context) => (contains context))))
 
@@ -132,9 +132,9 @@
   (fact "turns parsed-input to input"
     (handler context) => (contains {:input input}))
   (fact "requires parsed-input"
-    (handler (dissoc context :parsed-input)) => (throws))
+    (handler (dissoc context :parsed-input)) => (throws-error))
   (fact "requires input-mold-sym"
-    (handler (dissoc context :input-mold-sym)) => (throws))))
+    (handler (dissoc context :input-mold-sym)) => (throws-error))))
 
 (def authorizor (>TestAuthorizer true))
 (def input-context
@@ -147,16 +147,16 @@
         context (assoc input-context :system sys)]
     (fact "requires system/authorizer"
       (fact "no system"
-        (handler {}) => (throws))
+        (handler {}) => (throws-error))
       (fact "no authorizer"
-        (handler raw-context) => (throws)))
+        (handler raw-context) => (throws-error)))
     (fact "does nothing if authorized"
       (handler context) => context)
     (fact "throws exception if unauthorized"
       (let [unauth (>TestAuthorizer false)
             unauth-sys {:authorizer unauth}
             context (assoc input-context :system unauth-sys)]
-        (handler context) => (throws)))
+        (handler context) => (throws-403)))
     (fact "returns original data"
       (handler context) => (contains context))))
 
@@ -167,7 +167,7 @@
     (fact "adds :output"
       (handler context) => (contains {:output anything}))
     (fact "requires action-sym"
-      (handler (dissoc context :action-sym)) => (throws))
+      (handler (dissoc context :action-sym)) => (throws-error))
     (fact "calls action"
       (handler context) => (contains {:output output}))
     (fact "returns original data"
@@ -182,9 +182,9 @@
       (handler context) => (contains {:output-mold-sym `mold}))
     (fact "requires system/mold-store"
       (fact "no system"
-        (handler raw-context) => (throws))
+        (handler raw-context) => (throws-error))
       (fact "no moldstore"
-        (handler (assoc-in context [:system :mold-finder] nil)) => (throws)))
+        (handler (assoc-in context [:system :mold-finder] nil)) => (throws-error)))
     (fact "doesn't overwrite output-mold-sym if it's already set"
       (handler (assoc context :output-mold-sym 'foo)) => (contains {:output-mold-sym 'foo}))
     (fact "returns original data"
@@ -199,9 +199,9 @@
     (fact "turns output to molded-output"
       (handler context) => (contains {:molded-output molded-output}))
     (fact "requires output-mold"
-      (handler (dissoc context :output-mold-sym)) => (throws))
+      (handler (dissoc context :output-mold-sym)) => (throws-error))
     (fact "requires output"
-      (handler (dissoc context :output)) => (throws))))
+      (handler (dissoc context :output)) => (throws-error))))
 
 (def molded-output-context 
   (assoc output-context :molded-output molded-output :output-mold-sym `mold))
@@ -214,12 +214,12 @@
     (fact "adds :rendered-output"
       (handler context) => (contains {:rendered-output rendered-output}))
     (fact "requires molded-output"
-      (handler (dissoc context :molded-output)) => (throws))
+      (handler (dissoc context :molded-output)) => (throws-error))
     (fact "requires system/data-adapter"
       (fact "no system"
-        (handler raw-context) => (throws))
+        (handler raw-context) => (throws-error))
       (fact "no data-adapter"
-        (handler (assoc context :system {})) => (throws)))
+        (handler (assoc context :system {})) => (throws-error)))
     (fact "returns original data"
       (handler context) => (contains context))))
 

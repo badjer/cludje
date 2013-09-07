@@ -18,7 +18,7 @@
     (and (fn? f) (= 1 (arity f)))))
 
 (defn- find-action- [context action-namespaces throw?]
-  (let [action-str (? context [:parsed-input :_action])
+  (let [action-str (?! context [:parsed-input :_action])
         finds (find-in-nses action-namespaces action-str)
         matches (filter looks-like-action? finds)]
     (if-not (empty? matches)

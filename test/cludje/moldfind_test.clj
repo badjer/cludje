@@ -40,6 +40,8 @@
     (f mf (>input `mold)) => `mold)
   (fact "finds a mold in another namespace"
     (f mf (>input :altnsmold)) => `ans/altnsmold)
+  (fact "throws exception if _action not supplied"
+    (f mf (>input nil)) => (throws-error))
   (fact "throws exception if can't find"
     (f mf (>input :random-func)) => (throws-error))
   (fact "throws exception if the thing isn't a mold"
