@@ -48,10 +48,10 @@
       (do-request json-req) => (body {:name "A"}))
     (fact "handles exceptions"
       (do-request (>json-req :problem-cog)) => (status 200)
-      (do-request (>json-req :problem-cog)) => {}
+      (:body (do-request (>json-req :problem-cog))) => 
+        (contains {:__problems {:name "empty"}})
       (do-request (>json-req :unauthorized-cog)) => (status 403)
-      (do-request (>json-req :notloggedin-cog)) => (status 401)
-      )
+      (do-request (>json-req :notloggedin-cog)) => (status 401))
     (stop server) => anything))
 
 

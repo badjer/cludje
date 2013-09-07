@@ -23,23 +23,27 @@
 (defn >input [action-sym]
   {:action-sym action-sym})
 
-(def mold (>Mold {:name Str} {}))
-(def Cog (>Mold {:name Str} {}))
+(def mold-fields {:name Str})
+(def mold (>Mold mold-fields {}))
+(def cog-fields {:cogname Str})
+(def Cog (>Mold cog-fields {}))
 (def notmold 1)
 
-(def foo-bar-input (>Mold {:name Str :amt Int} {}))
-(def foo-bar-output (>Mold {:amt Int} {}))
+(def foo-bar-input-fields {:name Str :amt Int})
+(def foo-bar-input (>Mold foo-bar-input-fields {}))
+(def foo-bar-output-fields {:amt Int})
+(def foo-bar-output (>Mold foo-bar-output-fields {}))
 
 (defn test-find [f mf]
   (fact "finds a mold"
-    (f mf (>input :mold)) => mold
+    (fields (f mf (>input :mold))) => (contains (fields mold))
     (fact "with different casing"
-      (f mf (>input :cog)) => Cog
-      (f mf (>input "cog")) => Cog))
+      (fields (f mf (>input :cog))) => (contains (fields Cog))
+      (fields (f mf (>input "cog"))) => (contains (fields Cog))))
   (fact "works with fully-qualified names"
-    (f mf (>input `mold)) => mold)
+    (fields (f mf (>input `mold))) => (contains (fields mold)))
   (fact "finds a mold in another namespace"
-    (f mf (>input :altnsmold)) => ans/altnsmold)
+    (fields (f mf (>input :altnsmold))) => (contains (fields ans/altnsmold)))
   (fact "throws exception if _action not supplied"
     (f mf (>input nil)) => (throws-error))
   (fact "throws exception if can't find"
@@ -58,5 +62,9 @@
     (fact "find-output-mold"
       (test-find find-output-mold mf)
       (fact "finds <action-name>-output first"
-        (find-output-mold mf (>input :foo-bar)) => foo-bar-output))))
+        (fields (find-output-mold mf (>input :foo-bar))) => 
+          (contains (fields foo-bar-output)))
+      (fact "attaches :__problems Anything to the mold it returns"
+        (fields (find-output-mold mf (>input :foo-bar))) => 
+          (contains {:__problems Anything})))))
 

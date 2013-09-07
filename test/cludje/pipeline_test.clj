@@ -191,7 +191,7 @@
         handler (wrap-output-mold identity)
         context (assoc input-context :system sys)]
     (fact "adds :output-mold"
-      (handler context) => (contains {:output-mold mold}))
+      (handler context) => (has-keys :output-mold))
     (fact "requires system/mold-store"
       (fact "no system"
         (handler raw-context) => (throws-error))

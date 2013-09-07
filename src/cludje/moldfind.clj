@@ -1,15 +1,19 @@
 (ns cludje.moldfind
   (:use cludje.system
         cludje.mold
+        cludje.types
         cludje.util
         cludje.errors
         cludje.find)
   (:require [clojure.string :as s]))
 
+(defn- add-output-fields [mold]
+  (>Mold {:_ mold :__problems Anything} {}))
+
 (defrecord SingleMoldFinder [mold]
   IMoldFinder
   (find-input-mold [self context] mold)
-  (find-output-mold [self context] mold))
+  (find-output-mold [self context] (add-output-fields mold)))
 
 (defn >SingleMoldFinder [mold]
   (->SingleMoldFinder mold))
@@ -56,13 +60,15 @@
                                    (s/join ", " finds) ", but none of them "
                                    "looked were molds")})))))
 
-
 (defrecord NSMoldFinder [mold-namespaces]
   IMoldFinder
   (find-input-mold [self context]
     (find-mold- @mold-namespaces (propose-input-moldnames (?! context :action-sym))))
   (find-output-mold [self context]
-    (find-mold- @mold-namespaces (propose-output-moldnames (?! context :action-sym)))))
+    (let [names (propose-output-moldnames (?! context :action-sym))
+          mold (find-mold- @mold-namespaces names)
+          res (add-output-fields mold)]
+      res)))
 
 
 (defn >NSMoldFinder [& mold-namespaces]
