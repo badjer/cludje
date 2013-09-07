@@ -23,6 +23,16 @@
   "Returns true if x is truthy and not an empty string."
   (not (or (nil? x) (= x ""))))
 
+(def Anything 
+  (reify
+    IParseable
+    (parse [self txt] txt)
+    IShowable 
+    (show [self x] x)
+    IValidateable
+    (problems? [self x])))
+
+
 
 (def Str 
   (reify 

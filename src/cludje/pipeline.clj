@@ -73,11 +73,20 @@
         (throw-unauthorized)
         (f context)))))
 
+(defn run-action [action context]
+  (try
+    (action context)
+    (catch clojure.lang.ExceptionInfo ex
+      (let [exd (ex-data ex)]
+        (if (:__problems exd)
+          (merge (:input context) exd)
+          (throw ex))))))
+
 (defn wrap-output [f]
   (fn [context]
     (let [action-sym (?! context :action-sym)
           action (resolve action-sym)
-          output (action context)]
+          output (run-action action context)]
       (-> context
           (assoc :output output)
           (f)))))

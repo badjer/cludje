@@ -1,5 +1,6 @@
 (ns cludje.serve
-  (:use cludje.system)
+  (:use cludje.system
+        cludje.web)
   (:require [ring.adapter.jetty :as jetty])
   (:import [org.eclipse.jetty.server.handler GzipHandler]))
 
@@ -19,9 +20,10 @@
 (defrecord JettyServer [port jetty-instance]
   IServer
   (start [self start-port handler]
-    (reset! port start-port)
-    (reset! jetty-instance (jetty/run-jetty handler (jetty-opts {:port start-port}))))
-    ;(reset! jetty-instance (jetty/run-jetty @handler (jetty-opts self))))
+    (let [safe-handler (wrap-web-exception-handling handler)]
+      (reset! port start-port)
+      (reset! jetty-instance 
+              (jetty/run-jetty safe-handler (jetty-opts {:port start-port})))))
   (stop [self]
     (when @jetty-instance 
       (.stop @jetty-instance)

@@ -322,3 +322,11 @@
     (map :text res) => ["0.00" "0.50" "1.00" "1.50" "2.00"]
     (map :val res) => [0 (minutes 30) (hours 1) (minutes 90) (hours 2)]))
 
+
+(fact "Anything"
+  (fact "show filters nothing"
+    (show Anything {:a 1 :b 2}) => {:a 1 :b 2})
+  (fact "parse changes nothing"
+    (parse Anything {:a 1 :b 2}) => {:a 1 :b 2})
+  (fact "validates"
+    (problems? Anything {:a 1 :b 2}) => nil))

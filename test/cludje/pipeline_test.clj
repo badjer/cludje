@@ -1,5 +1,6 @@
 (ns cludje.pipeline-test
   (:use midje.sweet
+        cludje.errors
         cludje.test
         cludje.system
         cludje.authenticate
@@ -160,6 +161,10 @@
     (fact "returns original data"
       (handler context) => (contains context))))
 
+
+(defn problem-action [context] (throw-problems {:name "bad"}))
+(defn error-action [context] (throw-error))
+
 (fact "wrap-output" 
   (let [handler (wrap-output identity)
         sys {}
@@ -171,7 +176,15 @@
     (fact "calls action"
       (handler context) => (contains {:output output}))
     (fact "returns original data"
-      (handler context) => (contains context))))
+      (handler context) => (contains context))
+    (let [bad-context (assoc context :action-sym `problem-action)]
+      (fact "has __problems if problems thrown"
+        (:output (handler bad-context)) => (contains {:__problems {:name "bad"}}))
+      (fact "has original input if problems thrown"
+        (:output (handler bad-context)) => (contains input))
+      (fact "throws if non-problem exception"
+        (let [err-context (assoc context :action-sym `error-action)]
+          (handler err-context) => (throws))))))
 
 
 (fact "wrap-output-mold"

@@ -94,14 +94,28 @@
 
 (defn <-json [s]
   (if (:body s)
-    (recur (:body s))
+    (assoc s :body (cheshire/parse-string (:body s) true))
     (cheshire/parse-string s true)))
+
+(defn body [data]
+  "Midje checker that checks if a response body is data"
+  (fn [x]
+    (= data (:body x))))
+
+(defn status [code]
+  "Midje checker that checks if a response status is code"
+  (fn [x]
+    (= code (:status x))))
+
+
+(defn json-post [url json]
+  (http/post url {:form-params json :content-type :json :throw-exceptions false}))
 
 (defn do-request [{:keys [url body method] :or {url "http://google.ca"
                                                 body ""
                                                 method :get}}]
   (case method 
-    :get (http/get url)
-    :get-json (<-json (:body (http/get url)))
-    :json (<-json (:body (http/post url {:form-params body :content-type :json})))))
+    :get (http/get url {:throw-exceptions false})
+    :get-json (<-json (http/get url {:throw-exceptions false}))
+    :json (<-json (json-post url body))))
 

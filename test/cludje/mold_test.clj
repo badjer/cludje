@@ -158,3 +158,5 @@
   (parse Cog-list {:cogs [{:name "a" :price 1}
                           {:name "b" :price 2}]}) =>
   {:cogs [{:name "a" :price 1} {:name "b" :price 2}]})
+
+

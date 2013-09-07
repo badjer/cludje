@@ -1,5 +1,6 @@
 (ns cludje.serve-test
   (:use midje.sweet
+        cludje.errors
         cludje.serve
         cludje.system
         cludje.application
@@ -16,11 +17,19 @@
     (stop serv) => anything
     (do-request) => (throws)))
 
-(defn new-cog [{:keys [input]}] {:name "A"})
 (def cog (>Model "cog" {:name Str} {}))
+(defn new-cog [{:keys [input]}] {:name "A"})
+(defn problem-cog [_] (throw-problems {:name "empty"}))
+(defn unauthorized-cog [_] (throw-unauthorized))
+(defn notloggedin-cog [_] (throw-not-logged-in))
 
-(def json-req {:url "http://localhost:8099/api" :method :json 
-               :body {:_action "new-cog" :name "B"}})
+(defn >json-req 
+  ([action] (>json-req action nil))
+  ([action input] 
+  {:url "http://localhost:8099/api" :method :json
+   :body (merge input {:_action (name action)})}))
+
+(def json-req (>json-req :new-cog {:name "B"}))
 (def get-req {:method :get-json 
               :url "http://localhost:8099/api?name=B&_action=new-cog"})
 
@@ -34,12 +43,27 @@
         server (>JettyServer)]
     (start server 8099 handler) => anything
     (fact "handles GET request"
-      (do-request get-req) => {:name "A"})
-    ;(fact "handles JSON input"
-      ;(do-request json-req) => {:a 1})
+      (do-request get-req) => (body {:name "A"}))
+    (fact "handles JSON input"
+      (do-request json-req) => (body {:name "A"}))
+    (fact "handles exceptions"
+      (do-request (>json-req :problem-cog)) => (status 200)
+      (do-request (>json-req :problem-cog)) => {}
+      (do-request (>json-req :unauthorized-cog)) => (status 403)
+      (do-request (>json-req :notloggedin-cog)) => (status 401)
+      )
     (stop server) => anything))
 
+
 (future-facts "Finish testing server")
+
+(fact ">JettyServer denies get requests"
+  (let [sys (with-web (>test-system sys-config))
+        handler (>api-pipeline sys)
+        server (>JettyServer)]
+    (start server 8099 handler) => anything
+    (future-fact "Test")
+    (stop server) => anything))
 
 ;(let [pipeline (>api-pipeline
       ;serv (>JettyServer 8099)

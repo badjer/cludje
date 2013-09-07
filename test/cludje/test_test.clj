@@ -119,3 +119,13 @@
 (fact "<-json"
   (<-json "{\"a\":1}") => {:a 1})
 
+(fact "body"
+  {:body {:a 1}} => (body {:a 1})
+  {:body {:a 1}} =not=> (body {:b 1})
+  {} =not=> (body {:a 1}))
+
+(fact "status"
+  {:status 200} => (status 200)
+  {:status 400} =not=> (status 200)
+  {} =not=> (status 200))
+
