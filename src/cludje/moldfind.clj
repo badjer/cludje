@@ -6,17 +6,19 @@
         cludje.find)
   (:require [clojure.string :as s]))
 
-(defrecord SingleMoldFinder [mold-sym]
+(defrecord SingleMoldFinder [mold]
   IMoldFinder
-  (find-input-mold [self context] mold-sym)
-  (find-output-mold [self context] mold-sym))
+  (find-input-mold [self context] mold)
+  (find-output-mold [self context] mold))
 
-(defn >SingleMoldFinder [mold-sym]
-  (->SingleMoldFinder mold-sym))
+(defn >SingleMoldFinder [mold]
+  (->SingleMoldFinder mold))
 
-(defn is-mold? [sym]
+(defn sym-to-mold [sym]
   (let [m @(resolve sym)]
-    (satisfies? IMold m)))
+    (when (satisfies? IMold m)
+      m)))
+
 
 
 (defn propose-input-moldnames [action-sym]
@@ -41,7 +43,7 @@
 
 (defn- find-mold- [mold-namespaces mold-names]
   (let [finds (search-in-nses mold-namespaces mold-names)
-        matches (filter is-mold? finds)]
+        matches (keep sym-to-mold finds)]
       (if (seq matches)
         (first matches)
         (cond 

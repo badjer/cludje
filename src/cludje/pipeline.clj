@@ -50,15 +50,14 @@
 (defn wrap-input-mold [f]
   (fn [context]
     (let [moldfinder (?! context [:system :mold-finder])
-          input-mold-sym (find-input-mold moldfinder context)]
+          input-mold (find-input-mold moldfinder context)]
       (-> context
-          (assoc :input-mold-sym input-mold-sym)
+          (assoc :input-mold input-mold)
           (f)))))
 
 (defn wrap-input [f]
   (fn [context]
-    (let [input-mold-sym (?! context :input-mold-sym)
-          input-mold @(resolve input-mold-sym)
+    (let [input-mold (?! context :input-mold)
           parsed-input (?! context :parsed-input)
           molded-input (parse input-mold parsed-input)]
       (-> context
@@ -94,17 +93,16 @@
 (defn wrap-output-mold [f]
   (fn [context]
     (let [done-context (f context)]
-      (if (:output-mold-sym done-context)
+      (if (:output-mold done-context)
         done-context
         (let [moldfinder (?! done-context [:system :mold-finder]) 
-              output-mold-sym (find-output-mold moldfinder done-context)] 
-          (assoc done-context :output-mold-sym output-mold-sym))))))
+              output-mold (find-output-mold moldfinder done-context)] 
+          (assoc done-context :output-mold output-mold))))))
 
 (defn wrap-molded-output [f]
   (fn [context]
     (let [done-context (f context)
-          output-mold-sym (?! done-context :output-mold-sym)
-          output-mold @(resolve output-mold-sym)
+          output-mold (?! done-context :output-mold)
           output (?! done-context :output)
           molded (show output-mold output)]
       (assoc done-context :molded-output molded))))

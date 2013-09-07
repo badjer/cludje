@@ -6,7 +6,7 @@
         cludje.test
         cludje.application))
 
-(def cog (>Model "cog" {:name Str} {}))
+(def cog (>Model {:name Str} {:modelname "cog"}))
 
 (defn new-cog [context] {:name "A"})
 
