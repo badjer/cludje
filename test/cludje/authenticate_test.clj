@@ -1,4 +1,6 @@
 (ns cludje.authenticate-test
+  (:require [cemerick.friend :as friend]
+            [cemerick.friend.credentials :as creds])
   (:use midje.sweet
         cludje.test
         cludje.authenticate
@@ -47,3 +49,24 @@
 ; in subsequent calls to current-user?
 
 (future-facts "TokenLogin does encryption and has security")
+
+(def hashed-mockuser (assoc mockuser :hashed-pwd (creds/hash-bcrypt "123")))
+
+(def friend-request {:session 
+                     {::friend/identity 
+                      {:current :a 
+                       :authentications {:a mockuser}}}})
+(def friend-context {:raw-input friend-request})
+(def empty-friend-context {:raw-input {:session {}} :input mockuser})
+
+(fact "friend works as expected"
+  (friend/current-authentication friend-request) => mockuser)
+
+(def get-user (constantly hashed-mockuser))
+
+(fact "FriendAuthenticator"
+  (test-authenticator (>FriendAuthenticator get-user)
+                      empty-friend-context)
+  (let [auth (>FriendAuthenticator get-user)]
+    (fact "current-user with existing friend session"
+      (current-user auth friend-context) => mockuser)))

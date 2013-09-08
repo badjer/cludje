@@ -1,5 +1,6 @@
 (ns cludje.session
-  (:use cludje.system))
+  (:use cludje.system
+        cludje.util))
 
 (defrecord TestSessionStore [contents]
   ISessionStore
@@ -12,3 +13,13 @@
   ([] (>TestSessionStore {}))
   ([contents]
     (->TestSessionStore (atom contents))))
+
+(defrecord RingSessionStore []
+  ISessionStore
+  (current-session [store context]
+    (?! context [:raw-input :session]))
+  (persist-session [store session context]
+    ))
+
+(defn >RingSessionStore []
+  (->RingSessionStore))

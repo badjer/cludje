@@ -1,4 +1,6 @@
 (ns cludje.authenticate
+  (:require [cemerick.friend :as friend]
+            [cemerick.friend.credentials :as creds])
   (:use cludje.system
         cludje.errors
         cludje.mold
@@ -41,6 +43,7 @@
   ; TODO: Actual hashing
   text)
 
+
 (defrecord TokenAuthenticator [app-name user-table]
   IAuthenticator
   (current-user [self context]
@@ -61,3 +64,29 @@
 (defn >TokenAuthenticator
   ([app-name] (>TokenAuthenticator app-name :user))
   ([app-name user-table] (->TokenAuthenticator app-name user-table)))
+
+
+(defn check-pwd [input-pwd hashed-pwd]
+  (creds/bcrypt-verify input-pwd hashed-pwd))
+
+(defn >friend-map [user] 
+  (let [clean-user (dissoc user :hashed-pwd)]
+    {:current :a 
+     :authentications {:a clean-user}}))
+
+(defrecord FriendAuthenticator [get-user-fn]
+  IAuthenticator
+  (current-user [self context]
+    (let [request (?! context :raw-input)]
+      (friend/current-authentication request)))
+  (log-in [self context]
+    (let [{:keys [username password]} (make LoginUser (?! context :input))]
+      (when-let [got-user (get-user-fn username)]
+        (if (check-pwd password (:hashed-pwd got-user))
+          (assoc-in context [:raw-input :session ::friend/identity] (>friend-map got-user))))))
+  (log-out [self context]
+    (update-in context [:raw-input :session] dissoc ::friend/identity))) 
+
+
+(defn >FriendAuthenticator [get-user-fn]
+  (->FriendAuthenticator get-user-fn))
