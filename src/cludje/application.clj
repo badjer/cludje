@@ -61,6 +61,7 @@
       (wrap-authenticate)
       (wrap-session)
       (wrap-parsed-input)
+      (wrap-session)
       (wrap-system system)
       (wrap-context)
       (unwrap-context :rendered-output)))

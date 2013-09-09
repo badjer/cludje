@@ -8,7 +8,7 @@
 
 (def cog (>Model {:name Str} {:modelname "cog"}))
 
-(defn new-cog [context] {:name "A"})
+(defn new-cog [context] (assoc context :output {:name "A"}))
 
 (def system-args {:action-namespaces ['cludje.application-test] 
                   :mold-namespaces ['cludje.application-test]})
@@ -16,5 +16,6 @@
 (fact ">api-pipeline"
   (let [system (>test-system system-args)
         ap (>api-pipeline system)]
-  (fact "works end-to-end"
+  (fact "works end-to-end" 
     (ap {:_action :new-cog}) => {:name "A"})))
+

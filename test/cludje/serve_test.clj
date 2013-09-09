@@ -18,10 +18,11 @@
     (do-request) => (throws)))
 
 (def cog (>Model {:name Str} {:modelname "cog"}))
-(defn new-cog [{:keys [input]}] {:name "A"})
+(defn new-cog [context] (assoc context :output {:name "A"}))
 (defn problem-cog [_] (throw-problems {:name "empty"}))
 (defn unauthorized-cog [_] (throw-unauthorized))
 (defn notloggedin-cog [_] (throw-not-logged-in))
+
 
 (defn >json-req 
   ([action] (>json-req action nil))
@@ -35,6 +36,7 @@
 
 (def sys-config {:action-namespaces ['cludje.serve-test]
                  :mold-namespaces ['cludje.serve-test]})
+
 
 
 (facts ">JettyServer"

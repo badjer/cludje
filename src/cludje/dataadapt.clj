@@ -6,7 +6,7 @@
 (defrecord TestDataAdapter []
   IDataAdapter
   (parse-input [self rawdata] rawdata)
-  (render-output [self output] output))
+  (render-output [self context] (?! context :molded-output)))
 
 (defn >TestDataAdapter []
   (->TestDataAdapter))
@@ -17,8 +17,9 @@
     (let [parsed (ring-parser rawdata)
           params (?! parsed :params)]
       params))
-  (render-output [self output] 
-    (json-respond output)))
+  (render-output [self context] 
+    (json-respond context)))
 
 (defn >WebDataAdapter []
   (->WebDataAdapter))
+

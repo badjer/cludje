@@ -15,7 +15,7 @@
 
 
 (def raw-input {:price "$1.23"})
-(def raw-context {:raw-input raw-input})
+(def raw-context raw-input)
 
 (fact "wrap-system"
   (let [sys {:system 1}
@@ -61,8 +61,6 @@
         (handler raw-context) => (throws-error))
       (fact "no data-adapter"
         (handler (assoc context :system {})) => (throws-error)))
-    (fact "requires read-input"
-      (handler (dissoc context :raw-input)) => (throws-error))
     (fact "returns original data"
       (handler context) => (contains context))))
 
@@ -85,7 +83,7 @@
 
 
 (def output {:price 987})
-(defn action [context] output)
+(defn action [context] (assoc context :output output))
 (def action-finder (>SingleActionFinder `action))
 
 (fact "wrap-action"
@@ -218,6 +216,8 @@
 (def molded-output-context 
   (assoc output-context :molded-output molded-output :output-mold mold))
 (def rendered-output molded-output)
+(def extra-output {:z 1})
+(defn >context-with-ro [context] (assoc-in context [:rendered-output] extra-output))
 
 (fact "wrap-rendered-output"
   (let [handler (wrap-rendered-output identity)
@@ -225,6 +225,8 @@
         context (assoc molded-output-context :system sys)]
     (fact "adds :rendered-output"
       (handler context) => (contains {:rendered-output rendered-output}))
+    (fact "merges if :rendered-output already exists"
+      (:rendered-output (handler (>context-with-ro context))) => (contains extra-output))
     (fact "requires molded-output"
       (handler (dissoc context :molded-output)) => (throws-error))
     (fact "requires system/data-adapter"
@@ -234,5 +236,4 @@
         (handler (assoc context :system {})) => (throws-error)))
     (fact "returns original data"
       (handler context) => (contains context))))
-
 

@@ -62,7 +62,7 @@
 
 (defprotocol IDataAdapter
   (parse-input [self raw-data])
-  (render-output [self output]))
+  (render-output [self context]))
 
 
 

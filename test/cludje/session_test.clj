@@ -7,6 +7,7 @@
 (def session {:a 1})
 (def good-context {:raw-input {:session session}})
 (def bad-context {:raw-input {}})
+(def session-context {:session session})
 
 (facts ">RingSessionStore"
   (let [ss (>RingSessionStore)]
@@ -16,4 +17,6 @@
       (fact "throws if session missing from input"
         (current-session ss bad-context) => (throws-error)))
     (fact "persist-session"
-      (future-fact "writes back"))))
+      (future-fact "writes to rendered-output"
+        (persist-session ss session {}) => {:rendered-output session}))))
+

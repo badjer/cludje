@@ -1,5 +1,7 @@
 (ns cludje.web
+  (:use cludje.util)
   (:require [cheshire.core :as cheshire]
+            [ring.middleware.session :as sess]
             [ring.middleware.json :as json]
             [ring.middleware.resource :as resource]
             [ring.middleware.file-info :as file-info]
@@ -8,12 +10,14 @@
             [ring.middleware.keyword-params :as kw]
             [ring.util.response :as response]))
 
+
 (def ring-parser
   (-> identity
       ;(file-info/wrap-file-info)
       (cookies/wrap-cookies)
       (kw/wrap-keyword-params)
       (json/wrap-json-params)
+      (sess/wrap-session)
       (params/wrap-params)))
 
 (defn- check-output [output]
@@ -25,11 +29,19 @@
                      Probably, your action didn't return a map.  
                      Always return a map from actions" {:output output}))))
 
-(defn json-respond [output]
-  (check-output output)
-  (-> {:body (cheshire/generate-string output)}
-      (response/content-type "application/json")
-      (response/charset "UTF-8")))
+(defn json-render [context]
+  (let [output (?! context :molded-output)]
+    (check-output output)
+    (merge context
+      (-> {:body (cheshire/generate-string output)}
+          (response/content-type "application/json")
+          (response/charset "UTF-8")))))
+
+(def json-respond 
+  (-> json-render
+      (sess/wrap-session)
+      (cookies/wrap-cookies)
+      ))
 
 (defn http-401 [] {:status 401})
 (defn http-403 [] {:status 403})

@@ -2,6 +2,7 @@
   (:use midje.sweet)
   (:import [midje.util.exceptions ICapturedThrowable])
   (:require [clj-http.client :as http]
+            [clj-http.cookies :as cookies]
             [cheshire.core :as cheshire]))
 
 
@@ -108,14 +109,22 @@
     (= code (:status x))))
 
 
-(defn json-post [url json]
-  (http/post url {:form-params json :content-type :json :throw-exceptions false}))
+;(defn json-post [url json]
+  ;(http/post url {:form-params json :content-type :json :throw-exceptions false}))
 
-(defn do-request [{:keys [url body method] :or {url "http://google.ca"
-                                                body ""
-                                                method :get}}]
+
+(defn >cookies []
+  (cookies/cookie-store))
+
+(defn do-request [{:keys [url body method cookies] :or {url "http://google.ca" 
+                                                        body "" 
+                                                        cookies (>cookies) 
+                                                        method :get}}]
   (case method 
-    :get (http/get url {:throw-exceptions false})
-    :get-json (<-json (http/get url {:throw-exceptions false}))
-    :json (<-json (json-post url body))))
+    :get (http/get url {:throw-exceptions false :cookie-store cookies})
+    :get-json (<-json (http/get url {:throw-exceptions false :cookie-store cookies}))
+    :json (<-json (http/post url {:form-params body :content-type :json 
+                                  :throw-exceptions false
+                                  :cookie-store cookies}))))
+    ;:json (<-json (json-post url body))))
 

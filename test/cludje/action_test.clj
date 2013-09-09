@@ -66,6 +66,11 @@
     (fact "defines &?in"
       (&?in :z :a) => 1)))
 
+(fact "with-output-dsl"
+  (with-output-dsl in-context
+    (output {:z 1}) => (contains {:output {:z 1}})
+    (output {:z 1}) => (contains in-context)))
+
 (def action-context 
   (-> (merge in-context email-context)
       (assoc-in [:system :data-store] datastore)
@@ -83,6 +88,8 @@
       (?in :a) =not=> (throws))
     (fact "defines input"
       input => {:a 1 :b 2})
+    (fact "defines output"
+      output =not=> (throws))
     ;(fact "defines with-lookup"
       ;(with-lookup {} Cog) =not=> (throws))
     ))

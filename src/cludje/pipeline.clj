@@ -14,7 +14,8 @@
 (defn wrap-parsed-input [f]
   (fn [context]
     (let [adapter (?! context [:system :data-adapter])
-          unparsed-input (?! context :raw-input)
+          unparsed-input (dissoc context :system)
+          ;unparsed-input (?! context :raw-input)
           parsed (parse-input adapter unparsed-input)]
       (-> context
           (assoc :parsed-input parsed)
@@ -78,17 +79,19 @@
     (catch clojure.lang.ExceptionInfo ex
       (let [exd (ex-data ex)]
         (if (:__problems exd)
-          (merge (:input context) exd)
+          (assoc context :output (merge (:input context) exd))
           (throw ex))))))
 
 (defn wrap-output [f]
   (fn [context]
     (let [action-sym (?! context :action-sym)
           action (resolve action-sym)
-          output (run-action action context)]
-      (-> context
-          (assoc :output output)
-          (f)))))
+          done-context (run-action action context)]
+          ;output (run-action action context)]
+      (f done-context))))
+      ;(-> done-context
+          ;(assoc :output output)
+          ;(f)))))
 
 (defn wrap-output-mold [f]
   (fn [context]
@@ -111,15 +114,15 @@
   (fn [context]
     (let [done-context (f context)
           data-adapter (?! done-context [:system :data-adapter])
-          molded-output (?! done-context :molded-output)
-          rendered (render-output data-adapter molded-output)]
-      (assoc done-context :rendered-output rendered))))
+          rendered (render-output data-adapter done-context)]
+      (update-in done-context [:rendered-output] merge rendered))))
 
 
 ; Pipeline constructor functions
 (defn wrap-context [f]
   (fn [raw-input]
-    (f {:raw-input raw-input})))
+    (f raw-input)))
+    ;(f {:raw-input raw-input})))
 
 (defn unwrap-context [f selector]
   (fn [context]
