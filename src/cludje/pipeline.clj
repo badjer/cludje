@@ -13,23 +13,23 @@
 
 (defn wrap-parsed-input [f]
   (fn [context]
-    (let [adapter (?! context [:system :data-adapter])
-          unparsed-input (dissoc context :system)
-          ;unparsed-input (?! context :raw-input)
-          parsed (parse-input adapter unparsed-input)]
-      (-> context
-          (assoc :parsed-input parsed)
-          (f)))))
+    (let [adapter (?! context [:system :data-adapter])]
+      (->> context
+           (parse-input adapter)
+           (f)))))
 
 (defn wrap-session [f]
   (fn [context]
-    (let [session-store (?! context [:system :session-store])
-          in-session (current-session session-store context)
-          input (assoc context :session in-session)
-          output (f input)
-          out-session (:session output)]
-      (persist-session session-store out-session output)
-      output)))
+    (let [session-store (?! context [:system :session-store])]
+      (->> context 
+           (add-session session-store)
+           (f)
+           (persist-session session-store)))))
+      ;(persist-session session-store (f (add-session session-store context))))))
+          ;in-session (current-session session-store context)
+          ;input (assoc context :session in-session)
+          ;;output (f input)]
+      ;(persist-session session-store output))))
 
 
 (defn wrap-authenticate [f]
@@ -87,11 +87,7 @@
     (let [action-sym (?! context :action-sym)
           action (resolve action-sym)
           done-context (run-action action context)]
-          ;output (run-action action context)]
       (f done-context))))
-      ;(-> done-context
-          ;(assoc :output output)
-          ;(f)))))
 
 (defn wrap-output-mold [f]
   (fn [context]
@@ -121,8 +117,7 @@
 ; Pipeline constructor functions
 (defn wrap-context [f]
   (fn [raw-input]
-    (f raw-input)))
-    ;(f {:raw-input raw-input})))
+    (f {:raw-input raw-input})))
 
 (defn unwrap-context [f selector]
   (fn [context]

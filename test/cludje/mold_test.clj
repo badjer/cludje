@@ -71,6 +71,9 @@
     (satisfies? IShowable m) => true
     (show m {:price 123}) => {:price "$1.23"}
 
+    (fact "showing {} yields {}"
+      (show m {}) => {})
+
     (fact "with nested mold"
       (show Bike {:front {:name "a" :price 1}
                   :back {:name "b" :price 2}

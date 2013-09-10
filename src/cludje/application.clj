@@ -31,6 +31,7 @@
   (-> system
       (assoc :server (>JettyServer))
       (assoc :data-adapter (>WebDataAdapter))
+      (assoc :session-store (>RingSessionStore))
       (assoc :port 8888)))
 
 
@@ -60,8 +61,8 @@
       (wrap-action)
       (wrap-authenticate)
       (wrap-session)
-      (wrap-parsed-input)
       (wrap-session)
+      (wrap-parsed-input)
       (wrap-system system)
       (wrap-context)
       (unwrap-context :rendered-output)))

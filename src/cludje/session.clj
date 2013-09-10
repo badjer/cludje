@@ -4,11 +4,12 @@
 
 (defrecord TestSessionStore [contents]
   ISessionStore
-  (current-session [store context]
-    @contents)
-  (persist-session [store session context]
-    (reset! contents session)
-    context))
+  (add-session [store context]
+    (assoc context :session @contents))
+  (persist-session [store context]
+    (when-let [session (?? context :session)]
+      (reset! contents session)
+      context)))
 
 (defn >TestSessionStore 
   ([] (>TestSessionStore {}))
@@ -17,12 +18,16 @@
 
 (defrecord RingSessionStore []
   ISessionStore
-  (current-session [store context]
-    (?! context [:raw-input :session]))
-  (persist-session [store session context]
+  (add-session [store context]
+    (let [ring-request (?! context :ring-request)]
+      (println "RING-REQUEST: " ring-request)
+      (-> context 
+          (assoc :session (?? ring-request :session))
+          (assoc :session/key (?? ring-request :session/key)))))
+  (persist-session [store context]
     ; Do nothing, because we assume that the data-adapter handles it
     context))
-    ;(update-in context [:rendered-output] merge session)))
+
 
 
 (defn >RingSessionStore []

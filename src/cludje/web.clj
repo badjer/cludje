@@ -39,8 +39,8 @@
 
 (def json-respond 
   (-> json-render
-      (sess/wrap-session)
       (cookies/wrap-cookies)
+      (sess/wrap-session)
       ))
 
 (defn http-401 [] {:status 401})

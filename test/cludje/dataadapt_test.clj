@@ -4,13 +4,17 @@
         cludje.dataadapt
         cludje.test))
 
+(def input {:a "1"})
+(def context {:raw-input input})
+
 (fact ">TestDataAdapter"
   (let [tda (>TestDataAdapter)]
-    (fact "Sets action"
-      (parse-input tda {:_action "foo"}) => (contains {:_action "foo"}))))
+    (fact "Parses raw input"
+      (parse-input tda context) => (contains {:parsed-input input}))))
+
+(def web-context {:raw-input {:query-string "a=1"}})
 
 (fact ">WebDataAdapter"
   (let [wda (>WebDataAdapter)]
-    (fact "Sets action"
-      (parse-input wda {:query-string "_action=foo"}) => (contains {:_action "foo"}))))
-
+    (fact "Parses raw input"
+      (parse-input wda web-context) => (contains {:parsed-input input}))))

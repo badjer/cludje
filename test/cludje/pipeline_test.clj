@@ -15,7 +15,7 @@
 
 
 (def raw-input {:price "$1.23"})
-(def raw-context raw-input)
+(def raw-context {:raw-input raw-input})
 
 (fact "wrap-system"
   (let [sys {:system 1}

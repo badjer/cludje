@@ -11,8 +11,9 @@
 
 (defprotocol ISessionStore
   "Represent session"
-  (current-session [store context])
-  (persist-session [store session context]))
+  (add-session [store context])
+  (persist-session [store context]))
+
 
 
 (defprotocol IDatastore
