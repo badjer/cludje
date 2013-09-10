@@ -2,8 +2,6 @@
   (:use cludje.system
         cludje.util
         cludje.pipeline
-        cludje.dataadapt
-        cludje.session
         cludje.authenticate
         cludje.actionfind
         cludje.moldfind
@@ -15,68 +13,56 @@
 
 
 (defn >test-system [{:keys [action-namespaces mold-namespaces]}]
-  {:data-adapter (>TestDataAdapter)
-   :session-store (>TestSessionStore)
-   :authenticator (>TestAuthenticator)
+  {:authenticator (>TestAuthenticator)
    :action-finder (apply >NSActionFinder action-namespaces)
    :mold-finder (apply >NSMoldFinder mold-namespaces)
    :authorizer (>TestAuthorizer)
    :logger (>TestLogger)
    :data-store (>TestDatastore)
    :emailer (>TestEmailer)
+   :server (>TestServer)
    })
 
 
 (defn with-web [system]
   (-> system
       (assoc :server (>JettyServer))
-      (assoc :data-adapter (>WebDataAdapter))
-      (assoc :session-store (>RingSessionStore))
       (assoc :port 8888)))
 
 
 ; Define pipelines
 (defn >test-pipeline [system]
   (-> identity
-      (wrap-output)
-      (wrap-input)
-      (wrap-input-mold)
-      (wrap-action)
-      (wrap-session)
-      (wrap-parsed-input)
-      (wrap-system system)
-      (wrap-context)
-      (unwrap-context :output)))
+      (add-output)
+      (add-output-mold)
+      (add-result)
+      (add-input)
+      (add-input-mold)
+      (add-action)
+      (add-system system)))
 
 
 (defn >api-pipeline [system]
   (-> identity
-      (wrap-output)
-      (wrap-output-mold)
-      (wrap-molded-output)
-      (wrap-rendered-output)
-      (wrap-authorize)
-      (wrap-input)
-      (wrap-input-mold)
-      (wrap-action)
-      (wrap-authenticate)
-      (wrap-session)
-      (wrap-session)
-      (wrap-parsed-input)
-      (wrap-system system)
-      (wrap-context)
-      (unwrap-context :rendered-output)))
+      (add-output)
+      (add-output-mold)
+      (add-result)
+      (authorize)
+      (add-input)
+      (add-input-mold)
+      (add-action)
+      (add-authenticate)
+      (add-system system)))
 
 ; System functions
 (defn start-system [system]
-  (let [server (? system :server)
-        port (? system :port)
+  (let [server (?! system :server)
         handler (>api-pipeline system)]
-    (start server port handler)
+    (start server system handler)
     system))
 
 (defn stop-system [system]
-  (let [server (? system :server)]
+  (let [server (?! system :server)]
     (stop server)
     system))
 

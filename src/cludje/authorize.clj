@@ -6,7 +6,7 @@
 
 (defrecord TestAuthorizer [allow?]
   IAuthorizer
-  (can? [self context] @allow?))
+  (can? [self request] @allow?))
 
 (defn >TestAuthorizer 
   ([] (>TestAuthorizer true))
@@ -16,8 +16,8 @@
 
 (defrecord AbilityAuthorizer [auth-fns]
   IAuthorizer
-  (can? [self context]
-    (let [reses (map #(% context) @auth-fns)]
+  (can? [self request]
+    (let [reses (map #(% request) @auth-fns)]
       (first (keep identity reses)))))
 
 (defn >AbilityAuthorizer [& auth-fns]
@@ -25,9 +25,9 @@
 
 
 
-(defn- match-action? [context op model]
+(defn- match-action? [request op model]
   (let [exp-action (str (name op) "-" (tablename model))
-        action (name (? context :action-sym))
+        action (name (? request :action-sym))
         model-re (re-pattern (str "-" (tablename model) "$"))
         model-match? (re-find model-re action)]
     (cond 
@@ -35,14 +35,14 @@
       (and (= :* op) model-match?) true
       :else nil)))
 
-(defn- realize-expr [context expr]
-  (if (fn? expr) (expr context) expr))
+(defn- realize-expr [request expr]
+  (if (fn? expr) (expr request) expr))
 
-(defn- match-ability? [context [op model expr]]
+(defn- match-ability? [request [op model expr]]
   (cond
     (= :anon expr) true
-    (nil? (?? context :user)) false
-    (match-action? context op model) (realize-expr context expr)
+    (nil? (?? request :user)) false
+    (match-action? request op model) (realize-expr request expr)
     :else nil))
 
 (defn- parse-action-forms [forms]
@@ -54,5 +54,5 @@
 
 (defn >Ability [& forms]
   (let [calls (parse-action-forms forms)]
-    (fn [context]
-      (first (keep identity (map (partial match-ability? context) calls))))))
+    (fn [request]
+      (first (keep identity (map (partial match-ability? request) calls))))))

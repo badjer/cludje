@@ -12,8 +12,8 @@
 
 (defrecord SingleMoldFinder [mold]
   IMoldFinder
-  (find-input-mold [self context] mold)
-  (find-output-mold [self context] (add-output-fields mold)))
+  (find-input-mold [self request] mold)
+  (find-output-mold [self request] (add-output-fields mold)))
 
 (defn >SingleMoldFinder [mold]
   (->SingleMoldFinder mold))
@@ -62,10 +62,10 @@
 
 (defrecord NSMoldFinder [mold-namespaces]
   IMoldFinder
-  (find-input-mold [self context]
-    (find-mold- @mold-namespaces (propose-input-moldnames (?! context :action-sym))))
-  (find-output-mold [self context]
-    (let [names (propose-output-moldnames (?! context :action-sym))
+  (find-input-mold [self request]
+    (find-mold- @mold-namespaces (propose-input-moldnames (?! request :action-sym))))
+  (find-output-mold [self request]
+    (let [names (propose-output-moldnames (?! request :action-sym))
           mold (find-mold- @mold-namespaces names)
           res (add-output-fields mold)]
       res)))

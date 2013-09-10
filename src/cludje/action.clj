@@ -2,38 +2,38 @@
   (:use cludje.system
         cludje.util))
 
-(defmacro with-log-dsl [context & forms]
-  `(let [~'log (partial log (?? ~context [:system :logger]))]
+(defmacro with-log-dsl [request & forms]
+  `(let [~'log (partial log (?? ~request [:system :logger]))]
      ~@forms))
 
-(defmacro with-datastore-dsl [context & forms]
-  `(let [~'write (partial write (?? ~context [:system :data-store]))
-         ~'query (partial query (?? ~context [:system :data-store]))
-         ~'fetch (partial fetch (?? ~context [:system :data-store]))
-         ~'delete (partial delete (?? ~context [:system :data-store]))
-         ~'insert (partial insert (?? ~context [:system :data-store]))
-         ~'save (partial save (?? ~context [:system :data-store]))]
+(defmacro with-datastore-dsl [request & forms]
+  `(let [~'write (partial write (?? ~request [:system :data-store]))
+         ~'query (partial query (?? ~request [:system :data-store]))
+         ~'fetch (partial fetch (?? ~request [:system :data-store]))
+         ~'delete (partial delete (?? ~request [:system :data-store]))
+         ~'insert (partial insert (?? ~request [:system :data-store]))
+         ~'save (partial save (?? ~request [:system :data-store]))]
      ~@forms))
 
-(defmacro with-email-dsl [context & forms]
-  `(let [~'send-mail (partial send-mail (?? ~context [:system :emailer]))]
+(defmacro with-email-dsl [request & forms]
+  `(let [~'send-mail (partial send-mail (?? ~request [:system :emailer]))]
     ~@forms))
 
-(defmacro with-input-dsl [context & forms]
-  `(let [~'input (?? ~context :input)
-         ~'?in (partial ? (?? ~context :input))
-         ~'??in (partial ?? (?? ~context :input))
-         ~'&?in (partial &? (?? ~context :input))]
+(defmacro with-input-dsl [request & forms]
+  `(let [~'input (?? ~request :input)
+         ~'?in (partial ? (?? ~request :input))
+         ~'??in (partial ?? (?? ~request :input))
+         ~'&?in (partial &? (?? ~request :input))]
      ~@forms))
 
-(defmacro with-output-dsl [context & forms]
-  `(let [~'output #(assoc ~context :output %)]
+(defmacro with-output-dsl [request & forms]
+  `(let [~'output #(assoc ~request :output %)]
      ~@forms))
 
-(defmacro with-action-dsl [context & forms]
-  `(with-log-dsl ~context
-     (with-datastore-dsl ~context
-       (with-email-dsl ~context
-         (with-input-dsl ~context
-           (with-output-dsl ~context
+(defmacro with-action-dsl [request & forms]
+  `(with-log-dsl ~request
+     (with-datastore-dsl ~request
+       (with-email-dsl ~request
+         (with-input-dsl ~request
+           (with-output-dsl ~request
              ~@forms))))))

@@ -3,8 +3,10 @@
         cludje.test
         cludje.web))
 
-(fact "ring-parser"
-  (fact "adds :params"
-    (fact "from query-string"
-      (ring-parser {:query-string "a=1"}) => (contains {:params {:a "1"}}))
-    ))
+(fact "wrap-ring-middleware"
+  (let [handler (wrap-ring-middleware identity)]
+    (fact "returns a fn"
+      handler => fn?)
+    (fact "adds :params"
+      (fact "from query-string"
+        (handler {:query-string "a=1"}) => (contains {:params {:a "1"}})))))

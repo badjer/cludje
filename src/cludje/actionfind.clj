@@ -7,7 +7,7 @@
 
 (defrecord SingleActionFinder [action-sym]
   IActionFinder
-  (find-action [self context] action-sym))
+  (find-action [self request] action-sym))
 
 (defn >SingleActionFinder [action-sym]
   (->SingleActionFinder action-sym))
@@ -17,8 +17,8 @@
   (let [f @(resolve sym)]
     (and (fn? f) (= 1 (arity f)))))
 
-(defn- find-action- [context action-namespaces throw?]
-  (let [action-str (?! context [:parsed-input :_action])
+(defn- find-action- [request action-namespaces throw?]
+  (let [action-str (?! request [:params :_action])
         finds (find-in-nses action-namespaces action-str)
         matches (filter looks-like-action? finds)]
     (if-not (empty? matches)
@@ -26,21 +26,19 @@
       (when throw?
         (cond 
           (empty? finds)
-          (throw-error {:parsed-action (str "Couldn't find action! Couldn't find anything "
+          (throw-error {:params (str "Couldn't find action! Couldn't find anything "
                                      "named " action-str " in the namespaces "
                                      (s/join ", " action-namespaces))})
           :else 
-          (throw-error {:parsed-action (str "Couldn't find action! Found these: "
+          (throw-error {:params (str "Couldn't find action! Found these: "
                                      (s/join ", " finds) ", but none of them "
                                      "looked like actions")}))))))
 
 
 (defrecord NSActionFinder [action-namespaces]
   IActionFinder
-  (find-action [self context] 
-    (find-action- context @action-namespaces true)))
-
+  (find-action [self request] 
+    (find-action- request @action-namespaces true)))
 
 (defn >NSActionFinder [& action-namespaces]
   (->NSActionFinder (atom action-namespaces)))
-

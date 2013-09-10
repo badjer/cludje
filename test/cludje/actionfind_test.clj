@@ -5,10 +5,10 @@
         cludje.actionfind)
   (:require [cludje.altnamespace :as ans]))
 
-(defn >input [action-str]
-  {:parsed-input {:_action action-str}})
 
-(defn an-action [context])
+(defn >input [action-str] {:params {:_action action-str}})
+
+(defn an-action [request])
 (defn not-an-action [a b c])
 
 (fact "looks-like-action?"

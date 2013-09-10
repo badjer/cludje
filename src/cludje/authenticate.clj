@@ -11,9 +11,9 @@
 
 (defrecord TestAuthenticator [cur-user]
   IAuthenticator
-  (current-user [self context] @cur-user)
-  (log-in [self context] (reset! cur-user (parse LoginUser (? context :input))))
-  (log-out [self context] (reset! cur-user nil)))
+  (current-user [self request] @cur-user)
+  (log-in [self request] (reset! cur-user (parse LoginUser (? request :input))))
+  (log-out [self request] (reset! cur-user nil)))
 
 (defn >TestAuthenticator 
   ([] (>TestAuthenticator nil))
@@ -36,8 +36,8 @@
 
 (defn- make-token [user] (:username user))
 
-(defn- expire-token [context app-name] 
-  (assoc-in context [:session app-name] ""))
+(defn- expire-token [request app-name] 
+  (assoc-in request [:session app-name] ""))
 
 (defn- hash-password [text]
   ; TODO: Actual hashing
@@ -46,20 +46,20 @@
 
 (defrecord TokenAuthenticator [app-name user-table]
   IAuthenticator
-  (current-user [self context]
-    (when-let [token (?? context [:session app-name])]
-      (let [datastore (? context [:system :data-store])]
+  (current-user [self request]
+    (when-let [token (?? (?! request :session) app-name)]
+      (let [datastore (?! request [:system :data-store])]
         (token->user token datastore user-table))))
-  (log-in [self context]
-    (let [datastore (? context [:system :data-store])
-          input (? context :input)
+  (log-in [self request]
+    (let [datastore (?! request [:system :data-store])
+          input (?! request :input)
           user (parse LoginUser input)]
       (if-let [val-user (validate-user input datastore user-table hash-password)]
-        (assoc-in context [:session app-name] (make-token val-user))
+        (assoc-in request [:session app-name] (make-token val-user))
         (throw-problems {:username "Invalid username/password" 
                          :password "Invalid username/password"}))))
-  (log-out [self context] 
-    (expire-token context app-name)))
+  (log-out [self request] 
+    (expire-token request app-name)))
 
 (defn >TokenAuthenticator
   ([app-name] (>TokenAuthenticator app-name :user))
@@ -76,16 +76,15 @@
 
 (defrecord FriendAuthenticator [get-user-fn]
   IAuthenticator
-  (current-user [self context]
-    (let [request (?! context :raw-input)]
-      (friend/current-authentication request)))
-  (log-in [self context]
-    (let [{:keys [username password]} (make LoginUser (?! context :input))]
+  (current-user [self request]
+    (friend/current-authentication request))
+  (log-in [self request]
+    (let [{:keys [username password]} (make LoginUser (?! request :params))]
       (when-let [got-user (get-user-fn username)]
         (if (check-pwd password (:hashed-pwd got-user))
-          (assoc-in context [:raw-input :session ::friend/identity] (>friend-map got-user))))))
-  (log-out [self context]
-    (update-in context [:raw-input :session] dissoc ::friend/identity))) 
+          (assoc-in request [:session ::friend/identity] (>friend-map got-user))))))
+  (log-out [self request]
+    (update-in request [:session] dissoc ::friend/identity))) 
 
 
 (defn >FriendAuthenticator [get-user-fn]

@@ -7,233 +7,165 @@
         cludje.actionfind
         cludje.authorize
         cludje.moldfind
-        cludje.session
-        cludje.dataadapt
         cludje.types
         cludje.mold
         cludje.pipeline))
 
 
 (def raw-input {:price "$1.23"})
-(def raw-context {:raw-input raw-input})
+(def raw-request {:params raw-input})
 
-(fact "wrap-system"
-  (let [sys {:system 1}
-        handler (wrap-system identity sys)
-        context raw-context]
+(fact "add-system"
+  (let [sys {:a 1}
+        handler (add-system identity sys)
+        request raw-request]
     (fact "adds :system"
-      (handler context) => (contains {:system sys}))
+      (handler request) => (contains {:system sys}))
     (fact "returns original data"
-      (handler context) => (contains context))))
-
-
-(def session-store (>TestSessionStore))
-
-(fact "wrap-session"
-  (let [add-session-handler (wrap-session #(assoc-in % [:session :a] 1))
-        handler (wrap-session identity)
-        sys {:session-store session-store}
-        context (assoc raw-context :system sys)]
-    (fact "adds :session"
-      (handler context) => (has-keys :session))
-    (fact "requires system/session-store"
-      (fact "no system"
-        (handler (dissoc context :system)) => (throws-error))
-      (fact "no session-store"
-        (handler (assoc context :system {})) => (throws-error)))
-    (fact "persists :session"
-      (add-session-handler context) => anything
-      (handler context) => (contains {:session {:a 1}}))
-    (fact "returns original data"
-      (handler context) => (contains context))))
-
-(def data-adapter (>TestDataAdapter))
-(def parsed-input {:price "$1.23"})
-
-(fact "wrap-parsed-input"
-  (let [handler (wrap-parsed-input identity)
-        sys {:data-adapter data-adapter}
-        context (assoc raw-context :system sys)]
-    (fact "adds :parsed-input"
-      (handler context) => (contains {:parsed-input parsed-input}))
-    (fact "requires system/data-adapter"
-      (fact "no system"
-        (handler raw-context) => (throws-error))
-      (fact "no data-adapter"
-        (handler (assoc context :system {})) => (throws-error)))
-    (fact "returns original data"
-      (handler context) => (contains context))))
+      (handler request) => (contains request))))
 
 (def user {:name "A"})
 (def authenticator (>TestAuthenticator user))
 
-(fact "wrap-authenticate"
+(fact "add-authenticate"
   (let [sys {:authenticator authenticator}
-        handler (wrap-authenticate identity)
-        context (assoc raw-context :system sys)]
+        handler (add-authenticate identity)
+        request (assoc raw-request :system sys)]
     (fact "adds :user"
-      (handler context) => (contains {:user user}))
+      (handler request) => (contains {:user user}))
     (fact "requires system/authenticator"
       (fact "no system"
         (handler {}) => (throws-error))
       (fact "no authenticator"
-        (handler raw-context) => (throws-error)))
+        (handler raw-request) => (throws-error)))
     (fact "returns original data"
-      (handler context) => (contains context))))
+      (handler request) => (contains request))))
 
 
 (def output {:price 987})
-(defn action [context] (assoc context :output output))
+(defn action [request] (assoc request :output output))
 (def action-finder (>SingleActionFinder `action))
 
-(fact "wrap-action"
+(fact "add-action"
   (let [sys {:action-finder action-finder}
-        handler (wrap-action identity)
-        context (assoc raw-context :system sys)]
+        handler (add-action identity)
+        request (assoc raw-request :system sys)]
     (fact "adds :action"
-      (handler context) => (contains {:action-sym `action}))
+      (handler request) => (contains {:action-sym `action}))
     (fact "requires system/action-finder"
       (fact "no system"
         (handler {}) => (throws-error))
       (fact "no action-finder"
-        (handler raw-context) => (throws-error)))
+        (handler raw-request) => (throws-error)))
     (fact "returns original data"
-      (handler context) => (contains context))))
+      (handler request) => (contains request))))
 
-(def action-context (assoc raw-context :user user :action-sym `action))
+(def action-request (assoc raw-request :user user :action-sym `action))
 (def mold (>Mold {:price Money} {}))
 (def moldfinder (>SingleMoldFinder mold))
 
 (def bar (>Mold {:name Str} {}))
 
-(fact "wrap-input-mold"
+(fact "add-input-mold"
   (let [sys {:mold-finder moldfinder}
-        handler (wrap-input-mold identity)
-        context (assoc action-context :system sys)]
+        handler (add-input-mold identity)
+        request (assoc action-request :system sys)]
     (fact "adds :input-mold"
-      (:input-mold (handler context)) => mold)
+      (:input-mold (handler request)) => mold)
     (fact "requires system/mold-finder"
       (fact "no system"
-        (handler raw-context) => (throws-error))
+        (handler raw-request) => (throws-error))
       (fact "no mold-finder"
-        (handler (assoc-in context [:system :mold-finder] nil)) => (throws-error)))
+        (handler (assoc-in request [:system :mold-finder] nil)) => (throws-error)))
     (fact "returns original data"
-      (handler context) => (contains context))))
+      (handler request) => (contains request))))
 
-
-(def parsed-context 
-  (assoc raw-context :input-mold mold :parsed-input parsed-input))
+(def input-mold-request (assoc action-request :input-mold mold))
 (def input {:price 123})
 
-(fact "wrap-input"
-  (let [handler (wrap-input identity)
-        context parsed-context]
-    (fact "turns parsed-input to input"
-      (handler context) => (contains {:input input}))
-    (fact "requires parsed-input"
-      (handler (dissoc context :parsed-input)) => (throws-error))
+(fact "add-input"
+  (let [handler (add-input identity)
+        request input-mold-request]
+    (fact "adds :input"
+      (handler request) => (contains {:input input}))
+    (fact "requires params"
+      (handler (dissoc request :params)) => (throws-error))
     (fact "requires input-mold"
-      (handler (dissoc context :input-mold)) => (throws-error))))
+      (handler (dissoc request :input-mold)) => (throws-error))))
 
 (def authorizor (>TestAuthorizer true))
-(def input-context
-  (assoc action-context :input input))
+(def input-request
+  (assoc action-request :input input))
 
 
-(fact "wrap-authorize"
+(fact "authorize"
   (let [sys {:authorizer authorizor}
-        handler (wrap-authorize identity)
-        context (assoc input-context :system sys)]
+        handler (authorize identity)
+        request (assoc input-request :system sys)]
     (fact "requires system/authorizer"
       (fact "no system"
         (handler {}) => (throws-error))
       (fact "no authorizer"
-        (handler raw-context) => (throws-error)))
+        (handler raw-request) => (throws-error)))
     (fact "does nothing if authorized"
-      (handler context) => context)
+      (handler request) => request)
     (fact "throws exception if unauthorized"
       (let [unauth (>TestAuthorizer false)
             unauth-sys {:authorizer unauth}
-            context (assoc input-context :system unauth-sys)]
-        (handler context) => (throws-403)))
+            request (assoc input-request :system unauth-sys)]
+        (handler request) => (throws-403)))
     (fact "returns original data"
-      (handler context) => (contains context))))
+      (handler request) => (contains request))))
 
-(defn problem-action [context] (throw-problems {:name "bad"}))
-(defn error-action [context] (throw-error))
+(defn problem-action [request] (throw-problems {:name "bad"}))
+(defn error-action [request] (throw-error))
 
-(fact "wrap-output" 
-  (let [handler (wrap-output identity)
+(fact "add-output" 
+  (let [handler (add-output identity)
         sys {}
-        context (assoc input-context :system sys)]
+        request (assoc input-request :system sys)]
     (fact "adds :output"
-      (handler context) => (contains {:output anything}))
+      (handler request) => (contains {:output anything}))
     (fact "requires action-sym"
-      (handler (dissoc context :action-sym)) => (throws-error))
+      (handler (dissoc request :action-sym)) => (throws-error))
     (fact "calls action"
-      (handler context) => (contains {:output output}))
+      (handler request) => (contains {:output output}))
     (fact "returns original data"
-      (handler context) => (contains context))
-    (let [bad-context (assoc context :action-sym `problem-action)]
+      (handler request) => (contains request))
+    (let [bad-request (assoc request :action-sym `problem-action)]
       (fact "has __problems if problems thrown"
-        (:output (handler bad-context)) => (contains {:__problems {:name "bad"}}))
+        (:output (handler bad-request)) => (contains {:__problems {:name "bad"}}))
       (fact "has original input if problems thrown"
-        (:output (handler bad-context)) => (contains input))
+        (:output (handler bad-request)) => (contains input))
       (fact "throws if non-problem exception"
-        (let [err-context (assoc context :action-sym `error-action)]
-          (handler err-context) => (throws))))))
+        (let [err-request (assoc request :action-sym `error-action)]
+          (handler err-request) => (throws))))))
 
-
-(fact "wrap-output-mold"
+(fact "add-output-mold"
   (let [sys {:mold-finder moldfinder}
-        handler (wrap-output-mold identity)
-        context (assoc input-context :system sys)]
+        handler (add-output-mold identity)
+        request (assoc input-request :system sys)]
     (fact "adds :output-mold"
-      (handler context) => (has-keys :output-mold))
+      (handler request) => (has-keys :output-mold))
     (fact "requires system/mold-store"
       (fact "no system"
-        (handler raw-context) => (throws-error))
+        (handler raw-request) => (throws-error))
       (fact "no moldstore"
-        (handler (assoc-in context [:system :mold-finder] nil)) => (throws-error)))
+        (handler (assoc-in request [:system :mold-finder] nil)) => (throws-error)))
     (fact "doesn't overwrite output-mold if it's already set"
-      (handler (assoc context :output-mold 1)) => (contains {:output-mold 1}))
+      (handler (assoc request :output-mold 1)) => (contains {:output-mold 1}))
     (fact "returns original data"
-      (handler context) => (contains context))))
+      (handler request) => (contains request))))
 
-(def molded-output {:price "$9.87"})
-(def output-context (assoc input-context :output output :output-mold mold))
+(def result {:price "$9.87"})
+(def output-request (assoc input-request :output output :output-mold mold))
 
-(fact "wrap-molded-output"
-  (let [handler (wrap-molded-output identity)
-        context output-context]
-    (fact "turns output to molded-output"
-      (handler context) => (contains {:molded-output molded-output}))
+(fact "add-result"
+  (let [handler (add-result identity)
+        request output-request]
+    (fact "turns output to result"
+      (handler request) => (contains {:result result}))
     (fact "requires output-mold"
-      (handler (dissoc context :output-mold)) => (throws-error))
+      (handler (dissoc request :output-mold)) => (throws-error))
     (fact "requires output"
-      (handler (dissoc context :output)) => (throws-error))))
-
-(def molded-output-context 
-  (assoc output-context :molded-output molded-output :output-mold mold))
-(def rendered-output molded-output)
-(def extra-output {:z 1})
-(defn >context-with-ro [context] (assoc-in context [:rendered-output] extra-output))
-
-(fact "wrap-rendered-output"
-  (let [handler (wrap-rendered-output identity)
-        sys {:data-adapter data-adapter}
-        context (assoc molded-output-context :system sys)]
-    (fact "adds :rendered-output"
-      (handler context) => (contains {:rendered-output rendered-output}))
-    (fact "merges if :rendered-output already exists"
-      (:rendered-output (handler (>context-with-ro context))) => (contains extra-output))
-    (fact "requires molded-output"
-      (handler (dissoc context :molded-output)) => (throws-error))
-    (fact "requires system/data-adapter"
-      (fact "no system"
-        (handler raw-context) => (throws-error))
-      (fact "no data-adapter"
-        (handler (assoc context :system {})) => (throws-error)))
-    (fact "returns original data"
-      (handler context) => (contains context))))
-
+      (handler (dissoc request :output)) => (throws-error))))

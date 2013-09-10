@@ -11,38 +11,38 @@
 (def db-mockuser (assoc mockuser :hashed-pwd "123"))
 (defn >datastore [] (>TestDatastore {:user [db-mockuser]}))
 (defn >login-system [] {:data-store (>datastore)})
-(defn >login-context [] {:system (>login-system) :input mockuser})
+(defn >login-request [] {:system (>login-system) :input mockuser :session {}})
 
-(defn test-authenticator [auth context]
+(defn test-authenticator [auth request]
   (fact "is an IAuthenticator"
     (satisfies? IAuthenticator auth) => true)
   (fact "current-user - not logged in"
-    (current-user auth context) => nil)
-  (let [loggedin-context (log-in auth context)]
+    (current-user auth request) => nil)
+  (let [loggedin-request (log-in auth request)]
     (fact "log-in"
-      loggedin-context => ok?)
+      loggedin-request => ok?)
     (fact "current-user - logged in"
-      (current-user auth loggedin-context) => mockuser)
-    (let [loggedout-context (log-out auth loggedin-context)]
+      (current-user auth loggedin-request) => mockuser)
+    (let [loggedout-request (log-out auth loggedin-request)]
       (fact "log-out"
-        loggedout-context => ok?)
+        loggedout-request => ok?)
       (fact "current-user - logged out"
-        (current-user auth loggedout-context) => nil))))
-
+        (current-user auth loggedout-request) => nil))))
 
 (fact "TestAuthenticator"
   (test-authenticator 
     (>TestAuthenticator) 
-    (>login-context)))
+    (>login-request)))
 
 (fact "TokenAuthenticator"
   (test-authenticator
     (>TokenAuthenticator :test-app)
-    (>login-context)))
+    (>login-request)))
+
 
 (fact "TokenLogin sets auth token"
   (let [auth (>TokenAuthenticator :test-app)]
-    (log-in auth (>login-context)) => (contains {:session {:test-app "a@b.cd"}})))
+    (log-in auth (>login-request)) => (contains {:session {:test-app "a@b.cd"}})))
 
 (future-facts "TokenLogin - repeated calls to current-user don't hit the db repeatedly")
 ; Cache the current user in meta-data on the input, and then just re-read it
@@ -56,8 +56,7 @@
                      {::friend/identity 
                       {:current :a 
                        :authentications {:a mockuser}}}})
-(def friend-context {:raw-input friend-request})
-(def empty-friend-context {:raw-input {:session {}} :input mockuser})
+(def empty-friend-request {:params mockuser :session {}})
 
 (fact "friend works as expected"
   (friend/current-authentication friend-request) => mockuser)
@@ -66,7 +65,7 @@
 
 (fact "FriendAuthenticator"
   (test-authenticator (>FriendAuthenticator get-user)
-                      empty-friend-context)
+                      empty-friend-request)
   (let [auth (>FriendAuthenticator get-user)]
     (fact "current-user with existing friend session"
-      (current-user auth friend-context) => mockuser)))
+      (current-user auth friend-request) => mockuser)))

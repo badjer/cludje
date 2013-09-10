@@ -2,7 +2,7 @@
   (:use cludje.mold
         cludje.types))
 
-(defn altns-action [context])
+(defn altns-action [request])
 
 (def altnsmold (>Mold {:name Str} {}))
 

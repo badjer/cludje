@@ -10,38 +10,45 @@
             [ring.middleware.keyword-params :as kw]
             [ring.util.response :as response]))
 
+;(def ring-parser
+  ;(-> identity
+      ;;(file-info/wrap-file-info)
+      ;(cookies/wrap-cookies)
+      ;(kw/wrap-keyword-params)
+      ;(json/wrap-json-params)
+      ;(sess/wrap-session)
+      ;(params/wrap-params)))
 
-(def ring-parser
-  (-> identity
-      ;(file-info/wrap-file-info)
+(defn wrap-ring-middleware [f]
+  (-> f
       (cookies/wrap-cookies)
+      (sess/wrap-session)
       (kw/wrap-keyword-params)
       (json/wrap-json-params)
-      (sess/wrap-session)
       (params/wrap-params)))
 
-(defn- check-output [output]
+(defn assert-json-renderable [result]
   (cond
-    (map? output) output
-    (nil? output) nil
+    (map? result) result
+    (nil? result) nil
     :else (throw 
             (ex-info "We tried to render something that wasn't a map!  
                      Probably, your action didn't return a map.  
-                     Always return a map from actions" {:output output}))))
+                     Always return a map from actions" {:result result}))))
 
-(defn json-render [context]
-  (let [output (?! context :molded-output)]
-    (check-output output)
-    (merge context
-      (-> {:body (cheshire/generate-string output)}
-          (response/content-type "application/json")
-          (response/charset "UTF-8")))))
+;(defn json-render [context]
+  ;(let [output (?! context :molded-output)]
+    ;(check-output output)
+    ;(merge context
+      ;(-> {:body (cheshire/generate-string output)}
+          ;;(response/content-type "application/json")
+          ;(response/charset "UTF-8")))))
 
-(def json-respond 
-  (-> json-render
-      (cookies/wrap-cookies)
-      (sess/wrap-session)
-      ))
+;(def json-respond 
+  ;(-> json-render
+      ;(cookies/wrap-cookies)
+      ;(sess/wrap-session)
+      ;))
 
 (defn http-401 [] {:status 401})
 (defn http-403 [] {:status 403})

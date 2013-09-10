@@ -5,131 +5,132 @@
         cludje.system))
 
 
-(defn wrap-system [f system]
-  (fn [context]
-    (-> context
+(defn add-system [f system]
+  (fn [request]
+    (-> request
         (assoc :system system)
         (f))))
 
-(defn wrap-parsed-input [f]
-  (fn [context]
-    (let [adapter (?! context [:system :data-adapter])]
-      (->> context
-           (parse-input adapter)
-           (f)))))
+;(defn wrap-parsed-input [f]
+  ;(fn [request]
+    ;(let [adapter (?! request [:system :data-adapter])]
+      ;(->> request
+           ;(parse-input adapter)
+           ;(f)))))
 
-(defn wrap-session [f]
-  (fn [context]
-    (let [session-store (?! context [:system :session-store])]
-      (->> context 
-           (add-session session-store)
-           (f)
-           (persist-session session-store)))))
-      ;(persist-session session-store (f (add-session session-store context))))))
-          ;in-session (current-session session-store context)
-          ;input (assoc context :session in-session)
+;(defn wrap-session [f]
+  ;(fn [request]
+    ;(let [session-store (?! request [:system :session-store])]
+      ;(->> request 
+           ;(add-session session-store)
+           ;(f)
+           ;(persist-session session-store)))))
+      ;(persist-session session-store (f (add-session session-store request))))))
+          ;in-session (current-session session-store request)
+          ;input (assoc request :session in-session)
           ;;output (f input)]
       ;(persist-session session-store output))))
 
 
-(defn wrap-authenticate [f]
-  (fn [context]
-    (let [authenticator (?! context [:system :authenticator])
-          user (current-user authenticator context)]
-      (-> context
+(defn add-authenticate [f]
+  (fn [request]
+    (let [authenticator (?! request [:system :authenticator])
+          user (current-user authenticator request)]
+      (-> request
           (assoc :user user)
           (f)))))
 
-(defn wrap-action [f]
-  (fn [context]
-    (let [finder (?! context [:system :action-finder])
-          action (find-action finder context)]
-      (-> context
+(defn add-action [f]
+  (fn [request]
+    (let [finder (?! request [:system :action-finder])
+          action (find-action finder request)]
+      (-> request
           (assoc :action-sym action)
           (f)))))
 
-(defn wrap-input-mold [f]
-  (fn [context]
-    (let [moldfinder (?! context [:system :mold-finder])
-          input-mold (find-input-mold moldfinder context)]
-      (-> context
+(defn add-input-mold [f]
+  (fn [request]
+    (let [moldfinder (?! request [:system :mold-finder])
+          input-mold (find-input-mold moldfinder request)]
+      (-> request
           (assoc :input-mold input-mold)
           (f)))))
 
-(defn wrap-input [f]
-  (fn [context]
-    (let [input-mold (?! context :input-mold)
-          parsed-input (?! context :parsed-input)
-          molded-input (parse input-mold parsed-input)]
-      (-> context
-          (assoc :input molded-input)
+(defn add-input [f]
+  (fn [request]
+    (let [input-mold (?! request :input-mold)
+          params (?! request :params)
+          input (parse input-mold params)]
+      (-> request
+          (assoc :input input)
           (f)))))
 
-(defn wrap-authorize [f]
-  (fn [context]
-    (let [authorizer (?! context [:system :authorizer])
-          ok? (can? authorizer context)]
+(defn authorize [f]
+  (fn [request]
+    (let [authorizer (?! request [:system :authorizer])
+          ok? (can? authorizer request)]
       (if-not ok?
         (throw-unauthorized)
-        (f context)))))
+        (f request)))))
 
-(defn run-action [action context]
+(defn run-action [action request]
   (try
-    (action context)
+    (action request)
     (catch clojure.lang.ExceptionInfo ex
       (let [exd (ex-data ex)]
         (if (:__problems exd)
-          (assoc context :output (merge (:input context) exd))
+          (assoc request :output (merge (:input request) exd))
           (throw ex))))))
 
-(defn wrap-output [f]
-  (fn [context]
-    (let [action-sym (?! context :action-sym)
+(defn add-output [f]
+  (fn [request]
+    (let [action-sym (?! request :action-sym)
           action (resolve action-sym)
-          done-context (run-action action context)]
-      (f done-context))))
+          done-request (run-action action request)]
+      (f done-request))))
 
-(defn wrap-output-mold [f]
-  (fn [context]
-    (let [done-context (f context)]
-      (if (:output-mold done-context)
-        done-context
-        (let [moldfinder (?! done-context [:system :mold-finder]) 
-              output-mold (find-output-mold moldfinder done-context)] 
-          (assoc done-context :output-mold output-mold))))))
+(defn add-output-mold [f]
+  (fn [request]
+    (let [done-request (f request)]
+      (if (:output-mold done-request)
+        done-request
+        (let [moldfinder (?! done-request [:system :mold-finder]) 
+              output-mold (find-output-mold moldfinder done-request)] 
+          (assoc done-request :output-mold output-mold))))))
 
-(defn wrap-molded-output [f]
-  (fn [context]
-    (let [done-context (f context)
-          output-mold (?! done-context :output-mold)
-          output (?! done-context :output)
-          molded (show output-mold output)]
-      (assoc done-context :molded-output molded))))
+(defn add-result [f]
+  (fn [request]
+    (let [done-request (f request)
+          output-mold (?! done-request :output-mold)
+          output (?! done-request :output)
+          prepared (show output-mold output)]
+      (assoc done-request :result prepared))))
 
-(defn wrap-rendered-output [f]
-  (fn [context]
-    (let [done-context (f context)
-          data-adapter (?! done-context [:system :data-adapter])
-          rendered (render-output data-adapter done-context)]
-      (update-in done-context [:rendered-output] merge rendered))))
+
+;(defn wrap-rendered-output [f]
+  ;(fn [request]
+    ;(let [done-request (f request)
+          ;;data-adapter (?! done-request [:system :data-adapter])
+          ;rendered (render-output data-adapter done-request)]
+      ;(update-in done-request [:rendered-output] merge rendered))))
 
 
 ; Pipeline constructor functions
-(defn wrap-context [f]
-  (fn [raw-input]
-    (f {:raw-input raw-input})))
+;(defn wrap-request [f]
+  ;(fn [raw-input]
+    ;(f {:raw-input raw-input})))
 
-(defn unwrap-context [f selector]
-  (fn [context]
-    (let [done-context (f context)
-          res (selector done-context)]
-      (if-not (empty? res)
-        res
-        (throw-error {:context (dissoc done-context :system)})))))
+;(defn unwrap-request [f selector]
+  ;(fn [request]
+    ;(let [done-request (f request)
+          ;res (selector done-request)]
+      ;(if-not (empty? res)
+        ;res
+        ;(throw-error {:request (dissoc done-request :system)})))))
 
 
-(defn >pipeline [f]
-  "Loads the input into a context, and extracts the output from the context"
-  (-> f
-      (wrap-context)
-      (unwrap-context :rendered-output)))
+;(defn >pipeline [f]
+  ;"Loads the input into a request, and extracts the output from the request"
+  ;(-> f
+      ;(wrap-request)
+      ;(unwrap-request :rendered-output)))

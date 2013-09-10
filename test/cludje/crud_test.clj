@@ -13,48 +13,50 @@
 (def gear {:teeth 4})
 
 (def action-finder (>NSActionFinder 'cludje.crud-test))
-(defn >context [moldsym]
+
+(defn >request [moldsym]
   {:system {:data-store (>TestDatastore)
             :action-finder action-finder}
    :input-mold-sym moldsym})
 
-(defn >in [context input] 
-  (-> context
+(defn >in [request input] 
+  (-> request
       (assoc :input input)))
 
+
 (fact "crud actions"
-  (let [context (>context `Gear)
-        kees (crud-model-add (>in context gear))]
+  (let [request (>request `Gear)
+        kees (crud-model-add (>in request gear))]
     kees => (has-keys :_id)
-    (count (crud-model-list context)) => 1
-    (first (:gears (crud-model-list context))) => (contains gear)
-    (crud-model-edit (>in context kees)) => (contains gear)
-    (crud-model-new context) => {}
-    (crud-model-alter (>in context (assoc kees :teeth 5))) => map?
-    (crud-model-show (>in context kees)) => (contains {:teeth 5})
-    (crud-model-delete (>in context kees)) => nil
-    (:gears (crud-model-list context)) => empty?
+    (count (crud-model-list request)) => 1
+    (first (:gears (crud-model-list request))) => (contains gear)
+    (crud-model-edit (>in request kees)) => (contains gear)
+    (crud-model-new request) => {}
+    (crud-model-alter (>in request (assoc kees :teeth 5))) => map?
+    (crud-model-show (>in request kees)) => (contains {:teeth 5})
+    (crud-model-delete (>in request kees)) => nil
+    (:gears (crud-model-list request)) => empty?
     ))
 
 (def Widget (>Model {:teeth Int :size Int}
                     {:modelname "widget" :defaults {:size 3}}))
 (def-crud-actions Widget)
 
-(defn ac-companyid [context] 1)
+(defn ac-companyid [request] 1)
 (def Widgettype (>Model {:companyid Int :name Str}
                         {:modelname "widgettype" :defaults {:companyid ac-companyid}}))
 (def-crud-actions Widgettype)
 
 (fact "crud defaults"
-  (let [context (>context `Widget)]
+  (let [request (>request `Widget)]
     (fact "new sets defaults"
-      (new-widget context) => (contains {:size 3}))
+      (new-widget request) => (contains {:size 3}))
     (fact "add sets defaults"
-      (let [id (add-widget (>in context {:teeth 2}))]
+      (let [id (add-widget (>in request {:teeth 2}))]
         id => ok?
-        (show-widget (>in context id)) => (contains {:teeth 2 :size 3})))
+        (show-widget (>in request id)) => (contains {:teeth 2 :size 3})))
     (fact "set defaults with fn"
-      (new-widgettype (>context `Widgettype)) => (contains {:companyid 1}))))
+      (new-widgettype (>request `Widgettype)) => (contains {:companyid 1}))))
 
 
 (def Geartype (>Model {:name Str :isarchived Bool}
@@ -64,35 +66,35 @@
 (def-crud-actions Geartype)
 
 (fact "def-crud-actions with lookup model"
-  (let [context (>context `Geartype)
-        kees (add-geartype (>in context geartype))]
+  (let [request (>request `Geartype)
+        kees (add-geartype (>in request geartype))]
     (fact "new- automatically sets isarchived"
-      (new-geartype context) => (contains {:isarchived false}))
+      (new-geartype request) => (contains {:isarchived false}))
     (fact "can add without isarchived"
       kees => ok?)
     (fact "can list"
-      (count (:geartypes (list-geartype (>in context {:isarchived false})))) => 1
-      (first (:geartypes (list-geartype (>in context {:isarchived false})))) => 
+      (count (:geartypes (list-geartype (>in request {:isarchived false})))) => 1
+      (first (:geartypes (list-geartype (>in request {:isarchived false})))) => 
         (contains geartype))))
 
 
-(defn ac-with-lookup [context]
-  (with-lookup context {} Geartype))
+(defn ac-with-lookup [request]
+  (with-lookup request {} Geartype))
 
-(defn ac-lookup-fn [context]
-  (with-lookup context {} Widgettype))
+(defn ac-lookup-fn [request]
+  (with-lookup request {} Widgettype))
 
 (fact "with-lookup"
-  (let [context (>context `Geartype)]
+  (let [request (>request `Geartype)]
     ; Set up our test data
-    (add-geartype (>in context {:name "A"})) => ok?
-    (let [res (ac-with-lookup context)]
+    (add-geartype (>in request {:name "A"})) => ok?
+    (let [res (ac-with-lookup request)]
       res => (has-keys :geartypes)
       (map :name (:geartypes res)) => ["A"])
     (fact "using a fn for a default value" 
-      (let [context (assoc context :input-mold-sym `Widgettype)
-            _ (add-widgettype (>in context {:name "A"}))
-            sres (ac-lookup-fn context)]
+      (let [request (assoc request :input-mold-sym `Widgettype)
+            _ (add-widgettype (>in request {:name "A"}))
+            sres (ac-lookup-fn request)]
         sres => ok?
         sres => (has-keys :widgettypes)
         (map :name (:widgettypes sres)) => ["A"]))))
@@ -107,17 +109,17 @@
 (def-crud-actions Sprockettype)
 
 (fact "partitions makes model-list include selector"
-  (let [context (>context `Sprockettype)]
-    (add-sprockettype (>in context {:name "A" :companyid 1})) => ok?
-    (add-sprockettype (>in context {:name "B" :companyid 2})) => ok?
-    (let [sres1 (list-sprockettype (>in context {:companyid 1})) 
-          sres2 (list-sprockettype (>in context {:companyid 2}))]
+  (let [request (>request `Sprockettype)]
+    (add-sprockettype (>in request {:name "A" :companyid 1})) => ok?
+    (add-sprockettype (>in request {:name "B" :companyid 2})) => ok?
+    (let [sres1 (list-sprockettype (>in request {:companyid 1})) 
+          sres2 (list-sprockettype (>in request {:companyid 2}))]
       sres1 => ok?
       sres2 => ok?
       (map :name (:sprockettypes sres1)) => ["A"]
       (map :name (:sprockettypes sres2)) => ["B"])
     (fact "uses default if none supplied"
-      (let [sres-d (list-sprockettype context)]
+      (let [sres-d (list-sprockettype request)]
         sres-d => ok?
         (map :name (:sprockettypes sres-d)) => ["A"]))))
 
@@ -130,15 +132,15 @@
 (def-crud-actions Footype)
 
 (fact "partitions makes model-list include selector default - default is wrong type"
-  (let [context (>context `Footype)]
-    (add-footype (>in context {:name "A" :companyid "1"})) => ok?
-    (add-footype (>in context {:name "B" :companyid "2"})) => ok?
-    (let [res (list-footype context)]
+  (let [request (>request `Footype)]
+    (add-footype (>in request {:name "A" :companyid "1"})) => ok?
+    (add-footype (>in request {:name "B" :companyid "2"})) => ok?
+    (let [res (list-footype request)]
       (map :name (:footypes res)) => ["A"])))
 
 
 (facts "with-crud-dsl"
-  (with-crud-dsl (>context `Widget)
+  (with-crud-dsl (>request `Widget)
     (fact "defines with-lookup"
       (with-lookup {} Widget) =not=> (throws))
     (fact "defines model"

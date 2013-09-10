@@ -1,8 +1,33 @@
 (ns cludje.serve
   (:use cludje.system
+        cludje.util
         cludje.web)
-  (:require [ring.adapter.jetty :as jetty])
+  (:require [ring.adapter.jetty :as jetty]
+            [cheshire.core :as cheshire]
+            [ring.util.response :as response])
   (:import [org.eclipse.jetty.server.handler GzipHandler]))
+
+
+(defrecord TestServer [default-session session]
+  IServer
+  (start [self system handler]
+    "Returns a function that takes input, constructs
+     a request from it, assocs it with session, passes
+     it to handler, and returns the result.
+     Session will be persisted between requests until
+     the server is stopped"
+    (reset! session @default-session)
+    (fn [input]
+      (let [res (handler {:params input :session @session})]
+        (when-let [out-session (:session res)]
+          (reset! session out-session))
+        (:result res))))
+  (stop [self]
+    (reset! session nil)))
+
+(defn >TestServer 
+  ([] (>TestServer {}))
+  ([default-session] (->TestServer (atom default-session) (atom nil))))
 
 
 (defn- jetty-configurator [server]
@@ -17,18 +42,34 @@
           :configurator jetty-configurator}
          config))
 
-(defrecord JettyServer [port jetty-instance]
+(defn render-json [response]
+  (let [result (?! response :result)]
+    (assert-json-renderable result)
+    (merge response 
+           (-> {:body (cheshire/generate-string result)} 
+               (response/content-type "application/json") 
+               (response/charset "UTF-8")))))
+
+(defn wrap-render-json [f]
+  (fn [request]
+    (render-json (f request))))
+
+(defn >web-handler [f]
+  (-> f
+      (wrap-render-json)
+      (wrap-web-exception-handling)
+      (wrap-ring-middleware)))
+
+(defrecord JettyServer [jetty-instance]
   IServer
-  (start [self start-port handler]
-    (let [safe-handler (wrap-web-exception-handling handler)]
-      (reset! port start-port)
+  (start [self system handler]
+    (let [web-handler (>web-handler handler)]
       (reset! jetty-instance 
-              (jetty/run-jetty safe-handler (jetty-opts {:port start-port})))))
+              (jetty/run-jetty web-handler (jetty-opts system)))))
   (stop [self]
     (when @jetty-instance 
-      (.stop @jetty-instance)
-      (reset! port nil))))
+      (.stop @jetty-instance))))
 
 (defn >JettyServer []
-  (->JettyServer (atom nil) (atom nil)))
+  (->JettyServer (atom nil)))
 

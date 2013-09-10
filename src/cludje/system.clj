@@ -9,13 +9,6 @@
   (log-in [self context])
   (log-out [self context]))
 
-(defprotocol ISessionStore
-  "Represent session"
-  (add-session [store context])
-  (persist-session [store context]))
-
-
-
 (defprotocol IDatastore
   "Represents a datastore"
   (fetch [self coll kee] "Get an item from the datastore")
@@ -60,15 +53,8 @@
   (find-input-mold [self context])
   (find-output-mold [self context]))
 
-
-(defprotocol IDataAdapter
-  (parse-input [self raw-data])
-  (render-output [self context]))
-
-
-
 (defprotocol IServer
-  (start [self port handler])
+  (start [self system handler])
   (stop [self]))
 
 (defprotocol ITemplateFinder
