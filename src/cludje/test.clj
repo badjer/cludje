@@ -109,10 +109,6 @@
     (= code (:status x))))
 
 
-;(defn json-post [url json]
-  ;(http/post url {:form-params json :content-type :json :throw-exceptions false}))
-
-
 (defn >cookies []
   (cookies/cookie-store))
 
@@ -126,5 +122,5 @@
     :json (<-json (http/post url {:form-params body :content-type :json 
                                   :throw-exceptions false
                                   :cookie-store cookies}))))
-    ;:json (<-json (json-post url body))))
+
 
