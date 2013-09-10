@@ -8,7 +8,7 @@
   (:import [org.eclipse.jetty.server.handler GzipHandler]))
 
 
-(defrecord TestServer [default-session session]
+(defrecord TestServer [default-session output-selector session]
   IServer
   (start [self system pipeline]
     "Returns a function that takes input, constructs
@@ -21,13 +21,15 @@
       (let [res (pipeline {:params input :session @session})]
         (when-let [out-session (:session res)]
           (reset! session out-session))
-        (:result res))))
+        (@output-selector res))))
   (stop [self]
     (reset! session nil)))
 
 (defn >TestServer 
   ([] (>TestServer {}))
-  ([default-session] (->TestServer (atom default-session) (atom nil))))
+  ([default-session] (>TestServer default-session :result))
+  ([default-session output-selector]
+   (->TestServer (atom default-session) (atom output-selector) (atom nil))))
 
 
 (defn- jetty-configurator [server]

@@ -5,6 +5,7 @@
         cludje.system
         cludje.application
         cludje.model
+        cludje.mold
         cludje.types
         cludje.test))
 
@@ -50,6 +51,20 @@
         (stop ts) => anything
         (let [exec (start ts nil inc-cog)]
           (exec {}) => {:ses {:a 1}})))))
+
+(defn new-widget [request] {:output {:price 100} :result {:price "$1.00"}})
+
+(fact ">TestServer"
+  (fact "when outputing result"
+    (let [ts (>TestServer {} :result)
+          exec (start ts nil new-widget)]
+      (fact "returns result"
+        (exec {}) => {:price "$1.00"}))
+  (fact "when outputing output"
+    (let [ts (>TestServer {} :output)
+          exec (start ts nil new-widget)]
+      (fact "returns output"
+        (exec {}) => {:price 100})))))
 
 (def req {:url "http://localhost:8099"})
 (def port-sys {:port 8099})
