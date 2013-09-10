@@ -13,9 +13,9 @@
 (def system-args {:action-namespaces ['cludje.application-test] 
                   :mold-namespaces ['cludje.application-test]})
 
-(future-fact ">api-pipeline"
+(fact ">api-pipeline"
   (let [system (>test-system system-args)
         ap (>api-pipeline system)]
   (fact "works end-to-end" 
-    (ap {:_action :new-cog}) => {:name "A"})))
+    (ap {:params {:_action :new-cog}}) => (contains {:result {:name "A"}}))))
 

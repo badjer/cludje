@@ -10,7 +10,7 @@
 
 (defrecord TestServer [default-session session]
   IServer
-  (start [self system handler]
+  (start [self system pipeline]
     "Returns a function that takes input, constructs
      a request from it, assocs it with session, passes
      it to handler, and returns the result.
@@ -18,7 +18,7 @@
      the server is stopped"
     (reset! session @default-session)
     (fn [input]
-      (let [res (handler {:params input :session @session})]
+      (let [res (pipeline {:params input :session @session})]
         (when-let [out-session (:session res)]
           (reset! session out-session))
         (:result res))))
@@ -54,16 +54,16 @@
   (fn [request]
     (render-json (f request))))
 
-(defn >web-handler [f]
-  (-> f
+(defn >web-handler [pipeline]
+  (-> pipeline
       (wrap-render-json)
       (wrap-web-exception-handling)
       (wrap-ring-middleware)))
 
 (defrecord JettyServer [jetty-instance]
   IServer
-  (start [self system handler]
-    (let [web-handler (>web-handler handler)]
+  (start [self system pipeline]
+    (let [web-handler (>web-handler pipeline)]
       (reset! jetty-instance 
               (jetty/run-jetty web-handler (jetty-opts system)))))
   (stop [self]

@@ -54,7 +54,7 @@
   (find-output-mold [self context]))
 
 (defprotocol IServer
-  (start [self system handler])
+  (start [self system pipeline])
   (stop [self]))
 
 (defprotocol ITemplateFinder
