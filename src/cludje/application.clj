@@ -37,7 +37,6 @@
       (add-output-mold)
       (add-result)
       (add-input)
-      (add-input-mold)
       (add-action)
       (add-system system)))
 
@@ -49,7 +48,6 @@
       (add-result)
       (authorize)
       (add-input)
-      (add-input-mold)
       (add-action)
       (add-authenticate)
       (add-system system)))

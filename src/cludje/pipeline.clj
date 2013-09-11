@@ -27,21 +27,11 @@
           (assoc :action-sym action)
           (f)))))
 
-(defn add-input-mold [f]
-  (fn [request]
-    (let [moldfinder (?! request [:system :mold-finder])
-          input-mold (find-input-mold moldfinder request)]
-      (-> request
-          (assoc :input-mold input-mold)
-          (f)))))
-
 (defn add-input [f]
   (fn [request]
-    (let [input-mold (?! request :input-mold)
-          params (?! request :params)
-          input (parse input-mold params)]
+    (let [params (?! request :params)]
       (-> request
-          (assoc :input input)
+          (assoc :input params)
           (f)))))
 
 (defn authorize [f]

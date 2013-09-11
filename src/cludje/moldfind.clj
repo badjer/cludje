@@ -12,7 +12,6 @@
 
 (defrecord SingleMoldFinder [mold]
   IMoldFinder
-  (find-input-mold [self request] mold)
   (find-output-mold [self request] (add-output-fields mold)))
 
 (defn >SingleMoldFinder [mold]
@@ -23,17 +22,6 @@
     (when (satisfies? IMold m)
       m)))
 
-
-
-(defn propose-input-moldnames [action-sym]
-  (let [action (str (name action-sym))
-        ; We assume that the action is of the form:
-        ; some-ns/operation-model
-        unqualified-act (last (s/split action #"/"))
-        input-mold (str unqualified-act "-input")
-        modelname (last (s/split unqualified-act #"-"))
-        uppered (s/capitalize modelname)]
-    [input-mold uppered modelname]))
 
 (defn propose-output-moldnames [action-sym]
   (let [action (str (name action-sym))
@@ -62,8 +50,6 @@
 
 (defrecord NSMoldFinder [mold-namespaces]
   IMoldFinder
-  (find-input-mold [self request]
-    (find-mold- @mold-namespaces (propose-input-moldnames (?! request :action-sym))))
   (find-output-mold [self request]
     (let [names (propose-output-moldnames (?! request :action-sym))
           mold (find-mold- @mold-namespaces names)

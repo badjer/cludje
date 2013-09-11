@@ -50,7 +50,6 @@
   (find-action [self context] "Get the action, or nil if it doesn't exist"))
 
 (defprotocol IMoldFinder
-  (find-input-mold [self context])
   (find-output-mold [self context]))
 
 (defprotocol IServer

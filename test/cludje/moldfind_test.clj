@@ -8,12 +8,6 @@
   (:require [cludje.altnamespace :as ans]))
 
 
-(fact "propose-input-moldnames"
-  (propose-input-moldnames :add-cog) => ["add-cog-input" "Cog" "cog"]
-  (propose-input-moldnames :some-ns/add-cog) => ["add-cog-input" "Cog" "cog"]
-  (propose-input-moldnames :foobar) => ["foobar-input" "Foobar" "foobar"]
-  (propose-input-moldnames :some-ns/foobar) => ["foobar-input" "Foobar" "foobar"])
-
 (fact "propose-output-moldnames"
   (propose-output-moldnames :add-cog) => ["add-cog-output" "Cog" "cog"]
   (propose-output-moldnames :some-ns/add-cog) => ["add-cog-output" "Cog" "cog"]
@@ -29,8 +23,6 @@
 (def Cog (>Mold cog-fields {}))
 (def notmold 1)
 
-(def foo-bar-input-fields {:name Str :amt Int})
-(def foo-bar-input (>Mold foo-bar-input-fields {}))
 (def foo-bar-output-fields {:amt Int})
 (def foo-bar-output (>Mold foo-bar-output-fields {}))
 
@@ -55,10 +47,6 @@
   (let [mf (>NSMoldFinder 'cludje.moldfind-test 'cludje.altnamespace)]
     (fact "satisfies IMoldFinder"
       (satisfies? IMoldFinder mf) => true)
-    (fact "find-input-mold"
-      (test-find find-input-mold mf)
-      (fact "Finds <action-name>-input first"
-        (find-input-mold mf (>input :foo-bar)) => foo-bar-input))
     (fact "find-output-mold"
       (test-find find-output-mold mf)
       (fact "finds <action-name>-output first"

@@ -1,5 +1,6 @@
 (ns cludje.action
   (:use cludje.system
+        cludje.mold
         cludje.util))
 
 (defmacro with-log-dsl [request & forms]
@@ -37,3 +38,17 @@
          (with-input-dsl ~request
            (with-output-dsl ~request
              ~@forms))))))
+
+
+(defmacro action [& forms]
+  `(fn [request#] 
+     (with-action-dsl request#
+       ~@forms)))
+
+(defmacro action-for [mold & forms]
+  `(fn [request#]
+     (with-action-dsl request#
+       (let [~'input (make ~mold ~'input)]
+         ~@forms))))
+
+

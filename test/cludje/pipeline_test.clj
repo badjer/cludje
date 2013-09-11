@@ -12,8 +12,8 @@
         cludje.pipeline))
 
 
-(def raw-input {:price "$1.23"})
-(def raw-request {:params raw-input})
+(def input {:price "$1.23"})
+(def raw-request {:params input})
 
 (fact "add-system"
   (let [sys {:a 1}
@@ -67,32 +67,14 @@
 
 (def bar (>Mold {:name Str} {}))
 
-(fact "add-input-mold"
-  (let [sys {:mold-finder moldfinder}
-        handler (add-input-mold identity)
-        request (assoc action-request :system sys)]
-    (fact "adds :input-mold"
-      (:input-mold (handler request)) => mold)
-    (fact "requires system/mold-finder"
-      (fact "no system"
-        (handler raw-request) => (throws-error))
-      (fact "no mold-finder"
-        (handler (assoc-in request [:system :mold-finder] nil)) => (throws-error)))
-    (fact "returns original data"
-      (handler request) => (contains request))))
-
-(def input-mold-request (assoc action-request :input-mold mold))
-(def input {:price 123})
-
 (fact "add-input"
   (let [handler (add-input identity)
-        request input-mold-request]
+        request raw-request]
     (fact "adds :input"
       (handler request) => (contains {:input input}))
     (fact "requires params"
       (handler (dissoc request :params)) => (throws-error))
-    (fact "requires input-mold"
-      (handler (dissoc request :input-mold)) => (throws-error))))
+    ))
 
 (def authorizor (>TestAuthorizer true))
 (def input-request
