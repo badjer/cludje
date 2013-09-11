@@ -25,7 +25,7 @@
 ;      :menu [{:text "A" :url "/a"} {:text "B" :url "/b"}]
 ;      :footer "© 2013 Cludje"
 ;      :title "Cludje"}))
-; 
+ 
 (defn realize-one [request v]
   "Try to get a final-value for v.
   If it's a var, deref it. If it's a fn, call it with [system input]"
@@ -37,33 +37,53 @@
 (defn realize-map [request m]
   (into {} (for [[k v] m] [k (realize-one request v)])))
 
+(defn default-list-params [model request]
+  (let [parts (partitions model)
+        defaults (field-defaults model)]
+    ; This is a bit complicated because of optimization
+    ; We want parts-def to be (select-keys (realize-map defs)),
+    ; but we do an extra internal select-keys inside of 
+    ; realize-map in order to avoid evaling any default
+    ; fields that we don't need
+    ; The reason we add a (make model..) onto this is because
+    ; we want to handle the case where the default is of the 
+    ; wrong type - this will convert it
+    (select-keys 
+      (parse model 
+             (realize-map request 
+                          (select-keys defaults parts))) 
+      parts)))
+
+(defn list-params [model request]
+  (let [default-params (default-list-params model request)
+        input (?? request :input)
+        parsed (parse model input)
+        supplied-parts (clojure.set/intersection
+                         (set (partitions model))
+                         (set (keys input)))
+        input-parts (select-keys parsed supplied-parts)]
+    (merge default-params input-parts)))
+
+
+(defn model-defaults [model request]
+  (let [input (?? request :input)
+        defaults (field-defaults model)
+        realized-defaults (realize-map request defaults)
+        parsed-defaults (parse model realized-defaults)]
+    (select-keys parsed-defaults (keys defaults))))
+
+(defn build [model request]
+  "Applies all the defaults when make-ing the model"
+  (let [input (?! request :input)
+        defs (model-defaults model request)
+        paras (merge defs input)]
+    (make model paras)))
+
 
 (defn crud-model-list [model request]
   (let [input (?? request :input)
         listkee (keyword (str (tablename model) "s"))
-        parts (partitions model)
-        defs (field-defaults model)
-        ; This is a bit complicated because of optimization
-        ; We want parts-def to be (select-keys (realize-map defs)),
-        ; but we do an extra internal select-keys inside of 
-        ; realize-map in order to avoid evaling any default
-        ; fields that we don't need
-        ; The reason we add a (make model..) onto this is because
-        ; we want to handle the case where the default is of the 
-        ; wrong type - this will convert it
-        part-defs (select-keys 
-                     (parse model
-                           (realize-map request (select-keys defs parts)))
-                     parts)
-        ; We want to get a parsed version of any of the partitions
-        ; that the user passed as input - that's part-inp
-        parsed (parse model input)
-        supplied-parts (clojure.set/intersection 
-                          (set parts) 
-                          (set (keys input)))
-        part-inp (select-keys parsed supplied-parts)
-        ; The query-paras are the defaults and input of the partitions
-        query-paras (merge part-defs part-inp)]
+        query-paras (list-params model request)]
     (with-action-dsl request
       {listkee (query model query-paras)})))
 
@@ -73,11 +93,9 @@
 
 
 (defn crud-model-add [model request]
-  (let [input (?! request :input)
-        defs (parse model (realize-map request (field-defaults model)))
-        combined (merge defs input)]
-    (with-action-dsl request
-      (-> (insert model combined)
+  (with-action-dsl request
+    (let [built (build model request)]
+      (-> (insert model built)
           (with-alert :success "Saved")))))
 
 (defn crud-model-show [model request]
@@ -132,5 +150,6 @@
     (merge lookup-res m)))
 
 (defmacro with-crud-dsl [request & forms]
-  `(let [~'with-lookup (partial with-lookup ~request)]
+  `(let [~'with-lookup (partial with-lookup ~request)
+         ~'build #(build % ~request)]
      ~@forms))
