@@ -27,7 +27,7 @@
       (when-not (empty? matches)
         (let [moldfinder (? request [:system :mold-finder])
               modelname (model-name template-name)
-              moldrequest (assoc request :action-sym template-name)
+              moldrequest (assoc-in request [:params :_action] template-name)
               model (find-output-mold moldfinder moldrequest)
               template (first matches)]
           (@(resolve template) model))))))

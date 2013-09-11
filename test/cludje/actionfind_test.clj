@@ -11,15 +11,11 @@
 (defn an-action [request])
 (defn not-an-action [a b c])
 
-(fact "looks-like-action?"
-  (looks-like-action? `an-action) => truthy
-  (looks-like-action? `not-an-action) => falsey)
-
 (defn test-find [f af]
   (fact "finds things"
-    (find-action af (>input :an-action)) => `an-action)
+    (find-action af (>input :an-action)) => (exactly an-action))
   (fact "finds things in multiple namespaces"
-    (find-action af (>input :altns-action)) => `ans/altns-action))
+    (find-action af (>input :altns-action)) => (exactly ans/altns-action)))
 
 (fact "NSActionFinder"
   (let [af (>NSActionFinder 'cludje.actionfind-test 'cludje.altnamespace)]

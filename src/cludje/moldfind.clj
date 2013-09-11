@@ -23,8 +23,8 @@
       m)))
 
 
-(defn propose-output-moldnames [action-sym]
-  (let [action (str (name action-sym))
+(defn propose-output-moldnames [action-name]
+  (let [action (str (name action-name))
         ; We assume that the action is of the form:
         ; some-ns/operation-model
         unqualified-act (last (s/split action #"/"))
@@ -51,7 +51,7 @@
 (defrecord NSMoldFinder [mold-namespaces]
   IMoldFinder
   (find-output-mold [self request]
-    (let [names (propose-output-moldnames (?! request :action-sym))
+    (let [names (propose-output-moldnames (?! request [:params :_action]))
           mold (find-mold- @mold-namespaces names)
           res (add-output-fields mold)]
       res)))

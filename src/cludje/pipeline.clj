@@ -24,7 +24,7 @@
     (let [finder (?! request [:system :action-finder])
           action (find-action finder request)]
       (-> request
-          (assoc :action-sym action)
+          (assoc :action action)
           (f)))))
 
 (defn add-input [f]
@@ -44,8 +44,7 @@
 
 (defn add-output [f]
   (fn [request]
-    (let [action-sym (?! request :action-sym)
-          action (resolve action-sym)
+    (let [action (?! request :action)
           done-request (run-action action request)]
       (f done-request))))
 

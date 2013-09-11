@@ -14,8 +14,8 @@
   (propose-output-moldnames :foobar) => ["foobar-output" "Foobar" "foobar"]
   (propose-output-moldnames :some-ns/foobar) => ["foobar-output" "Foobar" "foobar"])
 
-(defn >input [action-sym]
-  {:action-sym action-sym})
+(defn >input [action]
+  {:params {:_action action}})
 
 (def mold-fields {:name Str})
 (def mold (>Mold mold-fields {}))
@@ -33,7 +33,7 @@
       (fields (f mf (>input :cog))) => (contains (fields Cog))
       (fields (f mf (>input "cog"))) => (contains (fields Cog))))
   (fact "works with fully-qualified names"
-    (fields (f mf (>input `mold))) => (contains (fields mold)))
+    (fields (f mf (>input "cludje.moldfind-test/mold"))) => (contains (fields mold)))
   (fact "finds a mold in another namespace"
     (fields (f mf (>input :altnsmold))) => (contains (fields ans/altnsmold)))
   (fact "throws exception if _action not supplied"

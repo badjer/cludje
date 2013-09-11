@@ -37,14 +37,9 @@
 (defn realize-map [request m]
   (into {} (for [[k v] m] [k (realize-one request v)])))
 
-(defn get-model [request]
-  (let [model-sym (? request :input-mold-sym)]
-    @(resolve model-sym)))
 
-
-(defn crud-model-list [request]
-  (let [model (get-model request)
-        input (?? request :input)
+(defn crud-model-list [model request]
+  (let [input (?? request :input)
         listkee (keyword (str (tablename model) "s"))
         parts (partitions model)
         defs (field-defaults model)
@@ -72,44 +67,37 @@
     (with-action-dsl request
       {listkee (query model query-paras)})))
 
-(defn crud-model-new [request]
-  (let [model (get-model request) 
-        defaults (field-defaults model)]
+(defn crud-model-new [model request]
+  (let [defaults (field-defaults model)]
     (realize-map request defaults)))
 
 
-(defn crud-model-add [request]
-  (let [model (get-model request)
-        input (?! request :input)
+(defn crud-model-add [model request]
+  (let [input (?! request :input)
         defs (parse model (realize-map request (field-defaults model)))
         combined (merge defs input)]
     (with-action-dsl request
       (-> (insert model combined)
           (with-alert :success "Saved")))))
 
-(defn crud-model-show [request]
-  (let [model (get-model request)
-        keyfield (keyname model)]
+(defn crud-model-show [model request]
+  (let [keyfield (keyname model)]
     (with-action-dsl request
       (fetch model (?in keyfield)))))
 
-(defn crud-model-edit [request]
-  (let [model-sym (? request :input-mold-sym)
-        model @(resolve model-sym)]
-    (with-action-dsl request
-      (fetch model (?in (keyname model))))))
+(defn crud-model-edit [model request]
+  (with-action-dsl request
+    (fetch model (?in (keyname model)))))
 
-(defn crud-model-alter [request]
-  (let [model (get-model request)]
-    (with-action-dsl request 
-      ; Ensure we've got the key
-      (?in (keyname model))
-      (-> (save model input)
-          (with-alert :success "Saved")))))
+(defn crud-model-alter [model request]
+  (with-action-dsl request 
+    ; Ensure we've got the key
+    (?in (keyname model))
+    (-> (save model input)
+        (with-alert :success "Saved"))))
 
-(defn crud-model-delete [request]
-  (let [model (get-model request)
-        keyfield (keyname model)]
+(defn crud-model-delete [model request]
+  (let [keyfield (keyname model)]
     (with-action-dsl request
       (delete model (?in keyfield))
       nil)))
@@ -120,33 +108,29 @@
         modelname (tablename model)]
     `(do
        (defn ~(symbol (str "list-" modelname)) [request#]
-         (crud-model-list request#));~model-sym ~'system ~'input))
+         (crud-model-list ~model-sym request#))
        (defn ~(symbol (str "new-" modelname)) [request#]
-         (crud-model-new request#));~model-sym ~'system ~'input))
+         (crud-model-new ~model-sym request#))
        (defn ~(symbol (str "add-" modelname)) [request#]
-         (crud-model-add request#));~model-sym ~'system ~'input))
+         (crud-model-add ~model-sym request#))
        (defn ~(symbol (str "show-" modelname)) [request#]
-         (crud-model-show request#));~model-sym ~'system ~'input))
+         (crud-model-show ~model-sym request#))
        (defn ~(symbol (str "edit-" modelname)) [request#]
-         (crud-model-edit request#));~model-sym ~'system ~'input))
+         (crud-model-edit ~model-sym request#))
        (defn ~(symbol (str "alter-" modelname)) [request#]
-         (crud-model-alter request#));~model-sym ~'system ~'input))
+         (crud-model-alter ~model-sym request#))
        (defn ~(symbol (str "delete-" modelname)) [request#]
-         (crud-model-delete request#));~model-sym ~'system ~'input)))))
+         (crud-model-delete ~model-sym request#))
        )))
 
-
 (defn with-lookup [request m model]
-  (let [model (get-model request)
-        action-name (str "list-" (tablename model))
+  (let [action-name (str "list-" (tablename model))
         actionfinder (? request [:system :action-finder])
         af-request (assoc request :params {:_action action-name})
-        action-sym (find-action actionfinder af-request)
-        action @(resolve action-sym)
+        action (find-action actionfinder af-request)
         lookup-res (action request)]
     (merge lookup-res m)))
 
 (defmacro with-crud-dsl [request & forms]
-  `(let [~'model (get-model ~request)
-         ~'with-lookup (partial with-lookup ~request)]
+  `(let [~'with-lookup (partial with-lookup ~request)]
      ~@forms))

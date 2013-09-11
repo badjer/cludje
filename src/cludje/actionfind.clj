@@ -5,23 +5,24 @@
         cludje.find)
   (:require [clojure.string :as s]))
 
-(defrecord SingleActionFinder [action-sym]
+(defrecord SingleActionFinder [action]
   IActionFinder
-  (find-action [self request] action-sym))
+  (find-action [self request] action))
 
-(defn >SingleActionFinder [action-sym]
-  (->SingleActionFinder action-sym))
+(defn >SingleActionFinder [action]
+  (->SingleActionFinder action))
 
 
-(defn looks-like-action? [sym]
-  (let [f @(resolve sym)]
-    (and (fn? f) (= 1 (arity f)))))
+(defn sym-to-action [sym]
+  (let [a @(resolve sym)]
+    (when (and (fn? a) (= 1 (arity a)))
+      a)))
 
 (defn- find-action- [request action-namespaces throw?]
   (let [action-str (?! request [:params :_action])
         finds (find-in-nses action-namespaces action-str)
-        matches (filter looks-like-action? finds)]
-    (if-not (empty? matches)
+        matches (keep sym-to-action finds)]
+    (if (seq matches)
       (first matches)
       (when throw?
         (cond 

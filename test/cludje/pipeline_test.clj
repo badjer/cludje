@@ -45,14 +45,14 @@
 (def output {:price 987})
 (defn action [request] (assoc request :output output))
 (defn just-output-action [request] output)
-(def action-finder (>SingleActionFinder `action))
+(def action-finder (>SingleActionFinder action))
 
 (fact "add-action"
   (let [sys {:action-finder action-finder}
         handler (add-action identity)
         request (assoc raw-request :system sys)]
     (fact "adds :action"
-      (handler request) => (contains {:action-sym `action}))
+      (:action (handler request)) => (exactly action))
     (fact "requires system/action-finder"
       (fact "no system"
         (handler {}) => (throws-error))
@@ -61,7 +61,8 @@
     (fact "returns original data"
       (handler request) => (contains request))))
 
-(def action-request (assoc raw-request :user user :action-sym `action))
+
+(def action-request (assoc raw-request :user user :action action))
 (def mold (>Mold {:price Money} {}))
 (def moldfinder (>SingleMoldFinder mold))
 
@@ -98,7 +99,8 @@
             request (assoc input-request :system unauth-sys)]
         (handler request) => (throws-403)))
     (fact "returns original data"
-      (handler request) => (contains request))))
+      ; Dissoc action cuz midje doesn't like to compare functions to functions
+      (handler request) => (contains (dissoc request :action)))))
 
 
 (defn problem-action [request] (throw-problems {:name "bad"}))
@@ -110,19 +112,20 @@
         request (assoc input-request :system sys)]
     (fact "adds :output"
       (handler request) => (contains {:output anything}))
-    (fact "requires action-sym"
-      (handler (dissoc request :action-sym)) => (throws-error))
+    (fact "requires action"
+      (handler (dissoc request :action)) => (throws-error))
     (fact "calls action"
       (handler request) => (contains {:output output}))
     (fact "returns original data"
-      (handler request) => (contains request))
-    (let [bad-request (assoc request :action-sym `problem-action)]
+      ; Dissoc action cuz midje doesn't like to compare functions to functions
+      (handler request) => (contains (dissoc request :action)))
+    (let [bad-request (assoc request :action problem-action)]
       (fact "has __problems if problems thrown"
         (:output (handler bad-request)) => (contains {:__problems {:name "bad"}}))
       (fact "has original input if problems thrown"
         (:output (handler bad-request)) => (contains input))
       (fact "throws if non-problem exception"
-        (let [err-request (assoc request :action-sym `error-action)]
+        (let [err-request (assoc request :action error-action)]
           (handler err-request) => (throws))))))
 
 (fact "add-output-mold"
@@ -139,7 +142,8 @@
     (fact "doesn't overwrite output-mold if it's already set"
       (handler (assoc request :output-mold 1)) => (contains {:output-mold 1}))
     (fact "returns original data"
-      (handler request) => (contains request))))
+      ; Dissoc action cuz midje doesn't like to compare functions to functions
+      (handler request) => (contains (dissoc request :action)))))
 
 (def result {:price "$9.87"})
 (def output-request (assoc input-request :output output :output-mold mold))
