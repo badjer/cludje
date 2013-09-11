@@ -44,6 +44,49 @@
 (defn ac-companyid [request] 1)
 (def Widgettype (>Model {:companyid Int :name Str}
                         {:modelname "widgettype" :defaults {:companyid ac-companyid}}))
+
+(fact "model-defaults"
+  (model-defaults Widget {}) => {:size 3}
+  (fact "with function"
+    (model-defaults Widgettype {}) => {:companyid 1})
+  (fact "ignores input"
+    (model-defaults Widget {:input {:size 1}}) => {:size 3}))
+
+(fact "build"
+  (build Gear {:input {:teeth 3}}) => {:_id nil :teeth 3}
+  (fact "with defaults"
+    (fact "no input override"
+      (build Widget {:input {:teeth 1}}) => (contains {:size 3 :teeth 1}))
+    (fact "input override"
+      (build Widget {:input {:teeth 1 :size 2}}) => (contains {:size 2 :teeth 1}))))
+
+(def Part (>Model {:size Int} {:modelname "part" 
+                               :partitions [:size]}))
+(def Part-default (>Model {:size Int} {:modelname "part-default"
+                                       :partitions [:size]
+                                       :defaults {:size 1}}))
+(def Part-default-fn (>Model {:size Int} {:modelname "part-default-fn"
+                                       :partitions [:size]
+                                       :defaults {:size ac-companyid}}))
+
+(fact "list-params"
+  (fact "defaults to nothing"
+    (list-params Gear {}) => {})
+  (fact "ignores defaults"
+    (list-params Widget {}) => {})
+  (fact "with partitions"
+    (list-params Part {:input {:size 1}}) => {:size 1}
+    (fact "if not supplied, throw problems"
+      (list-params Part {:input {}}) => (throws-problems))
+    (fact "and defaults"
+      (list-params Part-default {:input {}}) => {:size 1}
+      (fact "and default function"
+        (list-params Part-default-fn {:input {}}) => {:size 1}))))
+
+
+
+
+
 (def-crud-actions Widgettype)
 
 (fact "crud defaults"
@@ -138,7 +181,12 @@
 
 
 (facts "with-crud-dsl"
-  (with-crud-dsl (>sys-request)
+  (let [request (assoc (>sys-request) :input {:teeth 4})]
+  (with-crud-dsl request
     (fact "defines with-lookup"
-      (with-lookup {} Widget) =not=> (throws))))
+      (with-lookup {} Widget) =not=> (throws))
+    (fact "defines build"
+      (build Gear) =not=> (throws))
+    (fact "defines create"
+      (create Gear) =not=> (throws)))))
 

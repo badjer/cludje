@@ -37,6 +37,8 @@
 (facts "just-item?"
   [{:a 1}] => (just-item? {:a 1})
   [{:a 1 :b 1}] => (just-item? {:a 1})
+  '({:a 1 :b 1}) => (just-item? {:a 1})
+  (seq [{:a 1}]) => (just-item? {:a 1})
   [{:a 1} {:z 1}] =not=> (just-item? {:a 1})
   1 =not=> (just-item? {:a 1})
   nil =not=> (just-item? {:a 1})

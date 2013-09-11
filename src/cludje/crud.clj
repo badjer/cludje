@@ -4,7 +4,9 @@
         cludje.system
         cludje.model
         cludje.mold
-        cludje.types))
+        cludje.errors
+        cludje.types)
+  (:require [cludje.validate :as vali]))
 
 (def crud-actions [:new :add :show :edit :alter :delete :list])
 
@@ -37,7 +39,7 @@
 (defn realize-map [request m]
   (into {} (for [[k v] m] [k (realize-one request v)])))
 
-(defn default-list-params [model request]
+(defn- default-list-params [model request]
   (let [parts (partitions model)
         defaults (field-defaults model)]
     ; This is a bit complicated because of optimization
@@ -55,14 +57,18 @@
       parts)))
 
 (defn list-params [model request]
-  (let [default-params (default-list-params model request)
+  (let [parts (partitions model)
+        default-params (default-list-params model request)
         input (?? request :input)
         parsed (parse model input)
         supplied-parts (clojure.set/intersection
                          (set (partitions model))
                          (set (keys input)))
-        input-parts (select-keys parsed supplied-parts)]
-    (merge default-params input-parts)))
+        input-parts (select-keys parsed supplied-parts)
+        res (merge default-params input-parts)]
+    (when-let [probs (apply vali/needs res parts)]
+      (throw-problems probs))
+    res))
 
 
 (defn model-defaults [model request]
@@ -79,10 +85,14 @@
         paras (merge defs input)]
     (make model paras)))
 
+(defn create [model request]
+  "Build, then save"
+  (let [store (?! request [:system :data-store])]
+    (save store model (build model request))))
+
 
 (defn crud-model-list [model request]
-  (let [input (?? request :input)
-        listkee (keyword (str (tablename model) "s"))
+  (let [listkee (keyword (str (tablename model) "s"))
         query-paras (list-params model request)]
     (with-action-dsl request
       {listkee (query model query-paras)})))
@@ -94,9 +104,8 @@
 
 (defn crud-model-add [model request]
   (with-action-dsl request
-    (let [built (build model request)]
-      (-> (insert model built)
-          (with-alert :success "Saved")))))
+    (-> (create model request)
+        (with-alert :success "Saved"))))
 
 (defn crud-model-show [model request]
   (let [keyfield (keyname model)]
@@ -150,6 +159,8 @@
     (merge lookup-res m)))
 
 (defmacro with-crud-dsl [request & forms]
-  `(let [~'with-lookup (partial with-lookup ~request)
-         ~'build #(build % ~request)]
-     ~@forms))
+  `(with-action-dsl ~request
+    (let [~'with-lookup (partial with-lookup ~request) 
+          ~'build #(build % ~request)
+          ~'create #(create % ~request)]
+      ~@forms)))
