@@ -20,7 +20,6 @@
    :logger (>TestLogger)
    :data-store (>TestDatastore)
    :emailer (>TestEmailer)
-   :server (>TestServer)
    })
 
 
@@ -30,37 +29,13 @@
       (assoc :port 8888)))
 
 
-; Define pipelines
-(defn >test-pipeline [system]
-  (-> identity
-      (add-output)
-      (add-output-mold)
-      (add-result)
-      (add-input)
-      (add-action)
-      (add-system system)))
-
-
-(defn >api-pipeline [system]
-  (-> identity
-      (add-output)
-      (add-output-mold)
-      (add-result)
-      (authorize)
-      (add-input)
-      (add-action)
-      (add-authenticate)
-      (add-system system)))
-
 ; System functions
 (defn start-system [system]
-  (let [server (?! system :server)
-        handler (>api-pipeline system)]
-    (start server system handler)
-    system))
+  (when-let [server (? system :server)]
+    (start server system))
+  system)
 
 (defn stop-system [system]
-  (let [server (?! system :server)]
-    (stop server)
-    system))
-
+  (when-let [server (? system :server)]
+    (stop server))
+  system)

@@ -14,7 +14,7 @@
 
 (def action-finder (>NSActionFinder 'cludje.crud-test))
 
-(defn >request []
+(defn >sys-request []
   {:system {:data-store (>TestDatastore)
             :action-finder action-finder}})
 
@@ -24,7 +24,7 @@
 
 
 (fact "crud actions"
-  (let [request (>request)
+  (let [request (>sys-request)
         kees (crud-model-add Gear (>in request gear))]
     kees => (has-keys :_id)
     (count (crud-model-list Gear request)) => 1
@@ -47,7 +47,7 @@
 (def-crud-actions Widgettype)
 
 (fact "crud defaults"
-  (let [request (>request)]
+  (let [request (>sys-request)]
     (fact "new sets defaults"
       (new-widget request) => (contains {:size 3}))
     (fact "add sets defaults"
@@ -55,7 +55,7 @@
         id => ok?
         (show-widget (>in request id)) => (contains {:teeth 2 :size 3})))
     (fact "set defaults with fn"
-      (new-widgettype (>request)) => (contains {:companyid 1}))))
+      (new-widgettype (>sys-request)) => (contains {:companyid 1}))))
 
 
 (def Geartype (>Model {:name Str :isarchived Bool}
@@ -65,7 +65,7 @@
 (def-crud-actions Geartype)
 
 (fact "def-crud-actions with lookup model"
-  (let [request (>request)
+  (let [request (>sys-request)
         kees (add-geartype (>in request geartype))]
     (fact "new- automatically sets isarchived"
       (new-geartype request) => (contains {:isarchived false}))
@@ -84,7 +84,7 @@
   (with-lookup request {} Widgettype))
 
 (fact "with-lookup"
-  (let [request (>request)]
+  (let [request (>sys-request)]
     ; Set up our test data
     (add-geartype (>in request {:name "A"})) => ok?
     (let [res (ac-with-lookup request)]
@@ -107,7 +107,7 @@
 (def-crud-actions Sprockettype)
 
 (fact "partitions makes model-list include selector"
-  (let [request (>request)]
+  (let [request (>sys-request)]
     (add-sprockettype (>in request {:name "A" :companyid 1})) => ok?
     (add-sprockettype (>in request {:name "B" :companyid 2})) => ok?
     (let [sres1 (list-sprockettype (>in request {:companyid 1})) 
@@ -130,7 +130,7 @@
 (def-crud-actions Footype)
 
 (fact "partitions makes model-list include selector default - default is wrong type"
-  (let [request (>request)]
+  (let [request (>sys-request)]
     (add-footype (>in request {:name "A" :companyid "1"})) => ok?
     (add-footype (>in request {:name "B" :companyid "2"})) => ok?
     (let [res (list-footype request)]
@@ -138,7 +138,7 @@
 
 
 (facts "with-crud-dsl"
-  (with-crud-dsl (>request)
+  (with-crud-dsl (>sys-request)
     (fact "defines with-lookup"
       (with-lookup {} Widget) =not=> (throws))))
 

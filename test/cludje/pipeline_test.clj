@@ -9,15 +9,17 @@
         cludje.moldfind
         cludje.types
         cludje.mold
+        cludje.model
+        cludje.application
         cludje.pipeline))
 
 
 (def input {:price "$1.23"})
 (def raw-request {:params input})
 
-(fact "add-system"
+(fact "in-system"
   (let [sys {:a 1}
-        handler (add-system identity sys)
+        handler (in-system identity sys)
         request raw-request]
     (fact "adds :system"
       (handler request) => (contains {:system sys}))
@@ -157,3 +159,18 @@
       (handler (dissoc request :output-mold)) => (throws-error))
     (fact "requires output"
       (handler (dissoc request :output)) => (throws-error))))
+
+
+(def cog (>Model {:name Str} {:modelname "cog"}))
+
+(defn new-cog [request] (assoc request :output {:name "A"}))
+
+(def system-args {:action-namespaces ['cludje.pipeline-test] 
+                  :mold-namespaces ['cludje.pipeline-test]})
+
+(fact "api-pipeline"
+  (let [system (>test-system system-args)
+        ap (in-system api-pipeline system)]
+  (fact "works end-to-end" 
+    (ap {:params {:_action :new-cog}}) => (contains {:result {:name "A"}}))))
+

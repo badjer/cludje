@@ -53,7 +53,7 @@
   (find-output-mold [self context]))
 
 (defprotocol IServer
-  (start [self system pipeline])
+  (start [self system])
   (stop [self]))
 
 (defprotocol ITemplateFinder

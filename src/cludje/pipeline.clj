@@ -5,62 +5,77 @@
         cludje.run
         cludje.system))
 
-(defn add-system [f system]
+(defn in-system [pipeline system]
   (fn [request]
     (-> request
         (assoc :system system)
-        (f))))
+        (pipeline))))
 
-(defn add-authenticate [f]
+
+
+
+
+(defn add-authenticate [pipeline]
   (fn [request]
     (let [authenticator (?! request [:system :authenticator])
           user (current-user authenticator request)]
       (-> request
           (assoc :user user)
-          (f)))))
+          (pipeline)))))
 
-(defn add-action [f]
+(defn add-action [pipeline]
   (fn [request]
     (let [finder (?! request [:system :action-finder])
           action (find-action finder request)]
       (-> request
           (assoc :action action)
-          (f)))))
+          (pipeline)))))
 
-(defn add-input [f]
+(defn add-input [pipeline]
   (fn [request]
     (let [params (?! request :params)]
       (-> request
           (assoc :input params)
-          (f)))))
+          (pipeline)))))
 
-(defn authorize [f]
+(defn authorize [pipeline]
   (fn [request]
     (let [authorizer (?! request [:system :authorizer])
           ok? (can? authorizer request)]
       (if-not ok?
         (throw-unauthorized)
-        (f request)))))
+        (pipeline request)))))
 
-(defn add-output [f]
+(defn add-output [pipeline]
   (fn [request]
     (let [action (?! request :action)
           done-request (run-action action request)]
-      (f done-request))))
+      (pipeline done-request))))
 
-(defn add-output-mold [f]
+(defn add-output-mold [pipeline]
   (fn [request]
-    (let [done-request (f request)]
+    (let [done-request (pipeline request)]
       (if (:output-mold done-request)
         done-request
         (let [moldfinder (?! done-request [:system :mold-finder]) 
               output-mold (find-output-mold moldfinder done-request)] 
           (assoc done-request :output-mold output-mold))))))
 
-(defn add-result [f]
+(defn add-result [pipeline]
   (fn [request]
-    (let [done-request (f request)
+    (let [done-request (pipeline request)
           output-mold (?! done-request :output-mold)
           output (?! done-request :output)
           prepared (show output-mold output)]
       (assoc done-request :result prepared))))
+
+(def api-pipeline
+  (-> identity
+      (add-output)
+      (add-output-mold)
+      (add-result)
+      (authorize)
+      (add-input)
+      (add-action)
+      (add-authenticate)))
+

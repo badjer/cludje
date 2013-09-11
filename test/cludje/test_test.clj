@@ -3,6 +3,8 @@
         cludje.types
         cludje.model
         cludje.errors
+        cludje.application
+        cludje.pipeline
         midje.sweet))
 
 (fact "has-keys"
@@ -128,4 +130,35 @@
   {:status 200} => (status 200)
   {:status 400} =not=> (status 200)
   {} =not=> (status 200))
+
+
+(defn action [request]
+  (:input request))
+
+(defn set-session [request]
+  (let [new-val (get-in request [:input :a])]
+    (-> request
+        (assoc :output {}) 
+        (assoc-in [:session :a] new-val))))
+
+(defn get-session [request]
+  {:a (get-in request [:session :a])})
+
+(fact "run"
+  (let [system (>test-system {})
+        in-sys (in-system action-pipeline system)
+        session (atom {})
+        in-sess (in-session in-sys session)]
+    (fact "in-system"
+      (run in-sys action {:a 1}) => {:a 1})
+    (fact "in-session"
+      (run in-sess action {:a 1}) => {:a 1}
+      (fact "persists session"
+        (run in-sess get-session {}) => {:a nil}
+        @session => {}
+        (run in-sess set-session {:a 2}) => anything
+        @session => {:a 2}
+        (run in-sess get-session {}) => {:a 2}
+      ))))
+
 

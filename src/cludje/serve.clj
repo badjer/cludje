@@ -1,36 +1,12 @@
 (ns cludje.serve
   (:use cludje.system
         cludje.util
+        cludje.pipeline
         cludje.web)
   (:require [ring.adapter.jetty :as jetty]
             [cheshire.core :as cheshire]
             [ring.util.response :as response])
   (:import [org.eclipse.jetty.server.handler GzipHandler]))
-
-
-(defrecord TestServer [default-session output-selector session]
-  IServer
-  (start [self system pipeline]
-    "Returns a function that takes input, constructs
-     a request from it, assocs it with session, passes
-     it to handler, and returns the result.
-     Session will be persisted between requests until
-     the server is stopped"
-    (reset! session @default-session)
-    (fn [input]
-      (let [res (pipeline {:params input :session @session})]
-        (when-let [out-session (:session res)]
-          (reset! session out-session))
-        (@output-selector res))))
-  (stop [self]
-    (reset! session nil)))
-
-(defn >TestServer 
-  ([] (>TestServer {}))
-  ([default-session] (>TestServer default-session :result))
-  ([default-session output-selector]
-   (->TestServer (atom default-session) (atom output-selector) (atom nil))))
-
 
 (defn- jetty-configurator [server]
   "Ask Jetty to gzip."
@@ -56,22 +32,25 @@
   (fn [request]
     (render-json (f request))))
 
-(defn >web-handler [pipeline]
+(defn >web-handler [pipeline system]
   (-> pipeline
+      (in-system system)
       (wrap-render-json)
       (wrap-web-exception-handling)
       (wrap-ring-middleware)))
 
-(defrecord JettyServer [jetty-instance]
+(defrecord JettyServer [pipeline system-atom jetty-instance]
   IServer
-  (start [self system pipeline]
-    (let [web-handler (>web-handler pipeline)]
+  (start [self system]
+    (reset! system-atom system)
+    (let [web-handler (>web-handler pipeline system)]
       (reset! jetty-instance 
               (jetty/run-jetty web-handler (jetty-opts system)))))
   (stop [self]
     (when @jetty-instance 
       (.stop @jetty-instance))))
 
-(defn >JettyServer []
-  (->JettyServer (atom nil)))
+(defn >JettyServer 
+  ([] (>JettyServer api-pipeline))
+  ([pipeline] (->JettyServer pipeline (atom nil) (atom nil))))
 

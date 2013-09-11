@@ -30,41 +30,9 @@
 (def session {:a 1})
 (def input {:b 1})
 
-(fact ">TestServer"
-  (let [ts (>TestServer {:a 1})]
-    (satisfies? IServer ts) => true
-    (fact "Sets :params"
-      (let [exec (start ts nil params-handler)]
-        (exec input) => input))
-    (fact "Sets :session"
-      (let [exec (start ts nil session-handler)]
-        (exec input) => session))
-    (fact "Persists session between requests"
-      (let [exec (start ts nil inc-cog)]
-        (exec {}) => {:ses {:a 1}}
-        (exec {:inc 1}) => anything
-        (exec {}) => {:ses {:a 2}}))
-    (fact "Resetting clears session"
-      (let [exec (start ts nil inc-cog)]
-        (exec {:inc 1}) => anything
-        (exec {}) => {:ses {:a 2}}
-        (stop ts) => anything
-        (let [exec (start ts nil inc-cog)]
-          (exec {}) => {:ses {:a 1}})))))
 
 (defn new-widget [request] {:output {:price 100} :result {:price "$1.00"}})
 
-(fact ">TestServer"
-  (fact "when outputing result"
-    (let [ts (>TestServer {} :result)
-          exec (start ts nil new-widget)]
-      (fact "returns result"
-        (exec {}) => {:price "$1.00"}))
-  (fact "when outputing output"
-    (let [ts (>TestServer {} :output)
-          exec (start ts nil new-widget)]
-      (fact "returns output"
-        (exec {}) => {:price 100})))))
 
 (def req {:url "http://localhost:8099"})
 (def port-sys {:port 8099})
@@ -73,8 +41,8 @@
 (defn static-handler [request] (assoc request :result result))
 
 (facts ">JettyServer"
-  (let [serv (>JettyServer)]
-    (start serv port-sys static-handler) => anything 
+  (let [serv (>JettyServer static-handler)]
+    (start serv port-sys) => anything 
     (do-request req) => (contains {:status 200})
     (stop serv) => anything
     (do-request) => (throws)))
@@ -103,10 +71,11 @@
                  :mold-namespaces ['cludje.serve-test]})
 
 (facts ">JettyServer"
-  (let [sys (with-web (>test-system sys-config))
-        handler (>api-pipeline sys)
+  (let [sys (-> (>test-system sys-config)
+                (with-web)
+                (merge port-sys))
         server (>JettyServer)]
-    (start server port-sys handler) => anything
+    (start server sys) => anything
     (fact "handles GET request"
       (do-request get-req) => (body {:name "A"}))
     (fact "handles JSON input"
