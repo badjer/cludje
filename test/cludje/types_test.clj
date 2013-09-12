@@ -145,6 +145,8 @@
 
 (fact "Date"
   (parse Date "1970-01-01") => 0 
+  (parse Date 0) => 0
+  (parse Date 1) => 0
   (parse Date "1970-01-02") => 86400000 
   (parse Date "2013-02-20") => feb20
   ; Illegal values give nil
@@ -152,11 +154,11 @@
   (parse Date true) => nil
   (parse Date "") => nil
   (parse Date nil) => nil
-  (show Date feb20) => "Wed Feb 20" 
+  (show Date feb20) => "2013-02-20" 
   (show Date nil) => nil 
-  (show Date (+ feb20 10000)) => "Wed Feb 20"
+  (show Date (+ feb20 10000)) => "2013-02-20"
   (facts "show Date with different year shows year" 
-    (show Date (parse Date "2008-01-21")) => "Jan 21, 2008")
+    (show Date (parse Date "2008-01-21")) => "2008-01-21")
   (validate Date nil) => truthy
   (validate Date "") => truthy
   (validate Date feb20) => truthy
@@ -309,7 +311,7 @@
 (fact "date-range"
   (let [day (ts-from-date 2013 7 15)
         res (date-range day -1 1)]
-    (map :text res) => ["Sun Jul 14" "Mon Jul 15" "Tue Jul 16"]
+    (map :text res) => ["2013-07-14" "2013-07-15" "2013-07-16"]
     (map :val res) => [(- day one-day) day (+ day one-day)]))
 
 (fact "time-range"

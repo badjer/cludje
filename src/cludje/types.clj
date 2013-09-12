@@ -1,5 +1,8 @@
 (ns cludje.types
-  (:require [clojure.string :as s]))
+  (:require [clojure.string :as s]
+            [clj-time.coerce :as time-coerce]
+            [clj-time.local :as time-local]
+            [clj-time.core :as t]))
 
 (defprotocol IParseable
   (parse [self in] "Should always return a value (even nil) and never throw"))
@@ -198,6 +201,7 @@
         "Not a true/false value"))))
 
 
+
 (def one-minute (* 60 1000))
 (def one-hour (* 60 one-minute))
 (def one-day (* 24 one-hour))
@@ -312,12 +316,20 @@
         (str (get days-of-week (day-of-week ts)) " "
              (get months (month ts)) " " (day ts))))))
 
+(defn- iso-date-str [ts]
+  (when ts
+    (str (year ts) "-" (to-2-digit (month ts)) "-" (to-2-digit (day ts)))))
+
 (def Date
   (reify 
     IParseable
-    (parse [self txt] (just-date (to-time txt)))
+    (parse [self txt] 
+      (when (satisfies? time-coerce/ICoerce txt)
+        (-> txt
+            (time-coerce/to-local-date)
+            (time-coerce/to-long))))
     IShowable
-    (show [self x] (date-str x))
+    (show [self x] (iso-date-str x))
     IValidateable
     (problems? [self txt]
       (cond
