@@ -1,6 +1,10 @@
 (ns cludje.util
   (:use cludje.errors))
 
+(defn today [] 
+  (doto (java.util.Date.) 
+    (.setHours 0)))
+
 (defn map-vals [m f]
   (into {} (for [[k v] m] [k (f v)])))
 

@@ -1,6 +1,7 @@
 (ns cludje.types-test
   (:use midje.sweet
         cludje.test
+        cludje.util
         cludje.types))
 
 (fact "value?"
@@ -144,8 +145,6 @@
 (def feb20 1361318400000)
 (def feb19 (- feb20 one-day))
 (def feb21 (+ feb20 one-day))
-(def today (doto (java.util.Date.)
-              (.setHours 0)))
 
 (fact "Date"
   (parse Date "1970-01-01") => 0 
@@ -157,13 +156,13 @@
   (parse Date "2013-02-20T23:00:00.000Z") => feb20
   (parse Date "2013-02-21T01:00:00.000Z") => feb21
   (parse Date "2013-02-19T23:00:00.000Z") => feb19
-  (show Date (parse Date today)) => #"2013-09-12T.*Z"
+  (show Date (parse Date (today))) => "2013-09-12"
   ; Illegal values give nil
   (parse Date "asdf") => nil
   (parse Date true) => nil
   (parse Date "") => nil
   (parse Date nil) => nil
-  (show Date feb20) => "2013-02-20T00:00:00.000Z" 
+  (show Date feb20) => "2013-02-20" 
   (show Date nil) => nil 
   (validate Date nil) => truthy
   (validate Date "") => truthy
@@ -317,9 +316,7 @@
 (fact "date-range"
   (let [day (ts-from-date 2013 7 15)
         res (date-range day -1 1)]
-    (map :text res) => ["2013-07-14T00:00:00.000Z" 
-                        "2013-07-15T00:00:00.000Z" 
-                        "2013-07-16T00:00:00.000Z"]
+    (map :text res) => ["2013-07-14" "2013-07-15" "2013-07-16"]
     (map :val res) => [(- day one-day) day (+ day one-day)]))
 
 (fact "time-range"
