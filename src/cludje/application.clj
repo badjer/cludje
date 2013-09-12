@@ -25,17 +25,5 @@
 
 (defn with-web [system]
   (-> system
-      (assoc :server (>JettyServer))
       (assoc :port 8888)))
 
-
-; System functions
-(defn start-system [system]
-  (when-let [server (? system :server)]
-    (start server system))
-  system)
-
-(defn stop-system [system]
-  (when-let [server (? system :server)]
-    (stop server))
-  system)

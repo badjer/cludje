@@ -94,3 +94,4 @@
       ))
     (fact "Resetting clears session")
     (stop server) => anything))
+

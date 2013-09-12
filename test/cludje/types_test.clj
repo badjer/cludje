@@ -142,6 +142,10 @@
 
 
 (def feb20 1361318400000)
+(def feb19 (- feb20 one-day))
+(def feb21 (+ feb20 one-day))
+(def today (doto (java.util.Date.)
+              (.setHours 0)))
 
 (fact "Date"
   (parse Date "1970-01-01") => 0 
@@ -149,16 +153,18 @@
   (parse Date 1) => 0
   (parse Date "1970-01-02") => 86400000 
   (parse Date "2013-02-20") => feb20
+  (parse Date "2013-02-20T07:00:00.000Z") => feb20
+  (parse Date "2013-02-20T23:00:00.000Z") => feb20
+  (parse Date "2013-02-21T01:00:00.000Z") => feb21
+  (parse Date "2013-02-19T23:00:00.000Z") => feb19
+  (show Date (parse Date today)) => #"2013-09-12T.*Z"
   ; Illegal values give nil
   (parse Date "asdf") => nil
   (parse Date true) => nil
   (parse Date "") => nil
   (parse Date nil) => nil
-  (show Date feb20) => "2013-02-20" 
+  (show Date feb20) => "2013-02-20T00:00:00.000Z" 
   (show Date nil) => nil 
-  (show Date (+ feb20 10000)) => "2013-02-20"
-  (facts "show Date with different year shows year" 
-    (show Date (parse Date "2008-01-21")) => "2008-01-21")
   (validate Date nil) => truthy
   (validate Date "") => truthy
   (validate Date feb20) => truthy
@@ -311,7 +317,9 @@
 (fact "date-range"
   (let [day (ts-from-date 2013 7 15)
         res (date-range day -1 1)]
-    (map :text res) => ["2013-07-14" "2013-07-15" "2013-07-16"]
+    (map :text res) => ["2013-07-14T00:00:00.000Z" 
+                        "2013-07-15T00:00:00.000Z" 
+                        "2013-07-16T00:00:00.000Z"]
     (map :val res) => [(- day one-day) day (+ day one-day)]))
 
 (fact "time-range"

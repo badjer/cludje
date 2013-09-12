@@ -1,15 +1,20 @@
 (ns user
   (:use cludje.datastore 
         cludje.application
+        cludje.system
+        cludje.serve
         midje.repl)
   (:require [clojure.java.io :as io]
+            [cludje.demo.actions]
+            [cludje.demo.models]
             [clojure.string :as s]
             [clojure.pprint :refer (pprint)]
             [clojure.repl :refer :all]
             [clojure.test :as test]
             [clojure.tools.namespace.repl :refer (refresh refresh-all)]))
 
-(def system nil)
+(def system (atom nil))
+(def server (atom nil))
 
 (defn get-db []
   (when-let [ds (slurp-testdatastore "db.txt")]
@@ -27,35 +32,28 @@
   (merge
     (with-web (>test-system config))
     (get-db)
-    {:port 8088}))
+    {:port 8086}))
 
-(defn init
+(defn init []
   "Constructs the current development system."
-  []
-  (alter-var-root #'system (fn [s] (>system))))
+  (reset! server (>JettyServer))
+  (reset! system (>system)))
 
-(defn start
+(defn begin []
   "Starts the current development system."
-  []
-  (alter-var-root #'system 
-                  (fn [s]
-                    (if-not [s]
-                      (println "System wasn't init'd.")
-                      (start-system s)))))
+  (start @server @system))
 
-(defn stop
+(defn end []
   "Shuts down and destroys the current development system."
-  []
-  (alter-var-root #'system
-    (fn [s] (when s (stop-system s)))))
+  (stop @server))
 
 (defn go
   "Initializes the current development system and starts it running."
   []
   (init)
-  (start))
+  (begin))
 
 (defn reset []
   (put-db)
-  (stop)
+  (end)
   (refresh :after 'user/go))

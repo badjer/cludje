@@ -329,7 +329,7 @@
             (time-coerce/to-local-date)
             (time-coerce/to-long))))
     IShowable
-    (show [self x] (iso-date-str x))
+    (show [self x] (time-coerce/to-string x))
     IValidateable
     (problems? [self txt]
       (cond
