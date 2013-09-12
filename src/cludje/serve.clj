@@ -37,7 +37,7 @@
       (in-system system)
       (wrap-render-json)
       (wrap-web-exception-handling)
-      (wrap-ring-middleware)))
+      (wrap-ring-middleware system)))
 
 (defrecord JettyServer [pipeline system-atom jetty-instance]
   IServer
