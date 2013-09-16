@@ -1,9 +1,14 @@
 (ns cludje.util
-  (:use cludje.errors))
+  (:use cludje.errors)
+  (:require [clj-time.core :as t]
+            [clj-time.coerce :as time-coerce]))
 
-(defn today [] 
-  (doto (java.util.Date.) 
-    (.setHours 0)))
+(defn today
+  ([] (time-coerce/to-long (t/today)))
+  ([year month day] (time-coerce/to-long (t/local-date year month day))))
+;(defn today [] 
+;  (doto (java.util.Date.) 
+;    (.setHours 0)))
 
 (defn map-vals [m f]
   (into {} (for [[k v] m] [k (f v)])))

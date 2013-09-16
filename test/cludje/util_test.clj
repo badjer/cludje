@@ -71,3 +71,8 @@
     {:a 1 :__alerts [{:type :info :text "hi"}]}
   (-> {} (with-alert :info "hi")) => (has-alert :info #"hi"))
 
+(fact "today"
+  (today) => 1379203200000
+  (today 1970 1 1) => 0
+  (today 2013 9 15) => 1379203200000)
+

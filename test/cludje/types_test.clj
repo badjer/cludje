@@ -156,7 +156,6 @@
   (parse Date "2013-02-20T23:00:00.000Z") => feb20
   (parse Date "2013-02-21T01:00:00.000Z") => feb21
   (parse Date "2013-02-19T23:00:00.000Z") => feb19
-  (show Date (parse Date (today))) => "2013-09-12"
   ; Illegal values give nil
   (parse Date "asdf") => nil
   (parse Date true) => nil
