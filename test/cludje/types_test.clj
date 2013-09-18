@@ -100,7 +100,9 @@
         cs "$0.67"
         cv 67]
     (show Money dv) => ds
+    (show Money ds) => ds
     (show Money dcv) => dcs
+    (show Money dcs) => dcs
     (show Money nil) => nil
     (parse Money ds) => dv
     (parse Money dv) => dv
@@ -128,7 +130,9 @@
   (let [true-vals [true "true" "True" "t" "T" "yes" "Yes" "y" "Y" 1]
         false-vals [false "false" "False" "f" "F" "no" "No" "n" "N" 0]]
     (show Bool true) => "yes"
+    (show Bool "yes") => "yes"
     (show Bool false) => "no"
+    (show Bool "no") => "no"
     (show Bool nil) => nil
     (for [v true-vals]
       (parse Bool v) => true)
@@ -162,6 +166,7 @@
   (parse Date "") => nil
   (parse Date nil) => nil
   (show Date feb20) => "2013-02-20" 
+  (show Date "2013-02-20") => "2013-02-20"
   (show Date nil) => nil 
   (validate Date nil) => truthy
   (validate Date "") => truthy
@@ -195,6 +200,7 @@
   (show Time oh-one-am) => "12:01 AM"
   (show Time one-oh-one-pm) => "01:01 PM"
   (show Time (+ feb20 oh-one-am)) => "12:01 AM"
+  (show Time "12:01 AM") => "12:01 AM"
   (show Time nil) => nil
   (validate Time nil) => truthy
   (validate Time "") => truthy
@@ -226,6 +232,7 @@
   (show Timespan fifteen-min) => "0.25"
   (show Timespan thirteen-hour) => "13.00"
   (show Timespan (+ thirteen-hour fifteen-min)) => "13.25"
+  (show Timespan "13.25") => "13.25"
   (show Timespan nil) => nil
   (validate Timespan nil) => truthy
   (validate Timespan "") => truthy
@@ -258,6 +265,7 @@
   (show DateTime oh-one-am) => "12:01 AM"
   (show DateTime one-oh-one-pm) => "01:01 PM"
   (show DateTime (+ feb20 oh-one-am)) => "12:01 AM"
+  (show DateTime "12:01 AM") => "12:01 AM"
   (show DateTime nil) => nil
   (validate DateTime nil) => truthy
   (validate DateTime "") => truthy

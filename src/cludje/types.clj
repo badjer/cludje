@@ -167,7 +167,7 @@
                   decversion (to-decimal numstr)]
               (to-int (* 100 decversion))))))
     IShowable
-    (show [self x] (money-str x))
+    (show [self x] (money-str (parse Money x)))
     IValidateable
     (problems? [self txt]
       (cond
@@ -182,17 +182,20 @@
       (cond
         (= java.lang.Boolean (type txt)) txt
         (empty? txt) nil
-        1 true
-        true true
-        false false
-        0 false
+        (= txt 1) true
+        (= txt true) true
+        (= txt false) false
+        (= txt 0) false
         (re-find #"^[Yy](es)?$" (str txt)) true
         (re-find #"^[tT](rue)?$" (str txt)) true
         (re-find #"^[Nn](o)?$" (str txt)) false
         (re-find #"^[fF](alse)$" (str txt)) false
         :else nil))
     IShowable
-    (show [self x] (when-not (nil? x) (if x "yes" "no")))
+    (show [self x]
+      (when-not (nil? x)
+        (let [v (parse Bool x)]
+          (if v "yes" "no"))))
     IValidateable
     (problems? [self txt]
       (cond
@@ -329,7 +332,7 @@
             (time-coerce/to-local-date)
             (time-coerce/to-long))))
     IShowable
-    (show [self x] (iso-date-str x))
+    (show [self x] (iso-date-str (parse Date x)))
     IValidateable
     (problems? [self txt]
       (cond
@@ -361,7 +364,7 @@
     IParseable
     (parse [self txt] (to-time txt))
     IShowable
-    (show [self x] (when-not (nil? x) (time-str x)))
+    (show [self x] (when-not (nil? x) (time-str (parse Time x))))
     IValidateable
     (problems? [self txt]
       (cond
@@ -399,7 +402,7 @@
     IParseable
     (parse [self txt] (to-time txt))
     IShowable
-    (show [self x] (when-not (nil? x) (duration-str x)))
+    (show [self x] (when-not (nil? x) (duration-str (parse Timespan x))))
     IValidateable
     (problems? [self txt]
       (cond
@@ -423,7 +426,7 @@
     IParseable
     (parse [self txt] (to-time txt))
     IShowable
-    (show [self x] (when-not (nil? x) (time-str x)))
+    (show [self x] (when-not (nil? x) (time-str (parse DateTime x))))
     IValidateable
     (problems? [self txt]
       (cond
