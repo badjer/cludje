@@ -8,7 +8,7 @@
   (:require [clojure.string :as s]))
 
 (defn- add-output-fields [mold]
-  (>Mold {:_ mold :__problems Anything} {}))
+  (>Mold {:_ mold :__problems Anything :__alerts Anything} {}))
 
 (defrecord SingleMoldFinder [mold]
   IMoldFinder
