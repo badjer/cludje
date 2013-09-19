@@ -267,22 +267,22 @@
                    [time-match duration-match duration-dec-match
                     date-match number-match]))))
 
-(defn- year [ts]
+(defn year [ts]
   (when-let [d (new-date ts)]
     (.get d java.util.Calendar/YEAR)))
-(defn- month [ts]
+(defn month [ts]
   (when-let [d (new-date ts)]
     (+ 1 (.get d java.util.Calendar/MONTH))))
-(defn- day [ts]
+(defn day [ts]
   (when-let [d (new-date ts)]
     (.get d java.util.Calendar/DAY_OF_MONTH)))
-(defn- hour [ts]
+(defn hour [ts]
   (when-let [d (new-date ts)]
     (.get d java.util.Calendar/HOUR_OF_DAY)))
-(defn- minute [ts]
+(defn minute [ts]
   (when-let [d (new-date ts)]
     (.get d java.util.Calendar/MINUTE)))
-(defn- day-of-week [ts]
+(defn day-of-week [ts]
   (when-let [d (new-date ts)]
     (.get d java.util.Calendar/DAY_OF_WEEK)))
 
@@ -309,6 +309,8 @@
              "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"])
 
 (def days-of-week ["" "Sun" "Mon" "Tue" "Wed" "Thu" "Fri" "Sat"])
+
+(def full-days-of-week ["" "Sunday" "Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday"])
 
 (defn- date-str [ts]
   (when ts

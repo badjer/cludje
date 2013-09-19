@@ -174,6 +174,17 @@
   (validate Date "2013-02-20") => truthy
   (validate Date "abc") => falsey)
 
+(def testday (parse Date "2013-09-18"))
+
+(fact "Date util methods"
+  (fact "day-of-week"
+    (day-of-week testday) => 4)
+  (fact "days-of-week"
+    (days-of-week (day-of-week testday)) => "Wed")
+  (fact "full-days-of-week"
+    (full-days-of-week (day-of-week testday)) => "Wednesday")
+  )
+
 (def oh-one-am 60000)
 (def one-oh-one-pm 46860000)
 
