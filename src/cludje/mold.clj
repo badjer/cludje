@@ -53,12 +53,11 @@
 
 (defn- show- [mold input]
   (if (and (map? input) (not (empty? input)))
-    (let [kees (keys input) 
-          fields (select-keys (fields mold) kees)] 
-      (->>
-        (into {} (for [[field typ] fields] 
-                   [field (show typ (get input field))]))
-        (show-computed- mold)))
+    (let [kees (concat (keys input) (keys (computed-fields mold)))
+          fields (select-keys (fields mold) kees)
+          output (show-computed- mold input)]
+      (into {} (for [[field typ] fields] 
+                 [field (show typ (get output field))])))
     {}))
 
 (defn extend-ishowable [mold]

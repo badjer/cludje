@@ -37,7 +37,7 @@
       (fact "with a fn"
         (let [m (>Mold fs {:defaults {:name getx}})]
           (field-defaults m) => {:name "x"})))
-    (future-facts "field-defaults takes context as argument so we can use fns for defalts")
+    (future-facts "field-defaults takes context as argument so we can use fns for defaults")
 
     (fact "required-fields"
       (let [m (>Mold fs {:required [:name]})]
@@ -164,13 +164,19 @@
 
 (defn fullname [{:keys [firstname lastname]}]
   (str firstname " " lastname))
+(defn span [{:keys [start end]}]
+  (- end start))
 
-(def Person (>Mold {:firstname Str :lastname Str} {:computed {:fullname fullname}}))
+(def Person (>Mold {:firstname Str :lastname Str :fullname Str} {:computed {:fullname fullname}}))
 (def person {:firstname "A" :lastname "B"})
+(def Times (>Mold {:start Time :end Time :span Timespan} {:computed {:span span}}))
+(def times {:start 0 :end 3600000})
 
 (fact "can have computed fields in display"
   (fact "keeps original fields"
     (show Person person) => (contains person))
   (fact "adds computed field"
     (show Person person) => (contains {:fullname "A B"}))
+  (fact "computed fields is showed with type"
+    (show Times times) => (contains {:span "1.00"}))
   )
