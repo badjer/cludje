@@ -27,11 +27,11 @@
       (when throw?
         (cond 
           (empty? finds)
-          (throw-error {:params (str "Couldn't find action! Couldn't find anything "
+          (throw-not-found {:params (str "Couldn't find action! Couldn't find anything "
                                      "named " action-str " in the namespaces "
                                      (s/join ", " action-namespaces))})
           :else 
-          (throw-error {:params (str "Couldn't find action! Found these: "
+          (throw-not-found {:params (str "Couldn't find action! Found these: "
                                      (s/join ", " finds) ", but none of them "
                                      "looked like actions")}))))))
 
