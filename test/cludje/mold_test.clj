@@ -162,4 +162,15 @@
                           {:name "b" :price 2}]}) =>
   {:cogs [{:name "a" :price 1} {:name "b" :price 2}]})
 
+(defn fullname [{:keys [firstname lastname]}]
+  (str firstname " " lastname))
 
+(def Person (>Mold {:firstname Str :lastname Str} {:computed {:fullname fullname}}))
+(def person {:firstname "A" :lastname "B"})
+
+(fact "can have computed fields in display"
+  (fact "keeps original fields"
+    (show Person person) => (contains person))
+  (fact "adds computed field"
+    (show Person person) => (contains {:fullname "A B"}))
+  )

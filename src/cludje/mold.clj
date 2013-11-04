@@ -10,7 +10,8 @@
   ; TODO: Make this take context as an arg, so we can use fns as defaults
   (field-defaults [self])
   (required-fields [self])
-  (invisible-fields [self]))
+  (invisible-fields [self])
+  (computed-fields [self]))
 
 
 (defn friendly-name 
@@ -42,12 +43,22 @@
   ; Return the original object so we can chain things
   mold)
 
+(defn- show-computed- [mold input]
+  (if (and (map? input) (not (empty? input)))
+    (let [computed (computed-fields mold)]
+      (merge input
+             (into {} (for [[field fieldfn] computed]
+                        [field (fieldfn input)]))))
+    {}))
+
 (defn- show- [mold input]
   (if (and (map? input) (not (empty? input)))
     (let [kees (keys input) 
           fields (select-keys (fields mold) kees)] 
-      (into {} (for [[field typ] fields] 
-                 [field (show typ (get input field))])))
+      (->>
+        (into {} (for [[field typ] fields] 
+                   [field (show typ (get input field))]))
+        (show-computed- mold)))
     {}))
 
 (defn extend-ishowable [mold]
@@ -87,6 +98,8 @@
                      (get opts :names {}))
         defaults (merge (when base (field-defaults base))
                         (get opts :defaults))
+        computed (merge (when base (computed-fields base))
+                        (get opts :computed))
         invisible (distinct (concat (when base (invisible-fields base))
                          (get opts :invisible [])))]
     (extend (type obj)
@@ -95,6 +108,7 @@
        :field-names (fn [self] (map-vals fieldnames realize))
        :field-defaults (fn [self] (map-vals defaults realize))
        :required-fields (fn [self] reqfields)
+       :computed-fields (fn [self] computed)
        :invisible-fields (fn [self] invisible)})
     ; Return the object so we can chain these calls
     obj))
