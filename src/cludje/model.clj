@@ -8,21 +8,18 @@
 (defprotocol IModel
   (modelname [self])
   (tablename [self])
-  (keyname [self])
-  (partitions [self]))
+  (keyname [self]))
 
 (defn extend-imodel [obj fs opts]
   (let [modelname (s/lower-case (name (?! opts :modelname)))
         tablename (s/lower-case (name (get opts :tablename modelname)))
         no-key? (:no-key opts)
-        kee (if no-key? nil :_id)
-        parts (get opts :partitions [])]
+        kee (if no-key? nil :_id)]
     (extend (type obj)
       IModel
       {:modelname (fn [self] modelname)
        :tablename (fn [self] tablename)
-       :keyname (fn [self] kee)
-       :partitions (fn [self] parts)})
+       :keyname (fn [self] kee)})
     obj))
 
 ; We want strings and keywords to act as models,
@@ -32,14 +29,12 @@
   IModel
   {:modelname (fn [self] (s/lower-case self))
    :tablename (fn [self] (s/lower-case self))
-   :keyname (fn [self] :_id)
-   :partitions (fn [self] [])})
+   :keyname (fn [self] :_id)})
 (extend clojure.lang.Keyword
   IModel
   {:modelname (fn [self] (s/lower-case (name self)))
    :tablename (fn [self] (s/lower-case (name self)))
-   :keyname (fn [self] :_id)
-   :partitions (fn [self] [])})
+   :keyname (fn [self] :_id)})
 
 (defn >Model [fs opts]
   (let [no-key? (:no-key opts)

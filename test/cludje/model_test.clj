@@ -41,11 +41,7 @@
         (tablename (>Model {} {:modelname :Cog :tablename "cogt"})) => "cogt"))
     (fact "keyname"
       (keyname Cogmodel) => :_id)
-    (fact "partitions"
-      (fact "supplied"
-        (partitions (>Model fs {:modelname :cog :partitions [:name]})) => [:name])
-      (fact "not supplied"
-        (partitions (>Model fs {:modelname :cog})) => []))))
+    ))
 
 (def Gear (>Model {:name Str :teeth Int :size Int}
                   {:modelname "gear" :required [:name]
@@ -56,6 +52,3 @@
     (required-fields Gear) => [:name])
   (fact "invisible-fields"
     (invisible-fields Gear) => [:teeth :_id]))
-
-
-(future-facts "Allow models to have separate model and table names")

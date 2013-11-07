@@ -5,8 +5,8 @@
         cludje.serve
         midje.repl)
   (:require [clojure.java.io :as io]
-            [cludje.demo.actions]
-            [cludje.demo.models]
+            ;[cludje.demo.actions]
+            ;[cludje.demo.models]
             [clojure.string :as s]
             [clojure.pprint :refer (pprint)]
             [clojure.repl :refer :all]
@@ -24,8 +24,8 @@
   (when-let [ds (:data-store system)]
     (spit-testdatastore ds "db.txt")))
 
-(def config {:action-namespaces ['cludje.demo.actions]
-             :mold-namespaces ['cludje.demo.models]})
+(def config {});:action-namespaces ['cludje.demo.actions]
+             ;:mold-namespaces ['cludje.demo.models]})
 
 
 (defn >system []
