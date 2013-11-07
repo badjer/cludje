@@ -65,7 +65,14 @@
     (fact "defines ??in"
       (??in :z) => nil)
     (fact "defines &?in"
-      (&?in :z :a) => 1)))
+      (&?in :z :a) => 1)
+    (fact "defines with-param-in"
+      (with-param-in :a 0 Int) => {:a 1}
+      (with-param-in {:z 1} :a 0 Int) => {:a 1 :z 1})
+    (fact "defines with-optional-param-in"
+      (with-optional-param-in :a Int) => {:a 1}
+      (with-optional-param-in {:z 1} :a Int) => {:z 1 :a 1})
+    ))
 
 (fact "with-output-dsl"
   (with-output-dsl in-request
