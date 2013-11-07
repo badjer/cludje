@@ -32,25 +32,22 @@
   (fn [request]
     (render-json (f request))))
 
-(defn >web-handler [pipeline system]
+(defn >web-handler [pipeline opts]
   (-> pipeline
-      (in-system system)
       (wrap-render-json)
       (wrap-web-exception-handling)
-      (wrap-ring-middleware system)))
+      (wrap-ring-middleware opts)))
 
-(defrecord JettyServer [pipeline system-atom jetty-instance]
+(defrecord JettyServer [pipeline jetty-instance]
   IServer
-  (start [self system]
-    (reset! system-atom system)
-    (let [web-handler (>web-handler pipeline system)]
+  (start [self opts]
+    (let [web-handler (>web-handler pipeline opts)]
       (reset! jetty-instance 
-              (jetty/run-jetty web-handler (jetty-opts system)))))
+              (jetty/run-jetty web-handler (jetty-opts opts)))))
   (stop [self]
     (when @jetty-instance 
       (.stop @jetty-instance))))
 
 (defn >JettyServer 
-  ([] (>JettyServer api-pipeline))
-  ([pipeline] (->JettyServer pipeline (atom nil) (atom nil))))
+  ([pipeline] (->JettyServer pipeline (atom nil))))
 

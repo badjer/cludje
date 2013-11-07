@@ -4,6 +4,7 @@
         cludje.serve
         cludje.system
         cludje.application
+        cludje.pipeline
         cludje.model
         cludje.mold
         cludje.types
@@ -35,14 +36,14 @@
 
 
 (def req {:url "http://localhost:8099"})
-(def port-sys {:port 8099})
+(def jetty-config {:port 8099})
 
 (def result {:a 1})
 (defn static-handler [request] (assoc request :result result))
 
 (facts ">JettyServer"
   (let [serv (>JettyServer static-handler)]
-    (start serv port-sys) => anything 
+    (start serv jetty-config) => anything 
     (do-request req) => (contains {:status 200})
     (stop serv) => anything
     (do-request) => (throws)))
@@ -71,11 +72,10 @@
                  :mold-namespaces ['cludje.serve-test]})
 
 (facts ">JettyServer"
-  (let [sys (-> (>test-system sys-config)
-                (with-web)
-                (merge port-sys))
-        server (>JettyServer)]
-    (start server sys) => anything
+  (let [sys (>test-system sys-config)
+        pipeline (-> api-pipeline (in-system sys))
+        server (>JettyServer pipeline)]
+    (start server jetty-config) => anything
     (fact "handles GET request"
       (do-request get-req) => (body {:name "A"}))
     (fact "handles JSON input"

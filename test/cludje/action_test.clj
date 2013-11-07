@@ -91,21 +91,5 @@
       input => {:a 1 :b 2})
     (fact "defines output"
       output =not=> (throws))
-    ;(fact "defines with-lookup"
-      ;(with-lookup {} Cog) =not=> (throws))
     ))
 
-; An action that just returns input
-(def an-action (action input))
-
-(fact "action"
-  (fact "applies action-dsl"
-    (an-action {:input {:a 1}}) => {:a 1}))
-
-(def cog (>Mold {:price Money} {}))
-; An action that should have a mold attached to the input
-(def cog-action (action-for cog input))
-
-(fact ">action-for"
-  (fact "applies mold before input"
-    (cog-action {:input {:price "$1.00"}}) => {:price 100}))
