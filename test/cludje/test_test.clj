@@ -3,7 +3,6 @@
         cludje.types
         cludje.model
         cludje.errors
-        cludje.application
         cludje.pipeline
         midje.sweet))
 

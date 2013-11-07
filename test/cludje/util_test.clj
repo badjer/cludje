@@ -1,6 +1,7 @@
 (ns cludje.util-test
   (:use midje.sweet
         cludje.test
+        cludje.types
         cludje.util))
 
 (facts "map-vals"
@@ -75,3 +76,28 @@
   (today 1970 1 1) => 0
   (today 2013 9 15) => 1379203200000)
 
+(fact "with-optional-param"
+  (with-optional-param {} {:a 1} :a Int) => {:a 1}
+  (with-optional-param {} {} :a Int) => {}
+  (with-optional-param {} {:a "1"} :a Int) => {:a 1}
+  (with-optional-param {:z 1} {:a "1"} :a Int) => {:a 1 :z 1}
+  (with-optional-param {:z 1} {} :a Int) => {:z 1}
+  (fact "without map"
+    (with-optional-param {:a 1} :a Int) => {:a 1}
+    (with-optional-param {} :a Int) => {}
+    (with-optional-param {:a "1"} :a Int) => {:a 1})
+  )
+
+(fact "with-param"
+  (with-param {} {:a 1} :a 0 Int) => {:a 1}
+  (with-param {} {} :a 0 Int) => {:a 0}
+  (with-param {} {:a "1"} :a 0 Int) => {:a 1}
+  (with-param {} {} :a "0" Int) => {:a 0}
+  (with-param {:z 1} {:a 1} :a 0 Int) => {:a 1 :z 1}
+  (with-param {:z 1} {} :a 0 Int) => {:a 0 :z 1}
+  (fact "without map"
+    (with-param {:a 1} :a 0 Int) => {:a 1}
+    (with-param {} :a 0 Int) => {:a 0}
+    (with-param {:a "1"} :a 0 Int) => {:a 1}
+    (with-param {} :a "0" Int) => {:a 0})
+  )

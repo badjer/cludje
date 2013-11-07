@@ -1,6 +1,6 @@
 (ns user
   (:use cludje.datastore 
-        cludje.application
+        cludje.test
         cludje.system
         cludje.serve
         midje.repl)

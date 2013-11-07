@@ -10,7 +10,6 @@
         cludje.types
         cludje.mold
         cludje.model
-        cludje.application
         cludje.pipeline))
 
 

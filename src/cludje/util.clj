@@ -1,5 +1,6 @@
 (ns cludje.util
-  (:use cludje.errors)
+  (:use cludje.errors
+        cludje.types)
   (:require [clj-time.core :as t]
             [clj-time.coerce :as time-coerce]))
 
@@ -92,5 +93,19 @@
 
 (defn with-problem [m field text]
   (update-in m [:__problems] assoc (keyword (name field)) (str text)))
+
+(defn with-optional-param 
+  ([input kee typ]
+   (with-optional-param {} input kee typ))
+  ([m input kee typ]
+   (if (kee input)
+     (assoc m kee (parse typ (? input kee)))
+     m)))
+
+(defn with-param 
+  ([input kee default typ]
+   (with-param {} input kee default typ))
+  ([m input kee default typ]
+    (assoc m kee (parse typ (?? input kee default)))))
 
 
