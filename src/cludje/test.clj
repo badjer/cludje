@@ -148,9 +148,6 @@
         (reset! session-atom out-session))
       response)))
 
-(defn with-action [request action]
-  (assoc request :action action))
-
 (defn >request [input]
   {:params input})
 

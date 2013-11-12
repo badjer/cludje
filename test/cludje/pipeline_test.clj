@@ -16,6 +16,11 @@
 (def input {:price "$1.23"})
 (def raw-request {:params input})
 
+(fact "with-system"
+  (let [sys {:a 1}]
+    (with-system {} sys) => (contains {:system sys})
+    ))
+
 (fact "in-system"
   (let [sys {:a 1}
         handler (in-system identity sys)
@@ -27,6 +32,11 @@
 
 (def user {:name "A"})
 (def authenticator (>TestAuthenticator user))
+
+(fact "as-user"
+  (let [user {:a 1}]
+    (as-user {} user) => (contains {:user user})
+    ))
 
 (fact "add-authenticate"
   (let [sys {:authenticator authenticator}
@@ -47,6 +57,9 @@
 (defn action [request] (assoc request :output output))
 (defn just-output-action [request] output)
 (def action-finder (>SingleActionFinder action))
+
+(fact "with-action"
+  (with-action {} action) => (exactly {:action action}))
 
 (fact "add-action"
   (let [sys {:action-finder action-finder}
@@ -69,6 +82,9 @@
 
 (def bar (>Mold {:name Str} {}))
 
+(fact "with-input"
+  (with-input {} {:a 1}) => {:input {:a 1}})
+
 (fact "add-input"
   (let [handler (add-input identity)
         request raw-request]
@@ -78,10 +94,10 @@
       (handler (dissoc request :params)) => (throws-error))
     ))
 
+
 (def authorizor (>TestAuthorizer true))
 (def input-request
   (assoc action-request :input input))
-
 
 (fact "authorize"
   (let [sys {:authorizer authorizor}
@@ -107,6 +123,9 @@
 (defn problem-action [request] (throw-problems {:name "bad"}))
 (defn error-action [request] (throw-error))
 
+(fact "with-output"
+  (with-output {} {:a 1}) => {:output {:a 1}})
+
 (fact "add-output" 
   (let [handler (add-output identity)
         sys {}
@@ -129,6 +148,9 @@
         (let [err-request (assoc request :action error-action)]
           (handler err-request) => (throws))))))
 
+(fact "with-output-mold"
+  (with-output-mold {} :a) => {:output-mold :a})
+
 (fact "add-output-mold"
   (let [sys {:mold-finder moldfinder}
         handler (add-output-mold identity)
@@ -148,6 +170,9 @@
 
 (def result {:price "$9.87"})
 (def output-request (assoc input-request :output output :output-mold mold))
+
+(fact "with-result"
+  (with-result {} {:a 1}) => {:result {:a 1}})
 
 (fact "add-result"
   (let [handler (add-result identity)

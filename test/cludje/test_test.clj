@@ -162,4 +162,3 @@
         (run in-sess get-session {}) => {:a 2}
       ))))
 
-
