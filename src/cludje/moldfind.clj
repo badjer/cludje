@@ -8,7 +8,11 @@
   (:require [clojure.string :as s]))
 
 (defn- add-output-fields [mold]
-  (>Mold {:_ mold :__problems Anything :__alerts Anything} {}))
+  ; If the mold is Anything, it already allows
+  ; the output fields
+  (if (= Anything mold)
+    Anything
+    (>Mold {:_ mold :__problems Anything :__alerts Anything} {})))
 
 (defrecord SingleMoldFinder [mold]
   IMoldFinder
@@ -40,9 +44,7 @@
         (first matches)
         (cond 
           (empty? finds)
-          (throw-error {:mold (str "Couldn't find mold! Couldn't find anything "
-                                   "named " mold-names " in the namespaces "
-                                   (s/join ", " mold-namespaces))})
+          Anything
           :else 
           (throw-error {:mold (str "Couldn't find mold! Found these: "
                                    (s/join ", " finds) ", but none of them "

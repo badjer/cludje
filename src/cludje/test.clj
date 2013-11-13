@@ -166,7 +166,6 @@
     (show mold (:output response))))
 
 
-
 (defn >test-system [{:keys [action-namespaces mold-namespaces]}]
   {:authenticator (>TestAuthenticator)
    :action-finder (apply >NSActionFinder action-namespaces)

@@ -38,8 +38,8 @@
     (fields (f mf (>input :altnsmold))) => (contains (fields ans/altnsmold)))
   (fact "throws exception if _action not supplied"
     (f mf (>input nil)) => (throws-error))
-  (fact "throws exception if can't find"
-    (f mf (>input :random-func)) => (throws-error))
+  (fact "returns Anything if can't find"
+    (f mf (>input :random-func)) => Anything)
   (fact "throws exception if the thing isn't a mold"
     (f mf (>input :notmold)) => (throws-error)))
 
