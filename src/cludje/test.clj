@@ -139,16 +139,29 @@
   (-> (apply merge request-parts)
       (with-input input)))
 
-(defn run ([action input & request-parts]
+(defn run [action input & request-parts]
  (let [request (apply >request (conj request-parts input))]
    (-> (run-action action request)
-       (:output)))))
+       (:output))))
 
 (defn render [action input & request-parts]
   (let [request (apply >request (conj request-parts input))
         response (run-action action request)
         mold (get response :output-mold Anything)]
     (show mold (:output response))))
+
+(defn contextualize-run [& request-parts]
+  (fn [action input & supplied-parts]
+    (apply run (-> (concat request-parts supplied-parts)
+                   (conj input) 
+                   (conj action)))))
+
+(defn contextualize-render [& request-parts]
+  (fn [action input & supplied-parts]
+    (apply render (-> (concat request-parts supplied-parts)
+                      (conj input)
+                      (conj action)))))
+
 
 
 (defn >test-system [{:keys [action-namespaces mold-namespaces]}]

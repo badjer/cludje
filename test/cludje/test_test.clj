@@ -156,6 +156,16 @@
     (run action-response {:a 1}) => {:a 1})
   )
 
+(defn user-action [request]
+  (:user request))
+
+(fact "contextualize-run"
+  (let [run-as-user (contextualize-run (as-user {:name :foo}))]
+    (run-as-user user-action {}) => {:name :foo}
+    (fact "context can be explicitly overridden"
+      (run-as-user user-action {} (as-user {:name :bar})) => {:name :bar})
+    ))
+
 (def mold (>Mold {:a Str} {}))
 
 (fact "render"
@@ -167,3 +177,10 @@
     (render action-response {:a 1}) => {:a 1}
     (render action-response {:a 1} (with-output-mold mold)) => {:a "1"})
   )
+
+(fact "contextualize-render"
+  (let [render-as-user (contextualize-render (as-user {:name :foo}))]
+    (render-as-user user-action {}) => {:name :foo}
+    (fact "context can be explicitly overridden"
+      (render-as-user user-action {} (as-user {:name :bar})) => {:name :bar})
+    ))
