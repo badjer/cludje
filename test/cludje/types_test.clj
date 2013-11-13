@@ -15,6 +15,7 @@
   (show Str "a") => "a"
   (show Str :a) => "a"
   (show Str nil) => nil
+  (show Str 1) => "1"
   (parse Str "a") => "a"
   (parse Str 123) => "123"
   (parse Str :abc) => "abc"
@@ -129,8 +130,10 @@
 (fact "Bool"
   (let [true-vals [true "true" "True" "t" "T" "yes" "Yes" "y" "Y" 1]
         false-vals [false "false" "False" "f" "F" "no" "No" "n" "N" 0]]
+    (show Bool 1) => "yes"
     (show Bool true) => "yes"
     (show Bool "yes") => "yes"
+    (show Bool 0) => "no"
     (show Bool false) => "no"
     (show Bool "no") => "no"
     (show Bool nil) => nil

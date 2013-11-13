@@ -4,6 +4,7 @@
         cludje.model
         cludje.errors
         cludje.pipeline
+        cludje.mold
         midje.sweet))
 
 (fact "has-keys"
@@ -133,8 +134,37 @@
   {} =not=> (status 200))
 
 
+(fact ">request"
+  (>request {:a 1}) => {:input {:a 1}}
+  (>request {} {:user :me}) => {:user :me :input {}}
+  (fact "first parameter input always takes precedence"
+    (>request {:a 1} (with-input {:a 2})) => {:input {:a 1}})
+  )
+
+
 (defn action [request]
   (:input request))
+
+(defn action-response [request]
+  (with-output request (:input request)))
+
+(fact "run"
+  (run action {:a 1}) => {:a 1}
+  (run action {:a 1} (with-input {:a 2})) => {:a 1}
+  (run action {:a 1} (as-user :foo)) => {:a 1}
+  (fact "with an action that returns a response object"
+    (run action-response {:a 1}) => {:a 1})
+  )
+
+(def mold (>Mold {:a Str} {}))
+
+(fact "render"
+  (fact "uses mold to format output"
+    (render action {:a 1} (with-output-mold mold)) => {:a "1"})
+  (fact "no mold uses anything as mold"
+    (render action {:a 1}) => {:a 1})
+  )
+
 
 (defn set-session [request]
   (let [new-val (get-in request [:input :a])]
@@ -145,7 +175,8 @@
 (defn get-session [request]
   {:a (get-in request [:session :a])})
 
-(fact "run"
+
+(future-fact "run"
   (let [system (>test-system {})
         in-sys (in-system action-pipeline system)
         session (atom {})

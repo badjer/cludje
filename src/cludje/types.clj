@@ -50,7 +50,8 @@
     (show [self x] 
       (cond
         (keyword? x) (name x)
-        :else x))
+        (nil? x) nil
+        :else (str x)))
     IValidateable
     ; Never any problems with str
     ; Unless it's a collection
@@ -181,11 +182,10 @@
     (parse [self txt]
       (cond
         (= java.lang.Boolean (type txt)) txt
-        (empty? txt) nil
-        (= txt 1) true
+        (number? txt) (if (= txt 0) false true)
         (= txt true) true
         (= txt false) false
-        (= txt 0) false
+        (empty? txt) nil
         (re-find #"^[Yy](es)?$" (str txt)) true
         (re-find #"^[tT](rue)?$" (str txt)) true
         (re-find #"^[Nn](o)?$" (str txt)) false

@@ -5,8 +5,24 @@
         cludje.run
         cludje.system))
 
-(defn with-system [request system]
-  (assoc request :system system))
+(defn with-params 
+  ([params]
+   (with-params {} params))
+  ([request params]
+   (assoc request :params params)))
+
+(defn with-session 
+  ([session-map]
+   (with-session {} session-map))
+  ([request session-map]
+   (assoc request :session session-map)))
+
+
+(defn with-system 
+  ([system]
+   (with-system {} system))
+  ([request system]
+    (assoc request :system system)))
 
 (defn in-system [pipeline system]
   (fn [request]
@@ -15,8 +31,11 @@
         (pipeline))))
 
 
-(defn as-user [request user]
-  (assoc request :user user))
+(defn as-user 
+  ([user]
+   (as-user {} user))
+  ([request user]
+    (assoc request :user user)))
 
 (defn add-authenticate [pipeline]
   (fn [request]
@@ -27,8 +46,11 @@
           (pipeline)))))
 
 
-(defn with-action [request action]
-  (assoc request :action action))
+(defn with-action 
+  ([action]
+   (with-action {} action))
+  ([request action]
+    (assoc request :action action)))
 
 (defn add-action [pipeline]
   (fn [request]
@@ -38,8 +60,11 @@
           (with-action action)
           (pipeline)))))
 
-(defn with-input [request input]
-  (assoc request :input input))
+(defn with-input 
+  ([input]
+   (with-input {} input))
+  ([request input]
+    (assoc request :input input)))
 
 (defn add-input [pipeline]
   (fn [request]
@@ -56,8 +81,11 @@
         (throw-unauthorized)
         (pipeline request)))))
 
-(defn with-output [request output]
-  (assoc request :output output))
+(defn with-output 
+  ([output]
+   (with-output {} output))
+  ([request output]
+    (assoc request :output output)))
 
 (defn add-output [pipeline]
   (fn [request]
@@ -65,8 +93,11 @@
           done-request (run-action action request)]
       (pipeline done-request))))
 
-(defn with-output-mold [request mold]
-  (assoc request :output-mold mold))
+(defn with-output-mold 
+  ([mold]
+   (with-output-mold {} mold))
+  ([request mold]
+    (assoc request :output-mold mold)))
 
 (defn add-output-mold [pipeline]
   (fn [request]
@@ -78,8 +109,11 @@
           (-> done-request
               (with-output-mold output-mold)))))))
 
-(defn with-result [request result]
-  (assoc request :result result))
+(defn with-result 
+  ([result]
+   (with-result {} result))
+  ([request result]
+    (assoc request :result result)))
 
 (defn add-result [pipeline]
   (fn [request]

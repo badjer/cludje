@@ -12,6 +12,15 @@
         cludje.model
         cludje.pipeline))
 
+(fact "with-params"
+  (with-params {} {:a 1}) => {:params {:a 1}}
+  (with-params {:a 1}) => {:params {:a 1}})
+
+(fact "with-session"
+  (let [session {:a 1}]
+    (with-session {} session) => {:session session}
+    (with-session session) => {:session session}
+    ))
 
 (def input {:price "$1.23"})
 (def raw-request {:params input})
@@ -19,6 +28,7 @@
 (fact "with-system"
   (let [sys {:a 1}]
     (with-system {} sys) => (contains {:system sys})
+    (with-system sys) => (contains {:system sys})
     ))
 
 (fact "in-system"
@@ -36,6 +46,7 @@
 (fact "as-user"
   (let [user {:a 1}]
     (as-user {} user) => (contains {:user user})
+    (as-user user) => (contains {:user user})
     ))
 
 (fact "add-authenticate"
@@ -59,7 +70,8 @@
 (def action-finder (>SingleActionFinder action))
 
 (fact "with-action"
-  (with-action {} action) => (exactly {:action action}))
+  (with-action {} action) => (exactly {:action action})
+  (with-action action) => (exactly {:action action}))
 
 (fact "add-action"
   (let [sys {:action-finder action-finder}
@@ -83,7 +95,8 @@
 (def bar (>Mold {:name Str} {}))
 
 (fact "with-input"
-  (with-input {} {:a 1}) => {:input {:a 1}})
+  (with-input {} {:a 1}) => {:input {:a 1}}
+  (with-input {:a 1}) => {:input {:a 1}})
 
 (fact "add-input"
   (let [handler (add-input identity)
@@ -124,7 +137,8 @@
 (defn error-action [request] (throw-error))
 
 (fact "with-output"
-  (with-output {} {:a 1}) => {:output {:a 1}})
+  (with-output {} {:a 1}) => {:output {:a 1}}
+  (with-output {:a 1}) => {:output {:a 1}})
 
 (fact "add-output" 
   (let [handler (add-output identity)
@@ -149,7 +163,8 @@
           (handler err-request) => (throws))))))
 
 (fact "with-output-mold"
-  (with-output-mold {} :a) => {:output-mold :a})
+  (with-output-mold {} :a) => {:output-mold :a}
+  (with-output-mold :a) => {:output-mold :a})
 
 (fact "add-output-mold"
   (let [sys {:mold-finder moldfinder}
@@ -172,7 +187,8 @@
 (def output-request (assoc input-request :output output :output-mold mold))
 
 (fact "with-result"
-  (with-result {} {:a 1}) => {:result {:a 1}})
+  (with-result {} {:a 1}) => {:result {:a 1}}
+  (with-result {:a 1}) => {:result {:a 1}})
 
 (fact "add-result"
   (let [handler (add-result identity)

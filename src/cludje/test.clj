@@ -8,6 +8,8 @@
         cludje.authorize
         cludje.datastore
         cludje.email
+        cludje.run
+        cludje.types
         cludje.log)
   (:import [midje.util.exceptions ICapturedThrowable])
   (:require [clj-http.client :as http]
@@ -134,36 +136,36 @@
 
 
 
-(def action-pipeline
-  (-> identity
-      (add-output)
-      (add-input)))
+;;(def action-pipeline
+  ;(-> identity
+      ;(add-output)
+      ;(add-input)))
 
 
-(defn in-session [pipeline session-atom]
-  (fn [request]
-    (let [with-session (update-in request [:session] merge @session-atom)
-          response (pipeline with-session)]
-      (when-let [out-session (:session response)]
-        (reset! session-atom out-session))
-      response)))
+;(defn in-session [pipeline session-atom]
+  ;(fn [request]
+    ;(let [with-session (update-in request [:session] merge @session-atom)
+          ;response (pipeline with-session)]
+      ;(when-let [out-session (:session response)]
+        ;(reset! session-atom out-session))
+      ;response)))
 
-(defn >request [input]
-  {:params input})
+(defn >request [input & request-parts]
+  (-> (apply merge request-parts)
+      (with-input input)))
 
-(defn <output 
-  ([response] (<output :result))
-  ([response selector] (? response selector)))
+(defn run ([action input & request-parts]
+ (let [request (apply >request (conj request-parts input))]
+   (-> (run-action action request)
+       (:output)))))
 
-(defn run 
-  ([pipeline action] (run pipeline action {}))
-  ([pipeline action input] (run pipeline action input :output))
-  ([pipeline action input selector]
-    (-> input
-        (>request)
-        (with-action action)
-        pipeline
-        (<output selector))))
+(defn render [action input & request-parts]
+  (let [request (apply >request (conj request-parts input))
+        response (run-action action request)
+        mold (get response :output-mold Anything)]
+    (show mold (:output response))))
+
+
 
 (defn >test-system [{:keys [action-namespaces mold-namespaces]}]
   {:authenticator (>TestAuthenticator)
