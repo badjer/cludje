@@ -135,21 +135,6 @@
                                   :cookie-store cookies}))))
 
 
-
-;;(def action-pipeline
-  ;(-> identity
-      ;(add-output)
-      ;(add-input)))
-
-
-;(defn in-session [pipeline session-atom]
-  ;(fn [request]
-    ;(let [with-session (update-in request [:session] merge @session-atom)
-          ;response (pipeline with-session)]
-      ;(when-let [out-session (:session response)]
-        ;(reset! session-atom out-session))
-      ;response)))
-
 (defn >request [input & request-parts]
   (-> (apply merge request-parts)
       (with-input input)))

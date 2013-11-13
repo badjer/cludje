@@ -163,4 +163,7 @@
     (render action {:a 1} (with-output-mold mold)) => {:a "1"})
   (fact "no mold uses anything as mold"
     (render action {:a 1}) => {:a 1})
+  (fact "with an action that returns a response object"
+    (render action-response {:a 1}) => {:a 1}
+    (render action-response {:a 1} (with-output-mold mold)) => {:a "1"})
   )
