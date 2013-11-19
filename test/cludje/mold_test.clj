@@ -20,6 +20,10 @@
       (let [m (>Mold fs {})]
         (satisfies? IMold m) => true))
 
+    (fact "Can create mold without options"
+      (let [m (>Mold fs)]
+        (satisfies? IMold m) => true))
+
     (fact "fields"
       (let [m (>Mold fs {})]
         (fields m) => fs))

@@ -99,19 +99,22 @@
     ; Return the object so we can chain these calls
     obj))
 
-(defn >Mold [fs opts]
-  ; Terrible hack here.
-  ; We want to create a new type at runtime. We can't just
-  ; call (reify), it seems, because it gives back the same
-  ; type every time.
-  ; So instead, we eval in order to get new types
-  ; NOTE: If specify gets added to Clojure, that's what we'd like here
-  (let [obj (eval '(reify))]
-    (-> obj
-        (extend-imold fs opts)
-        (extend-ivalidateable)
-        (extend-ishowable)
-        (extend-iparseable))))
+(defn >Mold 
+  ([fs]
+   (>Mold fs {}))
+  ([fs opts]
+    ; Terrible hack here.
+    ; We want to create a new type at runtime. We can't just
+    ; call (reify), it seems, because it gives back the same
+    ; type every time.
+    ; So instead, we eval in order to get new types
+    ; NOTE: If specify gets added to Clojure, that's what we'd like here
+    (let [obj (eval '(reify))]
+      (-> obj
+          (extend-imold fs opts)
+          (extend-ivalidateable)
+          (extend-ishowable)
+          (extend-iparseable)))))
 
 (defn make [mold m]
   (if-let [problems (problems? mold m)]
