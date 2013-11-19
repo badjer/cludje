@@ -14,9 +14,11 @@
 
 
 (defn sym-to-action [sym]
-  (let [a @(resolve sym)]
-    (when (and (fn? a) (= 1 (arity a)))
-      a)))
+  (when sym
+    (when (resolve sym)
+      (when-let [a @(resolve sym)]
+        (when (and (fn? a) (= 1 (arity a)))
+          a)))))
 
 (defn- find-action- [request action-namespaces throw?]
   (let [action-str (?! request [:params :_action])
