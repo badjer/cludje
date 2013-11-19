@@ -16,6 +16,7 @@
 (defn find-in-ns 
   "Find the var thing in the namespace nas"
   ([nas thing]
+   (require nas)
     (when-let [vr (find-ns-var nas thing)]
       (qualify nas thing))))
 
