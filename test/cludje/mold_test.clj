@@ -164,9 +164,3 @@
   (parse Cog-list {:cogs [{:name "a" :price 1}
                           {:name "b" :price 2}]}) =>
   {:cogs [{:name "a" :price 1} {:name "b" :price 2}]})
-
-(defn fullname [{:keys [firstname lastname]}]
-  (str firstname " " lastname))
-(defn span [{:keys [start end]}]
-  (- end start))
-
