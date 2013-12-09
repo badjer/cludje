@@ -7,7 +7,9 @@
   "Contols identifying the user"
   (current-user [self context] "Returns the currently logged-in user.")
   (log-in [self context])
-  (log-out [self context]))
+  (log-out [self context])
+  (encrypt [self plaintext])
+  (check-hash [self txt cypher]))
 
 (defprotocol IDatastore
   "Represents a datastore"

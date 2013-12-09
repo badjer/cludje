@@ -8,7 +8,7 @@
         cludje.datastore))
 
 (def mockuser {:username "a@b.cd" :password "123"})
-(def db-mockuser (assoc mockuser :hashed-pwd "123"))
+(def db-mockuser (assoc mockuser :hashed-pwd "321"))
 (defn >datastore [] (>TestDatastore {:user [db-mockuser]}))
 (defn >login-system [] {:data-store (>datastore)})
 (defn >login-request [] {:system (>login-system) :input mockuser :session {}})
