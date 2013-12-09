@@ -12,7 +12,7 @@
 
 (def permitted-types
   "The types that are allowed to be in the database"
-  #{Boolean Integer String Long Float Double clojure.lang.BigInt})
+  #{Boolean Integer String Long Float Double clojure.lang.BigInt clojure.lang.PersistentHashSet clojure.lang.PersistentVector})
 
 (defn- validate-db-data [data]
   (let [types (distinct (map type (vals data)))
