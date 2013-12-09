@@ -24,16 +24,16 @@
     (->TestAuthenticator (atom cur-user))))
 
 
-(defn- token->user [token datastore user-table]
+(defn- token->user [token datastore user-table pwd-field]
   (-> (query datastore user-table {:username token})
       (first)
-      (dissoc :hashed-pwd)))
+      (dissoc pwd-field)))
 
-(defn- validate-user [authenticator input datastore user-table]
+(defn- validate-user [authenticator input datastore user-table pwd-field]
   (let [username (? input :username)
         password (? input :password)]
     (when-let [user (first (query datastore user-table {:username username}))]
-      (when (check-hash authenticator password (? user :hashed-pwd))
+      (when (check-hash authenticator password (? user pwd-field))
         user))))
 
 (defn- make-token [user] (:username user))
@@ -42,17 +42,17 @@
   (assoc-in request [:session app-name] ""))
 
 
-(defrecord TokenAuthenticator [app-name user-table]
+(defrecord TokenAuthenticator [app-name user-table pwd-field]
   IAuthenticator
   (current-user [self request]
     (when-let [token (?? (?! request :session) app-name)]
       (let [datastore (?! request [:system :data-store])]
-        (token->user token datastore user-table))))
+        (token->user token datastore user-table pwd-field))))
   (log-in [self request]
     (let [datastore (?! request [:system :data-store])
           input (?! request :input)
           user (parse LoginUser input)]
-      (if-let [val-user (validate-user self input datastore user-table)]
+      (if-let [val-user (validate-user self input datastore user-table pwd-field)]
         (assoc-in request [:session app-name] (make-token val-user))
         (throw-problems {:username "Invalid username/password" 
                          :password "Invalid username/password"}))))
@@ -63,23 +63,24 @@
 
 (defn >TokenAuthenticator
   ([app-name] (>TokenAuthenticator app-name :user))
-  ([app-name user-table] (->TokenAuthenticator app-name user-table)))
+  ([app-name user-table] (>TokenAuthenticator app-name :user :hashed-pwd))
+  ([app-name user-table pwd-field] (->TokenAuthenticator app-name user-table pwd-field)))
 
 
-(defn >friend-map [user] 
-  (let [clean-user (dissoc user :hashed-pwd)]
+(defn >friend-map [user pwd-field] 
+  (let [clean-user (dissoc user pwd-field)]
     {:current :a 
      :authentications {:a clean-user}}))
 
-(defrecord FriendAuthenticator [get-user-fn]
+(defrecord FriendAuthenticator [get-user-fn pwd-field]
   IAuthenticator
   (current-user [self request]
     (friend/current-authentication request))
   (log-in [self request]
     (let [{:keys [username password]} (make LoginUser (?! request :params))]
       (when-let [got-user (get-user-fn username)]
-        (if (check-hash self password (:hashed-pwd got-user))
-          (assoc-in request [:session ::friend/identity] (>friend-map got-user))))))
+        (if (check-hash self password (pwd-field got-user))
+          (assoc-in request [:session ::friend/identity] (>friend-map got-user pwd-field))))))
   (log-out [self request]
     (update-in request [:session] dissoc ::friend/identity))
   (encrypt [self txt]
@@ -90,5 +91,7 @@
 
 
 
-(defn >FriendAuthenticator [get-user-fn]
-  (->FriendAuthenticator get-user-fn))
+(defn >FriendAuthenticator 
+  ([get-user-fn] (>FriendAuthenticator get-user-fn :hashed-pwd))
+  ([get-user-fn pwd-field]
+    (->FriendAuthenticator get-user-fn pwd-field)))
