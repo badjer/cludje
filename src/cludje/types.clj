@@ -152,7 +152,7 @@
             dollar-str 
             (if show-cents? cents-str ""))))))
 
-(def money-regex #"^ *\$? *(\-?) *(\d+\.?\d*) *$")
+(def money-regex #"^ *\$? *(\-?) *(\d*\.?\d*) *$")
 
 (def Money
   (reify 

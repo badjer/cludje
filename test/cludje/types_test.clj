@@ -99,11 +99,17 @@
         dcss "123.45"
         dcv 12345
         cs "$0.67"
-        cv 67]
+        cv 67
+        idss ".61"
+        ids "$0.61"
+        id 61]
     (show Money dv) => ds
     (show Money ds) => ds
     (show Money dcv) => dcs
     (show Money dcs) => dcs
+    (show Money idss) => ids
+    (show Money ids) => ids
+    (show Money id) => ids
     (show Money nil) => nil
     (parse Money ds) => dv
     (parse Money dv) => dv
@@ -113,6 +119,9 @@
     (parse Money dcv) => dcv
     (parse Money cs) => cv
     (parse Money cv) => cv
+    (parse Money idss) => id
+    (parse Money ids) => id
+    (parse Money id) => id
     ; Illegal values give nil
     (parse Money "asdf") => nil
     (parse Money true) => nil
@@ -125,7 +134,10 @@
     (validate Money ds) => truthy
     (validate Money dv) => truthy
     (validate Money dcs) => truthy
-    (validate Money cs) => truthy))
+    (validate Money cs) => truthy
+    (validate Money idss) => truthy
+    (validate Money ids) => truthy
+    (validate Money id) => truthy))
 
 (fact "Bool"
   (let [true-vals [true "true" "True" "t" "T" "yes" "Yes" "y" "Y" 1]
