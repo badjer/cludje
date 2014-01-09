@@ -45,6 +45,20 @@
           res (map checker-fn xs)]
       (and (seq res) (every? #{true} res)))))
 
+(defn has-items? [& items]
+  (let [checkers (map has-item? items)]
+    (apply every-pred checkers)))
+
+(defn count? [expected]
+  (fn [xs]
+    (= expected (count xs))))
+
+(defn just-items? [& items]
+  (if (empty? items)
+    empty?
+    (every-pred (apply has-items? items)
+                (count? (count items)))))
+
 
 
 
