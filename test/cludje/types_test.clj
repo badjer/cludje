@@ -102,7 +102,10 @@
         cv 67
         idss ".61"
         ids "$0.61"
-        id 61]
+        id 61
+        deci (BigDecimal. "1.23")
+        deciv 123
+        decis "$1.23"]
     (show Money dv) => ds
     (show Money ds) => ds
     (show Money dcv) => dcs
@@ -110,7 +113,10 @@
     (show Money idss) => ids
     (show Money ids) => ids
     (show Money id) => ids
+    (show Money deci) => decis
     (show Money nil) => nil
+    (show Money 77/9) => (throws clojure.lang.ExceptionInfo #"convert")
+    (show Money 44/4) => "$0.11"
     (parse Money ds) => dv
     (parse Money dv) => dv
     (parse Money dcs) => dcv
@@ -122,12 +128,15 @@
     (parse Money idss) => id
     (parse Money ids) => id
     (parse Money id) => id
+    (parse Money deci) => deciv
     ; Illegal values give nil
     (parse Money "asdf") => nil
     (parse Money true) => nil
     ; Empty values are valid
     (parse Money nil) => nil
     (parse Money "") => nil
+    (parse Money 77/9) => (throws clojure.lang.ExceptionInfo #"convert")
+    (parse Money 44/4) => 11
     (validate Money nil) => truthy
     (validate Money "") => truthy
     (validate Money "asdf") => falsey
@@ -137,7 +146,11 @@
     (validate Money cs) => truthy
     (validate Money idss) => truthy
     (validate Money ids) => truthy
-    (validate Money id) => truthy))
+    (validate Money id) => truthy
+    (validate Money deci) => truthy
+    (validate Money 44/4) => truthy
+    (validate Money 77/9) => falsey
+    ))
 
 (fact "Bool"
   (let [true-vals [true "true" "True" "t" "T" "yes" "Yes" "y" "Y" 1]

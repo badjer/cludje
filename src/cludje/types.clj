@@ -101,9 +101,16 @@
 
 
 (defn- to-decimal [x]
-  (if (or (nil? x) (= BigDecimal (type x)))
-    x
-    (BigDecimal. x)))
+  (try
+    (cond 
+      (nil? x) x
+      (= BigDecimal (type x)) x
+      :else (BigDecimal. x))
+    (catch java.lang.IllegalArgumentException ex
+      (throw (ex-info (str "Tried to convert value " 
+                           x " of type " (type x) 
+                           " to a decimal, but could not find a "
+                           "decimal constructor for that type") {})))))
 
 (def Int
   (reify 
@@ -159,6 +166,12 @@
     IParseable
     (parse [self txt]
       (cond
+        (= clojure.lang.Ratio (type txt)) (throw 
+                                            (ex-info (str "Could not convert a Ratio (" 
+                                                          txt ") to Money - Money must "
+                                                          "be whole numbers of cents")
+                                                     {}))
+        (= BigDecimal (type txt)) (to-int (* 100 txt))
         (number? txt) txt
         (empty? (str txt)) nil
         :else
