@@ -11,6 +11,9 @@
 (defn map-vals [m f]
   (into {} (for [[k v] m] [k (f v)])))
 
+(defn map-keys [m f]
+  (into {} (for [[k v] m] [(f k) v])))
+
 (defn arity [f] 
   (let [m (first (.getDeclaredMethods (class f))) 
         p (.getParameterTypes m)] 

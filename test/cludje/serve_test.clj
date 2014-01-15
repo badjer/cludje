@@ -9,6 +9,23 @@
         cludje.types
         cludje.test))
 
+(def response {:result {:a 1}})
+(def response- {:result {:a-b 1}})
+(def response-nested {:result {:a {:b-c 1}}})
+(def response-vec {:result {:a [{:b-c 1}]}})
+
+(fact "render-json"
+  (fact "happy case"
+    (render-json response) => (contains {:body "{\"a\":1}"}))
+  (fact "converts - to _ in result kees"
+    (render-json response-) => (contains {:body "{\"a_b\":1}"})
+    (fact "inluding nested"
+      (render-json response-nested) => (contains {:body "{\"a\":{\"b_c\":1}}"}))
+    (fact "including nested vectors"
+      (jsonify-keys [{:a-b 1}]) => [{:a_b 1}]
+      (render-json response-vec) => (contains {:body "{\"a\":[{\"b_c\":1}]}"})))
+  )
+
 (defn params-handler [{:keys [params] :as request}]
   (assoc request :result params))
 

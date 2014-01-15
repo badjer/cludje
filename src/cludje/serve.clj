@@ -3,7 +3,8 @@
         cludje.util
         cludje.pipeline
         cludje.web)
-  (:require [ring.adapter.jetty :as jetty]
+  (:require [clojure.string :as st]
+            [ring.adapter.jetty :as jetty]
             [cheshire.core :as cheshire]
             [ring.util.response :as response])
   (:import [org.eclipse.jetty.server.handler GzipHandler]))
@@ -20,11 +21,22 @@
           :configurator jetty-configurator}
          config))
 
+(defn jsonify [k]
+  (-> k (name) (st/replace "-" "_") (keyword)))
+
+(defn jsonify-keys [m]
+  (cond 
+    (map? m) (-> m (map-vals jsonify-keys) (map-keys jsonify))
+    (sequential? m) (map jsonify-keys m)
+    :else m))
+
+
 (defn render-json [response]
-  (let [result (?! response :result)]
-    (assert-json-renderable result)
+  (let [result (?! response :result)
+        prepped-res (jsonify-keys result)]
+    (assert-json-renderable prepped-res)
     (merge response 
-           (-> {:body (cheshire/generate-string result)} 
+           (-> {:body (cheshire/generate-string prepped-res)} 
                (response/content-type "application/json") 
                (response/charset "UTF-8")))))
 
