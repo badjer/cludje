@@ -62,7 +62,9 @@
           victims (set (query self tbl {:_id kee}))
           oldtable (get @dbatom tbl)
           newtable (remove victims oldtable)]
-      (swap! dbatom assoc tbl newtable))))
+      (swap! dbatom assoc tbl newtable)))
+  (collections [self]
+    (keys @dbatom)))
 
 (defn >TestDatastore 
   ([] (>TestDatastore {}))
@@ -92,13 +94,8 @@
 ;; Mongodb datastore
 ;; ********************
 
-; TODO: Don't use the global-variable-dependent version of mongo fns
-;(defn- parse-mongo-str [connstr]
-  ;(let [groups (flatten (re-seq #"^.*://(.*?):(.*?)@(.*?):(\d+)/(.*)$" connstr)) 
-        ;mongo_port (Integer. (nth groups 4))] 
-    ;(merge (zipmap [:match :user :pass :host :port :db] groups) 
-           ;{:port mongo_port})))
 
+; TODO: Don't use the global-variable-dependent version of mongo fns
 (defn connect-to-mongo! [uri]
    (mg/connect-via-uri! uri))
 
@@ -128,7 +125,11 @@
   (delete [self coll kee] 
     (when kee
       (validate-db-data {:_id kee})
-      (mgcoll/remove-by-id (tablename coll) kee))))
+      (mgcoll/remove-by-id (tablename coll) kee)))
+  (collections [self]
+    (let [cols (mgdb/get-collection-names)
+          non-sys-cols (filter #(not (some #{\.} %)) cols)]
+      non-sys-cols)))
 
 
 (defn >MongoDatastore [uri]
@@ -139,4 +140,3 @@
   (connect-to-mongo! uri)
   (let [db (mg/get-db db-name)]
     (mgdb/drop-db db)))
-

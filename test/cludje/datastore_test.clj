@@ -72,7 +72,13 @@
         (count (query db tbl nil)) => 2
         (delete db tbl id) => anything
         (count (query db tbl nil)) => 1
-        (first (query db tbl nil)) => (contains rowb)))))
+        (first (query db tbl nil)) => (contains rowb)))
+    (fact "collections"
+      (let [db (constructor)]
+        (write db tbl nil row) => anything
+        (collections db) => [tbl]
+        ))))
+
 
 (def Cog (>Model {:price Money :amt Int} {:modelname "cog"}))
 (def cog {:price 123 :amt 1})

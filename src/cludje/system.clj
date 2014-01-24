@@ -16,7 +16,8 @@
   (fetch [self coll kee] "Get an item from the datastore")
   (query [self coll params] "Get multiple items from the datastore. If params is empty, all entries should be returned")
   (write [self coll kee data] "Insert or update. If kee is nil, insert. The key is returned")
-  (delete [self coll kee] "Delete"))
+  (delete [self coll kee] "Delete")
+  (collections [self] "Get a list of all the collections in the db"))
 
 (defn save [store model m]
   (let [parsed (make model m)
