@@ -95,7 +95,7 @@
 
 (facts "ability only allows anonymous access for :anon"
   (ab-cog-anon (dissoc (>input 'add-cog) :user)) => truthy
-  (ab-all-cog (dissoc (>input 'add-cog) :user)) => (throws-403))
+  (ab-all-cog (dissoc (>input 'add-cog) :user)) => (throws-401))
 
 
 (facts "AbilityAuthorizer"

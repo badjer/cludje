@@ -42,7 +42,7 @@
 (defn- match-ability? [request [op model expr]]
   (cond
     (= :anon expr) true
-    (nil? (?? request :user)) (err/throw-unauthorized)
+    (nil? (?? request :user)) (err/throw-not-logged-in)
     (match-action? request op model) (realize-expr request expr)
     :else nil))
 
