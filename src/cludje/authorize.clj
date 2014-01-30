@@ -1,7 +1,8 @@
 (ns cludje.authorize
   (:use cludje.system
         cludje.util
-        cludje.model))
+        cludje.model)
+  (:require [cludje.errors :as err]))
 
 
 (defrecord TestAuthorizer [allow?]
@@ -41,7 +42,7 @@
 (defn- match-ability? [request [op model expr]]
   (cond
     (= :anon expr) true
-    (nil? (?? request :user)) false
+    (nil? (?? request :user)) (err/throw-unauthorized)
     (match-action? request op model) (realize-expr request expr)
     :else nil))
 
