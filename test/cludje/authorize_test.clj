@@ -10,7 +10,7 @@
 
 (defn- >input 
   ([action-sym] (>input action-sym {}))
-  ([action-sym input] {:action-sym action-sym :input input :user {:username "a"}}))
+  ([action-sym input] {:input (assoc input :_action action-sym) :user {:username "a"}}))
 
 (def Cog (>Model {:amt Int} {:modelname "cog"}))
 
