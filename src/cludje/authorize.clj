@@ -27,9 +27,9 @@
 
 
 (defn- match-action? [request op model]
-  (let [exp-action (str (name op) "-" (tablename model))
+  (let [exp-action (str (name op) "-" (modelname model))
         action (name (? request [:input :_action]))
-        model-re (re-pattern (str "-" (tablename model) "$"))
+        model-re (re-pattern (str "-" (modelname model) "$"))
         model-match? (re-find model-re action)]
     (cond 
       (= exp-action action) true
