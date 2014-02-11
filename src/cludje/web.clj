@@ -1,5 +1,6 @@
 (ns cludje.web
-  (:use cludje.util)
+  (:use cludje.util
+        cludje.system)
   (:require [cheshire.core :as cheshire]
             [ring.middleware.session :as sess]
             [ring.middleware.json :as json]
@@ -32,7 +33,7 @@
 (defn http-401 [] {:status 401})
 (defn http-403 [] {:status 403})
 
-(defn handle-web-exception [ex]
+(defn try-lower-web-exception [ex]
   (let [exd (ex-data ex)]
     (cond
       (:__notfound exd) nil ; Return a 404
@@ -40,12 +41,16 @@
       (:__unauthorized exd) (http-403)
       :else ex)))
 
+(defn throw-exception [request ex]
+  (log (? request [:system :logger]) (str "Error!\n\n" ex "\n\n" (ex-data ex)))
+  (throw ex))
+
 (defn wrap-web-exception-handling [f]
   (fn [request]
     (try
       (f request)
       (catch clojure.lang.ExceptionInfo ex
-        (let [handled (handle-web-exception ex)]
+        (let [handled (try-lower-web-exception ex)]
           (if (= ex handled)
-            (throw ex)
+            (throw-exception request ex)
             handled))))))
