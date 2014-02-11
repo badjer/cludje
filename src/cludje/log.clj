@@ -17,3 +17,25 @@
 
 (defn >ConsoleLogger []
   (->ConsoleLogger))
+
+(defrecord MailLogger [mailer from to subject]
+  ILog
+  (log [self message]
+    (send-mailmessage mailer {:from from :to to :subject subject :text message})))
+
+(defn >MailLogger [mailer from to subject]
+  (->MailLogger mailer from to subject))
+
+(defrecord CompositeLogger [loggers]
+  ILog
+  (log [self message]
+    (doseq [logger loggers]
+      (log logger message))))
+
+(defn >CompositeLogger [& loggers]
+  (->CompositeLogger loggers))
+
+(defn >MailConsoleLogger [mailer from to subject]
+  (->CompositeLogger
+    (->ConsoleLogger) 
+    (->MailLogger mailer from to subject)))

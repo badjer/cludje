@@ -1,4 +1,4 @@
-(defproject cludje "0.5.13"
+(defproject cludje "0.5.14"
   :description "Cludje - A clojure web framework"
   :url "http://github.com/badjer/cludje"
   :license {:name "Eclipse Public License"
@@ -10,6 +10,7 @@
                  [clj-http "0.7.2"]
                  [ring "1.1.8"]
                  [clj-time "0.6.0"]
+                 [com.taoensso/timbre "3.0.1"]
                  [ring/ring-jetty-adapter "1.1.8"]
                  [ring/ring-json "0.2.0"]]
   :source-paths ["src"]
