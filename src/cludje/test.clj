@@ -14,6 +14,7 @@
   (:import [midje.util.exceptions ICapturedThrowable])
   (:require [clj-http.client :as http]
             [clj-http.cookies :as cookies]
+            [clojure.string :as st]
             [cheshire.core :as cheshire]))
 
 
@@ -49,6 +50,13 @@
   (let [checkers (map has-item? items)]
     (apply every-pred checkers)))
 
+
+
+(defn str-match [regex-or-str s]
+  (cond 
+    (string? regex-or-str) (= regex-or-str s)
+    :else (re-find regex-or-str s)))
+
 (defn count? [expected]
   (fn [xs]
     (= expected (count xs))))
@@ -59,6 +67,34 @@
     (every-pred (apply has-items? items)
                 (count? (count items)))))
 
+
+(defn line-is? 
+  "A midje checker that checks if a multi-line string matches a regex at line n"
+  ([n regex] (line-is? #"\n" n regex))
+  ([separator n regex]
+   (fn [x]
+     (when (string? x)
+       (when-let [line (-> x (st/split (re-pattern separator)) (get n))]
+         (str-match regex line))))))
+
+(defn has-line?
+  "A midje checker that checks if a multi-line string has a line that matches regex"
+  ([regex] (has-line? #"\n" regex))
+  ([separator regex]
+   (fn [x]
+     (when (string? x)
+       (let [lines (-> x (st/split (re-pattern separator)))
+             passes (partial str-match regex)]
+         (some passes lines))))))
+
+(defn has-lines?
+  "A midje checker that checks if a multi-line string has a line that matches every regex"
+  ([& regexes]
+   (fn [x]
+     (let [regexes (if (empty? regexes) [#""] regexes)
+           checkers (map has-line? regexes)
+           check-all (apply every-pred checkers)]
+       (check-all x)))))
 
 
 

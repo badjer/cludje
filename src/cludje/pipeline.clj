@@ -81,6 +81,17 @@
         (throw-unauthorized)
         (pipeline request)))))
 
+(defn- throw-exception [request ex]
+  (log (? request [:system :logger]) (str "Error!\n" ex "\n\n" (ex-data ex)))
+  (throw ex))
+
+(defn log-exceptions [pipeline]
+  (fn [request]
+    (try
+      (pipeline request)
+      (catch java.lang.Exception ex
+        (throw-exception request ex)))))
+
 (defn with-output 
   ([output]
    (with-output {} output))
@@ -124,6 +135,7 @@
       (-> done-request
           (with-result result)))))
 
+
 (def api-pipeline
   (-> identity
       (add-output)
@@ -132,5 +144,6 @@
       (authorize)
       (add-input)
       (add-action)
-      (add-authenticate)))
+      (add-authenticate)
+      (log-exceptions)))
 

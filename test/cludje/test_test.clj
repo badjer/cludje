@@ -47,6 +47,100 @@
   [{:a 2}] =not=> (just-item? {:a 1}))
 
 
+(fact "line-is?"
+  (let [txt "abc\ndef\nghi"]
+    txt => (line-is? 0 #"abc")
+    txt => (line-is? 0 "abc")
+    txt =not=> (line-is? 0 #"def")
+    txt =not=> (line-is? 0 "def")
+    txt => (line-is? 1 #"def")
+    txt => (line-is? 1 "def")
+    txt =not=> (line-is? 1 #"abc")
+    txt =not=> (line-is? 1 "abc")
+    txt => (line-is? 2 #"^g")
+    ; Strings and regexes are not the same thing
+    txt =not=> (line-is? 2 "^g")
+    txt =not=> (line-is? 2 #"^a")
+    txt =not=> (line-is? 2 "^a")
+    txt =not=> (line-is? 100 #"a")
+    txt =not=> (line-is? 100 "a")
+    txt =not=> (line-is? -100 #"a")
+    txt =not=> (line-is? -100 "a")
+    "" =not=> (line-is? 1 #"a")
+    "" =not=> (line-is? 1 "a")
+    "" => (line-is? 0 #"")
+    "" => (line-is? 0 "")
+    "" =not=> (line-is? 1 #"")
+    "" =not=> (line-is? 1 "")
+    nil =not=> (line-is? 0 #"")
+    nil =not=> (line-is? 0 "")
+    nil =not=> (line-is? 1 #"")
+    nil =not=> (line-is? 1 "")
+    nil =not=> (line-is? -1 #"")
+    nil =not=> (line-is? -1 ""))
+  (fact "with different separator"
+    (let [tbar "abcTdefTghi"]
+      tbar => (line-is? #"T" 0 #"abc")
+      tbar => (line-is? #"T" 0 "abc")
+      tbar =not=> (line-is? #"T" 0 #"def")
+      tbar =not=> (line-is? "T" 0 "def")
+      tbar => (line-is? #"T" 1 #"def")
+      tbar => (line-is? "T" 1 "def")
+      tbar =not=> (line-is? #"T" 1 #"abc")
+      tbar =not=> (line-is? "T" 1 "abc")
+      tbar => (line-is? #"T" 2 #"^g")
+      ; Strings and regexes are not the same thing
+      tbar =not=> (line-is? "T" 2 "^g")
+      tbar =not=> (line-is? #"T" 2 #"^a")
+      tbar =not=> (line-is? "T" 2 "^a")
+      tbar =not=> (line-is? #"T" 100 #"a")
+      tbar =not=> (line-is? "T" 100 "a")
+      tbar =not=> (line-is? #"T" -100 #"a")
+      tbar =not=> (line-is? "T" -100 "a")))
+  )
+
+(fact "has-line?"
+  (let [txt "abc\ndef\nghi"]
+    txt => (has-line? #"abc")
+    txt => (has-line? "abc")
+    txt => (has-line? #"def")
+    txt => (has-line? "def")
+    txt =not=> (has-line? #"xyz")
+    txt =not=> (has-line? "xyz")
+    "" =not=> (has-line? #"abc")
+    "" =not=> (has-line? "abc")
+    "" => (has-line? #"")
+    "" => (has-line? "")
+    nil =not=> (has-line? #"abc")
+    nil =not=> (has-line? "abc")
+    ))
+
+(fact "has-lines?"
+  (let [txt "abc\ndef\nghi"]
+    txt => (has-lines? #"abc")
+    txt => (has-lines? "abc")
+    txt =not=> (has-lines? #"xyz")
+    txt =not=> (has-lines? "xyz")
+    txt => (has-lines? #"abc" #"def")
+    txt => (has-lines? "abc" "def")
+    txt => (has-lines? #"abc" #"def" #"ghi")
+    txt => (has-lines? "abc" "def" "ghi")
+    txt => (has-lines? #"abc" #"ghi")
+    txt => (has-lines? "abc" "ghi")
+    txt =not=> (has-lines? #"abc" #"xyz")
+    txt =not=> (has-lines? "abc" "xyz")
+    txt => (has-lines?)
+    "" => (has-lines?)
+    "" => (has-lines? #"")
+    "" => (has-lines? "")
+    "" =not=> (has-lines? #"abc")
+    "" =not=> (has-lines? "abc")
+    nil =not=> (has-lines?)
+    nil =not=> (has-lines? #"abc")
+    nil =not=> (has-lines? "abc")
+    ))
+
+
 (fact "has-problems?"
   {} =not=> has-problems?
   {:__problems {}} => has-problems?

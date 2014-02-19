@@ -41,16 +41,14 @@
       (:__unauthorized exd) (http-403)
       :else ex)))
 
-(defn throw-exception [request ex]
-  (log (? request [:system :logger]) (str "Error!\n\n" ex "\n\n" (ex-data ex)))
-  (throw ex))
-
 (defn wrap-web-exception-handling [f]
   (fn [request]
     (try
       (f request)
-      (catch clojure.lang.ExceptionInfo ex
-        (let [handled (try-lower-web-exception ex)]
-          (if (= ex handled)
-            (throw-exception request ex)
-            handled))))))
+      (catch java.lang.Exception ex
+        (if (not= clojure.lang.ExceptionInfo (type ex))
+          (throw ex)
+          (let [handled (try-lower-web-exception ex)]
+            (if (= ex handled)
+              (throw ex)
+              handled)))))))

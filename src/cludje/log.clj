@@ -36,6 +36,6 @@
   (->CompositeLogger loggers))
 
 (defn >MailConsoleLogger [mailer from to subject]
-  (->CompositeLogger
+  (>CompositeLogger
     (->ConsoleLogger) 
     (->MailLogger mailer from to subject)))
