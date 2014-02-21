@@ -338,6 +338,10 @@
   (when ts
     (str (year ts) "-" (to-2-digit (month ts)) "-" (to-2-digit (day ts)))))
 
+(defn- crazy-date? [dt]
+  (when-let [yr (year dt)]
+    (or (<= 1900 yr) (>= 2100))))
+
 (def Date
   (reify 
     IParseable
@@ -354,6 +358,8 @@
         (nil? txt) nil
         (= txt "") nil
         (nil? (parse Date txt))
+        "Not a date"
+        (crazy-date? (parse Date txt))
         "Not a date"))))
 
 (defn date-range [cur start end]
