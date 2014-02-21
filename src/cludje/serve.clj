@@ -9,12 +9,15 @@
             [ring.util.response :as response])
   (:import [org.eclipse.jetty.server.handler GzipHandler]))
 
+(def header-buffer-size 65536)
 (defn- jetty-configurator [server]
   "Ask Jetty to gzip."
+  (.setHeaderBufferSize server header-buffer-size)
   (.setHandler server
                (doto (new GzipHandler)
                  (.setMimeTypes "text/html,text/plain,text/xml,application/xhtml+xml,text/css,application/javascript,text/javascript,image/svg+xml,application/json,application/clojure")
-                 (.setHandler (.getHandler server)))))
+                 (.setHandler (.getHandler server))))
+  )
 
 (defn- jetty-opts [config]
   (merge {:port 8888 :join? false
