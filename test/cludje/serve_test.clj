@@ -102,13 +102,20 @@
       (do-request (>json-req :problem-cog)) => (status 200)
       (:body (do-request (>json-req :problem-cog))) => 
         (contains {:__problems {:name "empty"}})
-      (do-request (>json-req :unauthorized-cog)) => (status 403)
-      (do-request (>json-req :notloggedin-cog)) => (status 401)
-      (do-request (>json-req :exception-cog)) => (status 500)
-      (fact "exception is logged"
-        (let [entries @(:entries (:logger sys))]
-          (count entries) => pos?
-          (last entries) => (has-line? #"Error!"))))
+      (fact "unauthorized"
+        (do-request (>json-req :unauthorized-cog)) => (status 403)
+        (fact "doesnt' log error"
+          (count @(:entries (:logger sys))) => 0))
+      (fact "notloggedin"
+        (do-request (>json-req :notloggedin-cog)) => (status 401)
+        (fact "doesn't log error"
+          (count @(:entries (:logger sys))) => 0))
+      (fact "exception"
+        (do-request (>json-req :exception-cog)) => (status 500)
+        (fact "exception is logged"
+          (let [entries @(:entries (:logger sys))]
+            (count entries) => pos?
+            (last entries) => (has-line? #"Error!")))))
     (fact "Persists session"
       (let [cs (>cookies)]
         (do-request (>json-req :inc-cog {} cs)) => (body {:ses {}})

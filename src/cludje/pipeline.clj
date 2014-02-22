@@ -81,8 +81,17 @@
         (throw-unauthorized)
         (pipeline request)))))
 
+(defn- handleable-exception? [ex]
+  (let [exd (ex-data ex)]
+    (cond
+      (:__notfound exd) true
+      (:__notloggedin exd) true
+      (:__unauthorized exd) true
+      :else false)))
+
 (defn- throw-exception [request ex]
-  (log (? request [:system :logger]) (str "Error!\n" ex "\n\n" (ex-data ex)))
+  (when (not (handleable-exception? ex))
+    (log (? request [:system :logger]) (str "Error!\n" ex "\n\n" (ex-data ex))))
   (throw ex))
 
 (defn log-exceptions [pipeline]
