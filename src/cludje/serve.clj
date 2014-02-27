@@ -9,19 +9,23 @@
             [ring.util.response :as response])
   (:import [org.eclipse.jetty.server.handler GzipHandler]))
 
-(def header-buffer-size 65536)
-(defn- jetty-configurator [server]
-  "Ask Jetty to gzip."
-  (.setHeaderBufferSize server header-buffer-size)
-  (.setHandler server
-               (doto (new GzipHandler)
-                 (.setMimeTypes "text/html,text/plain,text/xml,application/xhtml+xml,text/css,application/javascript,text/javascript,image/svg+xml,application/json,application/clojure")
-                 (.setHandler (.getHandler server))))
-  )
+(def default-header-buffer-size 65536)
+(defn- make-jetty-configurator [config]
+  (let [header-buffer-size (get config :header-buffer-size default-header-buffer-size)]
+    (fn [server]
+      "Ask Jetty to gzip."
+      (doseq [connector (.getConnectors server)]
+        (.setRequestHeaderSize connector header-buffer-size))
+      (.setHandler server
+                   (doto (new GzipHandler)
+                     (.setMimeTypes "text/html,text/plain,text/xml,application/xhtml+xml,text/css,application/javascript,text/javascript,image/svg+xml,application/json,application/clojure")
+                     (.setHandler (.getHandler server))))
+      )))
+
 
 (defn- jetty-opts [config]
   (merge {:port 8888 :join? false
-          :configurator jetty-configurator}
+          :configurator (make-jetty-configurator config)}
          config))
 
 (defn jsonify [k]
