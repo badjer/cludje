@@ -340,7 +340,7 @@
 
 (defn- crazy-date? [dt]
   (when-let [yr (year dt)]
-    (or (<= 1900 yr) (>= 2100))))
+    (or (>= 1900 yr) (<= 2100 yr))))
 
 (def Date
   (reify 

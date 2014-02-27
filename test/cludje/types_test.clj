@@ -200,6 +200,8 @@
   (validate Date "") => truthy
   (validate Date feb20) => truthy
   (validate Date "2013-02-20") => truthy
+  (validate Date "1111-11-11") => falsey
+  (validate Date "2982-06-25") => falsey
   (validate Date "abc") => falsey)
 
 (def testday (parse Date "2013-09-18"))
