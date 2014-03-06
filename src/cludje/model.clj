@@ -36,15 +36,53 @@
    :tablename (fn [self] (s/lower-case (name self)))
    :keyname (fn [self] :_id)})
 
-(defn >Model [fs opts]
+
+(defn get-mold-opts [fs opts]
   (let [no-key? (:no-key opts)
         kee (if no-key? nil :_id)
-        allfields (if no-key?  fs (assoc fs kee Str))
         ; Don't include kee in required fields
         required-fields (get opts :required (vec (keys fs)))
-        invisible-fields (conj (get opts :invisible []) kee)
-        mold-opts (merge opts {:required required-fields 
-                               :invisible invisible-fields})
+        invisible-fields (conj (get opts :invisible []) kee)] 
+    (merge opts {:required required-fields :invisible invisible-fields})))
+
+(defn get-fields [fs opts]
+  (let [no-key? (:no-key opts)
+        kee (if no-key? nil :_id)] 
+    (if no-key? fs (assoc fs kee Str))))
+
+(defmacro defmodel [nam fs & args] 
+  "Args are specified in key-value combinations, ie
+    (defmodel Car {:name Str} :modelname \"Cars\" :tablename \"Car_tbl\")
+  Valid args are
+    :required <seq>
+    :invisible <seq>
+    :defaults <map>
+    :names <map>
+    :no-key <bool>
+    :keyname <str>
+    :modelname <str>
+    :tablename <str>"
+  (let [opts (apply hash-map args)
+        opts (if (:modelname opts) 
+               opts 
+               (assoc opts :modelname (s/lower-case (name nam))))
+        classname (symbol (str nam "-type"))
+        constructor (symbol (str "->" nam "-type"))
+        instance (symbol nam)] 
+    `(do 
+       (deftype ~classname [])
+       (extend-imodel ~classname ~fs ~opts)
+       (extend-imold ~classname (get-fields ~fs ~opts) (get-mold-opts ~fs ~opts))
+       (extend-iuitype ~classname)
+       (def ~instance (~constructor)))))
+
+
+(defn >Model [fs opts]
+  "Note: most of the time you'll want to use defmold instead.
+  It will give you better error messages.
+  Only use this if you NEED to create an anonymous mold"
+  (let [allfields (get-fields fs opts)
+        mold-opts (get-mold-opts fs opts)
         ; Terrible hack here.
         ; We want to create a new type at runtime. We can't just
         ; call (reify), it seems, because it gives back the same

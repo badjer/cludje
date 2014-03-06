@@ -9,6 +9,28 @@
 
 (def Cogmodel (>Model fs {:modelname "cog"}))
 
+(defmodel Carmodel fs :modelname "carses" 
+                      :defaults {:price 10000} 
+                      :tablename "cars_tbl")
+(defmodel Jeepmodel fs)
+
+(fact "defmodel"
+  (fact "with args"
+    (fact "sets fields"
+      (fields Carmodel) => (assoc fs :_id Str))
+    (fact "sets mold options"
+      (field-defaults Carmodel) => {:price 10000})
+    (fact "sets model options"
+      (modelname Carmodel) => "carses"))
+  (fact "no args"
+    (fact "sets fields"
+      (fields Jeepmodel) => (assoc fs :_id Str))
+    (fact "sets mold options"
+      (field-defaults Jeepmodel) => {})
+    (fact "defaults modelname to name"
+      (modelname Jeepmodel) => "jeepmodel")
+  ))
+
 (fact ">Model"
   (fact "implements IModel"
     (fact "can build a model"

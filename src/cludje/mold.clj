@@ -93,19 +93,29 @@
     ; Return the object so we can chain these calls
     clss))
 
-(defmacro defmold [nam fs & [opts]]
-    (let [opts (or opts {})
-          classname (symbol (str nam "-type"))
-          constructor (symbol (str "->" nam "-type"))
-          instance (symbol nam)]
-      `(do 
-         (deftype ~classname [])
-         (extend-imold ~classname ~fs ~opts)
-         (extend-iuitype ~classname)
-         (def ~instance (~constructor)))))
+(defmacro defmold [nam fs & args] 
+  "Args are specified in key-value combinations, ie
+    (defmold Car {:name Str} :required [:name] :defaults {:name \"Car\"})
+  Valid args are
+    :required <seq>
+    :invisible <seq>
+    :defaults <map>
+    :names <map>"
+  (let [opts (apply hash-map args)
+        classname (symbol (str nam "-type"))
+        constructor (symbol (str "->" nam "-type"))
+        instance (symbol nam)] 
+    `(do 
+       (deftype ~classname [])
+       (extend-imold ~classname ~fs ~opts)
+       (extend-iuitype ~classname)
+       (def ~instance (~constructor)))))
 
 
 (defn >Mold 
+  "Note: most of the time you'll want to use defmold instead.
+  It will give you better error messages.
+  Only use this if you NEED to create an anonymous mold"
   ([fs]
    (>Mold fs {}))
   ([fs opts]
