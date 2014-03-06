@@ -3,7 +3,9 @@
         cludje.types
         cludje.errors
         cludje.run
-        cludje.system))
+        cludje.system)
+  (:require [clojure.stacktrace :as stack]
+            [clojure.pprint :as pprint]))
 
 (defn with-params 
   ([params]
@@ -89,9 +91,19 @@
       (:__unauthorized exd) true
       :else false)))
 
+(defn- log-exception [request ex]
+  (let [logger (? request [:system :logger])
+        data-str (with-out-str (pprint/pprint (ex-data ex)))
+        request-str (with-out-str (pprint/pprint request))
+        trace-str (with-out-str (stack/print-stack-trace ex))]
+    (log logger
+         (str "Error!\n" ex "\n\nData:\n" data-str
+              "\n\nRequest:\n" request-str
+              "\n\nStacktrace:\n" trace-str))))
+
 (defn- throw-exception [request ex]
   (when (not (handleable-exception? ex))
-    (log (? request [:system :logger]) (str "Error!\n" ex "\n\n" (ex-data ex))))
+    (log-exception request ex))
   (throw ex))
 
 (defn log-exceptions [pipeline]
