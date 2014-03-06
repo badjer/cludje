@@ -35,12 +35,12 @@
                                   [field errs])))))]
     (when-not (empty? res) res)))
 
-(defn extend-ivalidateable [mold]
-  (extend (type mold)
+(defn extend-ivalidateable [clss]
+  (extend clss
     IValidateable
     {:problems? problems?-})
   ; Return the original object so we can chain things
-  mold)
+  clss)
 
 (defn- show- [mold input]
   (if (and (map? input) (not (empty? input)))
@@ -50,12 +50,12 @@
                  [field (show typ (get input field))])))
     {}))
 
-(defn extend-ishowable [mold]
-  (extend (type mold)
+(defn extend-ishowable [clss]
+  (extend clss
     IShowable
     {:show show-})
   ; Return the original object so we can chain things
-  mold)
+  clss)
 
 (defn- parse- [mold input]
   (let [defaults (field-defaults mold)]
@@ -63,15 +63,15 @@
           (for [[field typ] (fields mold)]
             [field (parse typ (get input field (get defaults field)))]))))
 
-(defn extend-iparseable [mold]
-  (extend (type mold)
+(defn extend-iparseable [clss]
+  (extend clss
     IParseable
     {:parse parse-})
   ; Return the original object so we can chain things
-  mold)
+  clss)
 
 
-(defn extend-imold [obj fs opts]
+(defn extend-imold [clss fs opts]
   (let [base (get fs :_)
         allfields (merge 
                     (when base (fields base))
@@ -89,7 +89,7 @@
                         (get opts :defaults))
         invisible (distinct (concat (when base (invisible-fields base))
                          (get opts :invisible [])))]
-    (extend (type obj)
+    (extend clss
       IMold
       {:fields (fn [self] allfields)
        :field-names (fn [self] (map-vals fieldnames realize))
@@ -97,7 +97,20 @@
        :required-fields (fn [self] reqfields)
        :invisible-fields (fn [self] invisible)})
     ; Return the object so we can chain these calls
-    obj))
+    clss))
+
+(defmacro defmold [nam fs opts]
+  (let [classname (symbol (str nam "-type"))
+        constructor (symbol (str "->" nam "-type"))
+        instance (symbol nam)]
+    `(do 
+       (deftype ~classname [])
+       (extend-imold ~classname ~fs ~opts)
+       (extend-ivalidateable ~classname)
+       (extend-ishowable ~classname)
+       (extend-iparseable ~classname)
+       (def ~instance (~constructor)))))
+
 
 (defn >Mold 
   ([fs]
@@ -110,11 +123,12 @@
     ; So instead, we eval in order to get new types
     ; NOTE: If specify gets added to Clojure, that's what we'd like here
     (let [obj (eval '(reify))]
-      (-> obj
+      (-> (type obj)
           (extend-imold fs opts)
           (extend-ivalidateable)
           (extend-ishowable)
-          (extend-iparseable)))))
+          (extend-iparseable))
+      obj)))
 
 (defn make [mold m]
   (if-let [problems (problems? mold m)]

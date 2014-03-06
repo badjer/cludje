@@ -5,7 +5,7 @@
             [clj-time.core :as t]))
 
 (defprotocol IParseable
-  (parse [self in] "Should always return a value (even nil) and never throw"))
+  (parse [self txt] "Should always return a value (even nil) and never throw"))
 
 (defprotocol IShowable
   (show [self x]))
@@ -26,15 +26,17 @@
   "Returns true if x is truthy and not an empty string."
   (not (or (nil? x) (= x ""))))
 
+
 (deftype Anything-type []
   IParseable
   (parse [self txt] txt)
-  IShowable 
+  IShowable
   (show [self x] x)
   IValidateable
   (problems? [self x]))
 
 (def Anything (Anything-type.))
+
 
 (deftype Str-type []
   IParseable 
