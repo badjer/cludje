@@ -52,7 +52,8 @@
       (fact "finds <action-name>-output first"
         (fields (find-output-mold mf (>input :foo-bar))) => 
           (contains (fields foo-bar-output)))
-      (fact "attaches output fields to the mold it returns"
-        (fields (find-output-mold mf (>input :foo-bar))) => 
-          (contains {:__problems Anything :__alerts Anything})))))
-
+      (fact "mold allows __ fields to be shown"
+        (let [mold (find-output-mold mf (>input :foo-bar))]
+          (show mold {:__problems :foo}) => {:__problems :foo}))
+      )
+    ))

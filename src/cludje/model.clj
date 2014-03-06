@@ -55,7 +55,5 @@
     (-> (type obj)
         (extend-imodel fs opts)
         (extend-imold allfields mold-opts)
-        (extend-ivalidateable)
-        (extend-ishowable)
-        (extend-iparseable))
+        (extend-iuitype))
     obj))

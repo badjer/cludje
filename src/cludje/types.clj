@@ -4,13 +4,9 @@
             [clj-time.local :as time-local]
             [clj-time.core :as t]))
 
-(defprotocol IParseable
-  (parse [self txt] "Should always return a value (even nil) and never throw"))
-
-(defprotocol IShowable
-  (show [self x]))
-
-(defprotocol IValidateable
+(defprotocol IUIType
+  (parse [self txt] "Should always return a value (even nil) and never throw")
+  (show [self x])
   (problems? [self m] "Get the problems trying to make m"))
 
 (defn validate [ivalidateable x]
@@ -18,7 +14,7 @@
   (not (problems? ivalidateable x)))
 
 (defn validate-test [pred-or-ivalidateable x]
-  (if (satisfies? IValidateable pred-or-ivalidateable)
+  (if (satisfies? IUIType pred-or-ivalidateable)
     (validate pred-or-ivalidateable x)
     (pred-or-ivalidateable x)))
 
@@ -28,31 +24,27 @@
 
 
 (deftype Anything-type []
-  IParseable
+  IUIType
   (parse [self txt] txt)
-  IShowable
   (show [self x] x)
-  IValidateable
   (problems? [self x]))
 
 (def Anything (Anything-type.))
 
 
 (deftype Str-type []
-  IParseable 
+  IUIType 
   (parse [self txt] 
     (cond
       (nil? txt) nil
       (string? txt) txt
       (keyword? txt) (name txt)
       :else (str txt)))
-  IShowable
   (show [self x] 
     (cond
       (keyword? x) (name x)
       (nil? x) nil
       :else (str x)))
-  IValidateable
   ; Never any problems with str
   ; Unless it's a collection
   (problems? [self txt] 
@@ -64,11 +56,9 @@
 (declare Email)
 
 (deftype Email-type []
-  IParseable 
+  IUIType 
   (parse [self txt] (when txt (when-not (problems? Email txt) (str txt))))
-  IShowable
   (show [self x] x) 
-  IValidateable
   (problems? [self txt]
     (cond
       (nil? txt) nil
@@ -80,11 +70,9 @@
 
 (declare Password)
 (deftype Password-type []
-  IParseable
+  IUIType
   (parse [self txt] (when txt (when-not (problems? Password txt) (str txt))))
-  IShowable
   (show [self x] (when-not (nil? x) ""))
-  IValidateable
   (problems? [self txt]
     (when-let [s (str txt)]
       (cond
@@ -120,11 +108,9 @@
                            "decimal constructor for that type") {})))))
 
 (deftype Int-type []
-  IParseable
+  IUIType
   (parse [self txt] (when-not (empty? (str txt)) (to-int txt)))
-  IShowable
   (show [self x] (when-not (nil? x) (str x)))
-  IValidateable
   (problems? [self txt]
     (when (not (re-find #"^\d*$" (str txt)))
       "Not a number")))
@@ -171,7 +157,7 @@
 
 (declare Money)
 (deftype Money-type []
-  IParseable
+  IUIType
   (parse [self txt]
     (cond
       (= clojure.lang.Ratio (type txt)) 
@@ -190,9 +176,7 @@
                 numstr (str sign n)
                 decversion (to-decimal numstr)]
             (to-int (* 100 decversion))))))
-  IShowable
   (show [self x] (money-str (parse Money x)))
-  IValidateable
   (problems? [self txt]
     (cond
       (empty? (str txt)) nil 
@@ -203,7 +187,7 @@
 
 (declare Bool)
 (deftype Bool-type []
-  IParseable
+  IUIType
   (parse [self txt]
     (cond
       (= java.lang.Boolean (type txt)) txt
@@ -216,12 +200,10 @@
       (re-find #"^[Nn](o)?$" (str txt)) false
       (re-find #"^[fF](alse)$" (str txt)) false
       :else nil))
-  IShowable
   (show [self x]
     (when-not (nil? x)
       (let [v (parse Bool x)]
         (if v "yes" "no"))))
-  IValidateable
   (problems? [self txt]
     (cond
       (empty? (str txt)) nil
@@ -359,15 +341,13 @@
 (declare Date)
 
 (deftype Date-type []
-  IParseable
+  IUIType
   (parse [self txt] 
     (when (satisfies? time-coerce/ICoerce txt)
       (-> txt
           (time-coerce/to-local-date)
           (time-coerce/to-long))))
-  IShowable
   (show [self x] (iso-date-str (parse Date x)))
-  IValidateable
   (problems? [self txt]
     (cond
       (nil? txt) nil
@@ -399,11 +379,9 @@
 
 (declare Time)
 (deftype Time-type []
-  IParseable
+  IUIType
   (parse [self txt] (to-time txt))
-  IShowable
   (show [self x] (when-not (nil? x) (time-str (parse Time x))))
-  IValidateable
   (problems? [self txt]
     (cond
       (nil? txt) nil
@@ -439,11 +417,9 @@
 
 (declare Timespan)
 (deftype Timespan-type []
-  IParseable
+  IUIType
   (parse [self txt] (to-time txt))
-  IShowable
   (show [self x] (when-not (nil? x) (duration-str (parse Timespan x))))
-  IValidateable
   (problems? [self txt]
     (cond
       (nil? txt) nil
@@ -466,11 +442,9 @@
 (declare DateTime)
 
 (deftype DateTime-type []
-  IParseable
+  IUIType
   (parse [self txt] (to-time txt))
-  IShowable
   (show [self x] (when-not (nil? x) (time-str (parse DateTime x))))
-  IValidateable
   (problems? [self txt]
     (cond
       (nil? txt) nil
@@ -482,21 +456,19 @@
 
 (defn list-of [mold]
   (reify 
-    IParseable 
+    IUIType 
     (parse [self txt] 
       (cond
         (nil? txt) []
         (= [] txt) []
         (not (coll? txt)) [(parse mold txt)]
         :else (map (partial parse mold) txt)))
-    IShowable
     (show [self x]
       (cond
         (nil? x) []
         (= [] x) []
         (not (coll? x)) [(show mold x)]
         :else (map (partial show mold) x)))
-    IValidateable
     (problems? [self txt]
       (cond
         (nil? txt) nil

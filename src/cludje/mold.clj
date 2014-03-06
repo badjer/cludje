@@ -35,27 +35,19 @@
                                   [field errs])))))]
     (when-not (empty? res) res)))
 
-(defn extend-ivalidateable [clss]
-  (extend clss
-    IValidateable
-    {:problems? problems?-})
-  ; Return the original object so we can chain things
-  clss)
+(defn- special-field? [kee]
+  (->> kee
+       (name)
+       (re-find #"^__")))
 
 (defn- show- [mold input]
   (if (and (map? input) (not (empty? input)))
-    (let [kees (keys input)
-          fields (select-keys (fields mold) kees)]
-      (into {} (for [[field typ] fields] 
-                 [field (show typ (get input field))])))
+    (let [specials (filter special-field? (keys input))
+          fs (select-keys (fields mold) (keys input))
+          included (concat specials (keys fs))]
+      (into {} (for [kee included]
+                 [kee (show (get fs kee Anything) (get input kee))])))
     {}))
-
-(defn extend-ishowable [clss]
-  (extend clss
-    IShowable
-    {:show show-})
-  ; Return the original object so we can chain things
-  clss)
 
 (defn- parse- [mold input]
   (let [defaults (field-defaults mold)]
@@ -63,10 +55,12 @@
           (for [[field typ] (fields mold)]
             [field (parse typ (get input field (get defaults field)))]))))
 
-(defn extend-iparseable [clss]
+(defn extend-iuitype [clss]
   (extend clss
-    IParseable
-    {:parse parse-})
+    IUIType
+    {:parse parse- 
+     :show show- 
+     :problems? problems?-})
   ; Return the original object so we can chain things
   clss)
 
@@ -106,9 +100,7 @@
     `(do 
        (deftype ~classname [])
        (extend-imold ~classname ~fs ~opts)
-       (extend-ivalidateable ~classname)
-       (extend-ishowable ~classname)
-       (extend-iparseable ~classname)
+       (extend-iuitype ~classname)
        (def ~instance (~constructor)))))
 
 
@@ -125,9 +117,7 @@
     (let [obj (eval '(reify))]
       (-> (type obj)
           (extend-imold fs opts)
-          (extend-ivalidateable)
-          (extend-ishowable)
-          (extend-iparseable))
+          (extend-iuitype))
       obj)))
 
 (defn make [mold m]

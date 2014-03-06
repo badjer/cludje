@@ -51,9 +51,9 @@
         (invisible-fields m) => [:price]))))
 
 
-(fact ">Mold implements IValidateable"
+(fact ">Mold implements problems?"
   (let [m (>Mold fs {})]
-    (satisfies? IValidateable m) => true
+    (satisfies? IUIType m) => true
     (problems? m {}) => (just-keys :name :price)
     (problems? m {:name "a" :price "asdf"}) => (just-keys :price)
     (problems? m {:name "a" :price 123}) => falsey
@@ -69,9 +69,9 @@
                        :back {:name "a" :price 234}
                        :gears 1}) => (just-keys :front))))
 
-(fact ">Mold implements IShowable"
+(fact ">Mold implements show"
   (let [m (>Mold fs {})]
-    (satisfies? IShowable m) => true
+    (satisfies? IUIType m) => true
     (show m {:price 123}) => {:price "$1.23"}
 
     (fact "showing {} yields {}"
@@ -93,11 +93,16 @@
                     :gears 3 :bar 2}) =>
         {:front {:name "a" :price "$0.01"}
          :back {:name "b" :price "$0.02"}
-         :gears "3"}))))
+         :gears "3"}))
 
-(fact ">Mold implements IParseable"
+    (fact "copies throw any fields that start with __"
+      (show m {:name "a" :__alerts :foo}) => {:name "a" :__alerts :foo})
+    ))
+
+
+(fact ">Mold implements parse"
   (let [m (>Mold fs {})]
-    (satisfies? IParseable m) => true
+    (satisfies? IUIType m) => true
 
     (fact "parse returns all fields"
       (parse m {}) => (has-keys :name :price)

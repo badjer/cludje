@@ -7,16 +7,10 @@
         cludje.find)
   (:require [clojure.string :as s]))
 
-(defn- add-output-fields [mold]
-  ; If the mold is Anything, it already allows
-  ; the output fields
-  (if (= Anything mold)
-    Anything
-    (>Mold {:_ mold :__problems Anything :__alerts Anything} {})))
 
 (defrecord SingleMoldFinder [mold]
   IMoldFinder
-  (find-output-mold [self request] (add-output-fields mold)))
+  (find-output-mold [self request] mold))
 
 (defn >SingleMoldFinder [mold]
   (->SingleMoldFinder mold))
@@ -54,9 +48,8 @@
   IMoldFinder
   (find-output-mold [self request]
     (let [names (propose-output-moldnames (?! request [:params :_action]))
-          mold (find-mold- @mold-namespaces names)
-          res (add-output-fields mold)]
-      res)))
+          mold (find-mold- @mold-namespaces names)]
+      mold)))
 
 
 (defn >NSMoldFinder [& mold-namespaces]
