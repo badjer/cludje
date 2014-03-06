@@ -70,6 +70,7 @@
 (defn unauthorized-cog [_] (throw-unauthorized))
 (defn notloggedin-cog [_] (throw-not-logged-in))
 (defn exception-cog [_] 
+  (println "**** DON'T WORRY, THIS IS SUPPOSED TO EXPLODE ****")
   (/ 1 0))
 
 

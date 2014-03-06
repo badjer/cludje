@@ -26,65 +26,70 @@
   "Returns true if x is truthy and not an empty string."
   (not (or (nil? x) (= x ""))))
 
-(def Anything 
-  (reify
-    IParseable
-    (parse [self txt] txt)
-    IShowable 
-    (show [self x] x)
-    IValidateable
-    (problems? [self x])))
+(deftype Anything-type []
+  IParseable
+  (parse [self txt] txt)
+  IShowable 
+  (show [self x] x)
+  IValidateable
+  (problems? [self x]))
 
+(def Anything (Anything-type.))
 
+(deftype Str-type []
+  IParseable 
+  (parse [self txt] 
+    (cond
+      (nil? txt) nil
+      (string? txt) txt
+      (keyword? txt) (name txt)
+      :else (str txt)))
+  IShowable
+  (show [self x] 
+    (cond
+      (keyword? x) (name x)
+      (nil? x) nil
+      :else (str x)))
+  IValidateable
+  ; Never any problems with str
+  ; Unless it's a collection
+  (problems? [self txt] 
+    (when (coll? txt)
+      "Str cannot be a collection")))
 
-(def Str 
-  (reify 
-    IParseable 
-    (parse [self txt] 
+(def Str (Str-type.))
+
+(declare Email)
+
+(deftype Email-type []
+  IParseable 
+  (parse [self txt] (when txt (when-not (problems? Email txt) (str txt))))
+  IShowable
+  (show [self x] x) 
+  IValidateable
+  (problems? [self txt]
+    (cond
+      (nil? txt) nil
+      (empty? (str txt)) nil 
+      (not (re-find #"(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?" (str txt)))
+      "Not a valid email")))
+
+(def Email (Email-type.))
+
+(declare Password)
+(deftype Password-type []
+  IParseable
+  (parse [self txt] (when txt (when-not (problems? Password txt) (str txt))))
+  IShowable
+  (show [self x] (when-not (nil? x) ""))
+  IValidateable
+  (problems? [self txt]
+    (when-let [s (str txt)]
       (cond
-        (nil? txt) nil
-        (string? txt) txt
-        (keyword? txt) (name txt)
-        :else (str txt)))
-    IShowable
-    (show [self x] 
-      (cond
-        (keyword? x) (name x)
-        (nil? x) nil
-        :else (str x)))
-    IValidateable
-    ; Never any problems with str
-    ; Unless it's a collection
-    (problems? [self txt] 
-      (when (coll? txt)
-        "Str cannot be a collection"))))
+        (empty? s)  nil
+        (> 2 (.length s)) "Not long enough"))))
 
-(def Email
-  (reify 
-    IParseable 
-    (parse [self txt] (when txt (when-not (problems? Email txt) (str txt))))
-    IShowable
-    (show [self x] x) 
-    IValidateable
-    (problems? [self txt]
-      (cond
-        (nil? txt) nil
-        (empty? (str txt)) nil 
-        (not (re-find #"(?i)[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?" (str txt)))
-        "Not a valid email"))))
-
-(def Password
-  (reify 
-    IParseable
-    (parse [self txt] (when txt (when-not (problems? Password txt) (str txt))))
-    IShowable
-    (show [self x] (when-not (nil? x) ""))
-    IValidateable
-    (problems? [self txt]
-      (when-let [s (str txt)]
-        (cond
-          (empty? s)  nil
-          (> 2 (.length s)) "Not long enough")))))
+(def Password (Password-type.))
 
 (defn- to-int [x]
   (if-not (nil? x)
@@ -112,16 +117,17 @@
                            " to a decimal, but could not find a "
                            "decimal constructor for that type") {})))))
 
-(def Int
-  (reify 
-    IParseable
-    (parse [self txt] (when-not (empty? (str txt)) (to-int txt)))
-    IShowable
-    (show [self x] (when-not (nil? x) (str x)))
-    IValidateable
-    (problems? [self txt]
-      (when (not (re-find #"^\d*$" (str txt)))
-        "Not a number"))))
+(deftype Int-type []
+  IParseable
+  (parse [self txt] (when-not (empty? (str txt)) (to-int txt)))
+  IShowable
+  (show [self x] (when-not (nil? x) (str x)))
+  IValidateable
+  (problems? [self txt]
+    (when (not (re-find #"^\d*$" (str txt)))
+      "Not a number")))
+
+(def Int (Int-type.))
 
 
 (defn to-2-digit 
@@ -161,60 +167,66 @@
 
 (def money-regex #"^ *\$? *(\-?) *(\d*\.?\d*) *$")
 
-(def Money
-  (reify 
-    IParseable
-    (parse [self txt]
-      (cond
-        (= clojure.lang.Ratio (type txt)) (throw 
-                                            (ex-info (str "Could not convert a Ratio (" 
-                                                          txt ") to Money - Money must "
-                                                          "be whole numbers of cents")
-                                                     {}))
-        (= BigDecimal (type txt)) (to-int (* 100 txt))
-        (number? txt) txt
-        (empty? (str txt)) nil
-        :else
-          (if-let [match (first (re-seq money-regex (str txt)))]
-            (let [[_ sign n] match
-                  numstr (str sign n)
-                  decversion (to-decimal numstr)]
-              (to-int (* 100 decversion))))))
-    IShowable
-    (show [self x] (money-str (parse Money x)))
-    IValidateable
-    (problems? [self txt]
-      (cond
-        (empty? (str txt)) nil 
-        (not (re-find money-regex (str txt)))
-        "Invalid money amount"))))
+(declare Money)
+(deftype Money-type []
+  IParseable
+  (parse [self txt]
+    (cond
+      (= clojure.lang.Ratio (type txt)) 
+      (throw (ex-info (str "Could not convert a Ratio (" 
+                           txt ") to Money - Money must " 
+                           "be whole numbers of cents") {}))
+      (= BigDecimal (type txt)) 
+      (to-int (* 100 txt))
+      (number? txt) 
+      txt
+      (empty? (str txt)) 
+      nil
+      :else
+        (if-let [match (first (re-seq money-regex (str txt)))]
+          (let [[_ sign n] match
+                numstr (str sign n)
+                decversion (to-decimal numstr)]
+            (to-int (* 100 decversion))))))
+  IShowable
+  (show [self x] (money-str (parse Money x)))
+  IValidateable
+  (problems? [self txt]
+    (cond
+      (empty? (str txt)) nil 
+      (not (re-find money-regex (str txt)))
+      "Invalid money amount")))
 
-(def Bool
-  (reify 
-    IParseable
-    (parse [self txt]
-      (cond
-        (= java.lang.Boolean (type txt)) txt
-        (number? txt) (if (= txt 0) false true)
-        (= txt true) true
-        (= txt false) false
-        (empty? txt) nil
-        (re-find #"^[Yy](es)?$" (str txt)) true
-        (re-find #"^[tT](rue)?$" (str txt)) true
-        (re-find #"^[Nn](o)?$" (str txt)) false
-        (re-find #"^[fF](alse)$" (str txt)) false
-        :else nil))
-    IShowable
-    (show [self x]
-      (when-not (nil? x)
-        (let [v (parse Bool x)]
-          (if v "yes" "no"))))
-    IValidateable
-    (problems? [self txt]
-      (cond
-        (empty? (str txt)) nil
-        (nil? (parse Bool txt))
-        "Not a true/false value"))))
+(def Money (Money-type.))
+
+(declare Bool)
+(deftype Bool-type []
+  IParseable
+  (parse [self txt]
+    (cond
+      (= java.lang.Boolean (type txt)) txt
+      (number? txt) (if (= txt 0) false true)
+      (= txt true) true
+      (= txt false) false
+      (empty? txt) nil
+      (re-find #"^[Yy](es)?$" (str txt)) true
+      (re-find #"^[tT](rue)?$" (str txt)) true
+      (re-find #"^[Nn](o)?$" (str txt)) false
+      (re-find #"^[fF](alse)$" (str txt)) false
+      :else nil))
+  IShowable
+  (show [self x]
+    (when-not (nil? x)
+      (let [v (parse Bool x)]
+        (if v "yes" "no"))))
+  IValidateable
+  (problems? [self txt]
+    (cond
+      (empty? (str txt)) nil
+      (nil? (parse Bool txt))
+      "Not a true/false value")))
+
+(def Bool (Bool-type.))
 
 
 
@@ -342,25 +354,28 @@
   (when-let [yr (year dt)]
     (or (>= 1900 yr) (<= 2100 yr))))
 
-(def Date
-  (reify 
-    IParseable
-    (parse [self txt] 
-      (when (satisfies? time-coerce/ICoerce txt)
-        (-> txt
-            (time-coerce/to-local-date)
-            (time-coerce/to-long))))
-    IShowable
-    (show [self x] (iso-date-str (parse Date x)))
-    IValidateable
-    (problems? [self txt]
-      (cond
-        (nil? txt) nil
-        (= txt "") nil
-        (nil? (parse Date txt))
-        "Not a date"
-        (crazy-date? (parse Date txt))
-        "Not a date"))))
+(declare Date)
+
+(deftype Date-type []
+  IParseable
+  (parse [self txt] 
+    (when (satisfies? time-coerce/ICoerce txt)
+      (-> txt
+          (time-coerce/to-local-date)
+          (time-coerce/to-long))))
+  IShowable
+  (show [self x] (iso-date-str (parse Date x)))
+  IValidateable
+  (problems? [self txt]
+    (cond
+      (nil? txt) nil
+      (= txt "") nil
+      (nil? (parse Date txt))
+      "Not a date"
+      (crazy-date? (parse Date txt))
+      "Not a date")))
+
+(def Date (Date-type.))
 
 (defn date-range [cur start end]
   "Get a list of dates from (cur + start <days>) to (cur + end <days>)
@@ -380,19 +395,21 @@
         pm? (< 11 h)]
     (str (to-2-digit adj-h) ":" (to-2-digit m) " " (if pm? "PM" "AM"))))
 
-(def Time
-  (reify 
-    IParseable
-    (parse [self txt] (to-time txt))
-    IShowable
-    (show [self x] (when-not (nil? x) (time-str (parse Time x))))
-    IValidateable
-    (problems? [self txt]
-      (cond
-        (nil? txt) nil
-        (= "" txt) nil
-        (nil? (parse Time txt))
-        "Not valid time"))))
+(declare Time)
+(deftype Time-type []
+  IParseable
+  (parse [self txt] (to-time txt))
+  IShowable
+  (show [self x] (when-not (nil? x) (time-str (parse Time x))))
+  IValidateable
+  (problems? [self txt]
+    (cond
+      (nil? txt) nil
+      (= "" txt) nil
+      (nil? (parse Time txt))
+      "Not valid time")))
+
+(def Time (Time-type.))
 
 (defn time-range 
   "Get a list of times from start <milliseconds> to end <milliseconds>
@@ -418,19 +435,21 @@
         m-dec (percentage 60 m)]
     (str hours "." (to-2-digit m-dec))))
 
-(def Timespan
-  (reify 
-    IParseable
-    (parse [self txt] (to-time txt))
-    IShowable
-    (show [self x] (when-not (nil? x) (duration-str (parse Timespan x))))
-    IValidateable
-    (problems? [self txt]
-      (cond
-        (nil? txt) nil
-        (= "" txt) nil
-        (nil? (parse Timespan txt))
-        "Not valid timespan"))))
+(declare Timespan)
+(deftype Timespan-type []
+  IParseable
+  (parse [self txt] (to-time txt))
+  IShowable
+  (show [self x] (when-not (nil? x) (duration-str (parse Timespan x))))
+  IValidateable
+  (problems? [self txt]
+    (cond
+      (nil? txt) nil
+      (= "" txt) nil
+      (nil? (parse Timespan txt))
+      "Not valid timespan")))
+
+(def Timespan (Timespan-type.))
 
 (defn timespan-range 
   "Get a list of timespans from start <milliseconds> to end <milliseconds>
@@ -442,19 +461,22 @@
   ([end step]
    (timespan-range 0 end step)))
 
-(def DateTime
-  (reify 
-    IParseable
-    (parse [self txt] (to-time txt))
-    IShowable
-    (show [self x] (when-not (nil? x) (time-str (parse DateTime x))))
-    IValidateable
-    (problems? [self txt]
-      (cond
-        (nil? txt) nil
-        (= "" txt) nil
-        (nil? (parse DateTime txt))
-        "Not valid date/time"))))
+(declare DateTime)
+
+(deftype DateTime-type []
+  IParseable
+  (parse [self txt] (to-time txt))
+  IShowable
+  (show [self x] (when-not (nil? x) (time-str (parse DateTime x))))
+  IValidateable
+  (problems? [self txt]
+    (cond
+      (nil? txt) nil
+      (= "" txt) nil
+      (nil? (parse DateTime txt))
+      "Not valid date/time")))
+
+(def DateTime (DateTime-type.))
 
 (defn list-of [mold]
   (reify 
