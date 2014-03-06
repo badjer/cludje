@@ -260,7 +260,7 @@
       (run-as-user user-action {} (as-user {:name :bar})) => {:name :bar})
     ))
 
-(def mold (>Mold {:a Str} {}))
+(defmold mold {:a Str})
 
 (fact "render"
   (fact "uses mold to format output"

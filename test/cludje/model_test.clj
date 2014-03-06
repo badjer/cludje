@@ -65,9 +65,8 @@
       (keyname Cogmodel) => :_id)
     ))
 
-(def Gear (>Model {:name Str :teeth Int :size Int}
-                  {:modelname "gear" :required [:name]
-                   :invisible [:teeth]}))
+(defmodel Gear {:name Str :teeth Int :size Int} 
+  :modelname "gear" :required [:name] :invisible [:teeth])
 
 (fact ">Model overrides mold fields"
   (fact "required-fields"

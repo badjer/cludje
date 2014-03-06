@@ -8,7 +8,7 @@
         cludje.types
         cludje.util))
 
-(def LoginUser (>Mold {:username Email :password Password} {}))
+(defmold LoginUser {:username Email :password Password})
 
 (defrecord TestAuthenticator [cur-user]
   IAuthenticator

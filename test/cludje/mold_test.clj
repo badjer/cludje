@@ -169,7 +169,7 @@
 
 
 
-(def Cog+ (>Mold {:_ Cog :id Int} {}))
+(defmold Cog+ {:_ Cog :id Int})
 
 (fact "can extend an existing mold"
   (fields Cog+) => (has-keys :name :price :id)
@@ -179,7 +179,7 @@
   (invisible-fields Cog+) => [])
 
 
-(def Cog-list (>Mold {:cogs (list-of Cog)} {}))
+(defmold Cog-list {:cogs (list-of Cog)})
 
 (fact "can have a list in a mold"
   (parse Cog-list {:cogs [{:name "a" :price 1}

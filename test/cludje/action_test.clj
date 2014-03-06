@@ -22,7 +22,7 @@
 
 (def row {:a 1})
 
-(def Cog (>Model {:a Int} {:modelname "cog"}))
+(defmodel Cog {:a Int} :modelname "cog")
 
 (def datastore (>TestDatastore))
 (def ds-request {:system {:data-store datastore}})

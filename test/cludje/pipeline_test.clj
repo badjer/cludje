@@ -89,10 +89,10 @@
 
 
 (def action-request (assoc raw-request :user user :action action))
-(def mold (>Mold {:price Money} {}))
+(defmold mold {:price Money})
 (def moldfinder (>SingleMoldFinder mold))
 
-(def bar (>Mold {:name Str} {}))
+(defmold bar {:name Str})
 
 (fact "with-input"
   (with-input {} {:a 1}) => {:input {:a 1}}
@@ -200,8 +200,7 @@
     (fact "requires output"
       (handler (dissoc request :output)) => (throws-error))))
 
-
-(def cog (>Model {:name Str} {:modelname "cog"}))
+(defmodel cog {:name Str} :modelname "cog")
 
 (defn new-cog [request] (assoc request :output {:name "A"}))
 

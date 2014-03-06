@@ -29,8 +29,7 @@
   (save store model (dissoc m (keyname model))))
 
 
-(def MailMessage 
-  (>Mold {:to Email :from Email :subject Str :body Str :text Str} {}))
+(defmold MailMessage {:to Email :from Email :subject Str :body Str :text Str})
 
 (defprotocol IEmailer
   "Sends email"

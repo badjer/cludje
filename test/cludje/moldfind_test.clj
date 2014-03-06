@@ -18,13 +18,13 @@
   {:params {:_action action}})
 
 (def mold-fields {:name Str})
-(def mold (>Mold mold-fields {}))
+(defmold mold mold-fields)
 (def cog-fields {:cogname Str})
-(def Cog (>Mold cog-fields {}))
+(defmold Cog cog-fields)
 (def notmold 1)
 
 (def foo-bar-output-fields {:amt Int})
-(def foo-bar-output (>Mold foo-bar-output-fields {}))
+(defmold foo-bar-output foo-bar-output-fields)
 
 (defn test-find [f mf]
   (fact "finds a mold"

@@ -80,7 +80,7 @@
         ))))
 
 
-(def Cog (>Model {:price Money :amt Int} {:modelname "cog"}))
+(defmodel Cog {:price Money :amt Int} :modelname "cog")
 (def cog {:price 123 :amt 1})
 (def cog2 {:price 123 :amt 2})
 (def cogb {:price 234 :amt 1})

@@ -12,7 +12,7 @@
   ([action-sym] (>input action-sym {}))
   ([action-sym input] {:input (assoc input :_action action-sym) :user {:username "a"}}))
 
-(def Cog (>Model {:amt Int} {:modelname "cog"}))
+(defmodel Cog {:amt Int} :modelname "cog")
 
 (def ab-all-cog (>Ability :add Cog true))
 
@@ -26,7 +26,7 @@
   (ab-all-cog (>input `remove-cog)) => falsey
   (ab-all-cog (>input :cludje.authorize-test/remove-cog)) => falsey)
 
-(def Foo (>Model {:amt Int} {:modelname "cog" :tablename "gear"}))
+(defmodel Foo {:amt Int} :modelname "cog" :tablename "gear")
 (def ab-model-cog (>Ability :add Foo true))
 
 (facts "ability matches on modelname if it's different"
@@ -72,7 +72,7 @@
   (ab-star-override-cog (>input 'add-cog)) => truthy
   (ab-star-override-cog (>input 'delete-cog)) => falsey)
 
-(def Person (>Model {:name Str} {:modelname "person"}))
+(defmodel Person {:name Str} :modelname "person")
 (def ab-cog-person
   (>Ability
     :add Cog #(= 1 (:amt (:input %)))

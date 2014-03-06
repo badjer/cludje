@@ -64,7 +64,7 @@
     (stop serv) => anything
     (do-request) => (throws)))
 
-(def cog (>Model {:name Str :ses Anything} {:modelname "cog"}))
+(defmodel cog {:name Str :ses Anything} :modelname "cog")
 (defn new-cog [request] (assoc request :output {:name "A"}))
 (defn problem-cog [_] (throw-problems {:name "empty"}))
 (defn unauthorized-cog [_] (throw-unauthorized))
