@@ -93,15 +93,16 @@
     ; Return the object so we can chain these calls
     clss))
 
-(defmacro defmold [nam fs opts]
-  (let [classname (symbol (str nam "-type"))
-        constructor (symbol (str "->" nam "-type"))
-        instance (symbol nam)]
-    `(do 
-       (deftype ~classname [])
-       (extend-imold ~classname ~fs ~opts)
-       (extend-iuitype ~classname)
-       (def ~instance (~constructor)))))
+(defmacro defmold [nam fs & [opts]]
+    (let [opts (or opts {})
+          classname (symbol (str nam "-type"))
+          constructor (symbol (str "->" nam "-type"))
+          instance (symbol nam)]
+      `(do 
+         (deftype ~classname [])
+         (extend-imold ~classname ~fs ~opts)
+         (extend-iuitype ~classname)
+         (def ~instance (~constructor)))))
 
 
 (defn >Mold 

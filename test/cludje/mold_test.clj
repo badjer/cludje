@@ -12,6 +12,23 @@
 (def Cog (>Mold fs {:defaults {:price 42}}))
 (def Bike (>Mold {:front Cog :back Cog :gears Int} {}))
 
+(defmold Car fs {:defaults {:price 10000}})
+(defmold Jeep fs)
+
+(fact "defmold"
+  (fact "with args"
+    (fact "sets fields"
+      (fields Car) => fs)
+    (fact "sets options"
+      (field-defaults Car) => {:price 10000})
+    )
+  (fact "no args"
+    (fact "sets fields"
+      (fields Jeep) => fs)
+    (fact "sets options"
+      (field-defaults Jeep) => {})
+  ))
+
 (fact ">Mold"
   (fact "creates different types"
     (type Bike) =not=> (type Cog))
