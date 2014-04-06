@@ -99,4 +99,3 @@
     (fact "defines output"
       output =not=> (throws))
     ))
-
