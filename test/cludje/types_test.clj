@@ -275,6 +275,7 @@
   (show Timespan (+ thirteen-hour fifteen-min)) => "13.25"
   (show Timespan "13.25") => "13.25"
   (show Timespan nil) => nil
+  (show Timespan 2810700000) => "780.75"
   (validate Timespan nil) => truthy
   (validate Timespan "") => truthy
   (validate Timespan one-min) => truthy

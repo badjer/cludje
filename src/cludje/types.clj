@@ -408,12 +408,11 @@
     (quot (* 100 part) total)))
 
 (defn- duration-str [ts]
-  (let [d (- (day ts) 1)
-        h (hour ts)
-        hours (+ h (* 24 d))
+  (let [fullhours (quot ts one-hour)
+        m (minute ts)
         m (minute ts)
         m-dec (percentage 60 m)]
-    (str hours "." (to-2-digit m-dec))))
+    (str fullhours "." (to-2-digit m-dec))))
 
 (declare Timespan)
 (deftype Timespan-type []
