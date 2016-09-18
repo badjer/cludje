@@ -120,7 +120,7 @@
           _ (validate-db-data keedata)
           _ (validate-db-data data)
           objdata (merge data keedata)]
-      (mgcoll/update db (tablename coll) keedata objdata :upsert true) 
+      (mgcoll/update db (tablename coll) keedata objdata {:upsert true})
       kee))
   (delete [self coll kee] 
     (when kee
