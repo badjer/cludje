@@ -97,22 +97,22 @@
 
 ; TODO: Don't use the global-variable-dependent version of mongo fns
 (defn connect-to-mongo! [uri]
-   (mg/connect-via-uri! uri))
+   (mg/connect-via-uri uri))
 
-(defrecord MongoDatastore []
+(defrecord MongoDatastore [db]
   IDatastore
   (fetch [self coll kee] 
     (if (nil? kee)
       ; MongoDb driver throws error if kee is nil, so check here
       nil
       (let [_ (validate-db-data {:_id kee})
-            fromdb (mgcoll/find-map-by-id (tablename coll) kee)]
+            fromdb (mgcoll/find-map-by-id db (tablename coll) kee)]
         (if (empty? fromdb)
           nil
           fromdb))))
   (query [self coll params] 
     (validate-db-data params)
-    (let [res (mgcoll/find-maps (tablename coll) params)]
+    (let [res (mgcoll/find-maps db (tablename coll) params)]
       (when-not (empty? res) res)))
   (write [self coll kee data] 
     (let [kee (if kee kee (new-id))
@@ -120,23 +120,21 @@
           _ (validate-db-data keedata)
           _ (validate-db-data data)
           objdata (merge data keedata)]
-      (mgcoll/update (tablename coll) keedata objdata :upsert true) 
+      (mgcoll/update db (tablename coll) keedata objdata :upsert true) 
       kee))
   (delete [self coll kee] 
     (when kee
       (validate-db-data {:_id kee})
-      (mgcoll/remove-by-id (tablename coll) kee)))
+      (mgcoll/remove-by-id db (tablename coll) kee)))
   (collections [self]
-    (let [cols (mgdb/get-collection-names)
+    (let [cols (mgdb/get-collection-names db)
           non-sys-cols (filter #(not (some #{\.} %)) cols)]
       non-sys-cols)))
 
 
 (defn >MongoDatastore [uri]
-  (connect-to-mongo! uri)
-  (->MongoDatastore))
+  (->MongoDatastore (:db (connect-to-mongo! uri))))
 
 (defn drop-mongo! [uri db-name]
-  (connect-to-mongo! uri)
-  (let [db (mg/get-db db-name)]
+  (let [db (:db (connect-to-mongo! uri))]
     (mgdb/drop-db db)))
